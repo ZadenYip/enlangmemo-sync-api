@@ -1,0 +1,3 @@
+{
+    "buf.commandLine.path": "${workspaceFolder}/node_modules/.bin/buf",
+}

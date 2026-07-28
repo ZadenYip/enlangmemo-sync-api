@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package enlangmemo.sync.v1;
+
+import "buf/validate/validate.proto";
+
+service SyncService {
+  rpc Ping(PingRequest) returns (PingResponse);
+  rpc GetSyncState(GetSyncStateRequest) returns (GetSyncStateResponse);
+}
+
+message PingRequest {
+  string message = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message PingResponse {
+  string message = 1;
+}
+
+message GetSyncStateRequest {
+  string device_id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message GetSyncStateResponse {
+  int64 server_revision = 1;
+}

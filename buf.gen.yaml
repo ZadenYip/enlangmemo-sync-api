@@ -1,0 +1,34 @@
+version: v2
+clean: true
+
+managed:
+  enabled: true
+  disable:
+    - file_option: go_package
+      module: buf.build/bufbuild/protovalidate
+  override:
+    - file_option: go_package_prefix
+      value: github.com/zadenyip/enlangmemo-sync-api/packages/go/gen
+
+plugins:
+  # Go protobuf message types: *.pb.go
+  - remote: buf.build/protocolbuffers/go
+    out: packages/go/gen
+    opt:
+      - paths=source_relative
+
+  # Go ConnectRPC client/server glue: *.connect.go
+  - remote: buf.build/connectrpc/go
+    out: packages/go/gen
+    opt:
+      - paths=source_relative
+
+  # TypeScript protobuf message types + service descriptors: *_pb.ts
+  - remote: buf.build/bufbuild/es
+    out: packages/ts/src/gen
+    opt:
+      - target=ts
+      - import_extension=js
+
+inputs:
+  - directory: proto
