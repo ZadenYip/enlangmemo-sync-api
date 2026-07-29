@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  buf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Buf checks
+        uses: bufbuild/buf-action@v1
+        with:
+          push: false
+
+  sdk:
+    runs-on: ubuntu-latest
+    needs: buf
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate SDKs
+        run: pnpm buf generate
+
+      - name: Check generated code is committed
+        run: git diff --exit-code
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: packages/go/go.mod
+          cache-dependency-path: packages/go/go.sum
+
+      - name: Test Go SDK
+        working-directory: packages/go
+        run: go test ./...
+
+      - name: Build TypeScript SDK
+        working-directory: packages/ts
+        run: pnpm build
+
+      - name: Publish TypeScript SDK
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: packages/ts
+        run: pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
