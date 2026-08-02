@@ -21,8 +21,9 @@ message HandshakeRequest {
 message HandshakeResponse {
   HandshakeStatus status = 1;
 
-  // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32），用于后续增量同步请求的身份验证
-  string session_id = 2 [(buf.validate.field).string.len = 32];
+  // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）。
+  // NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
+  optional string session_id = 2 [(buf.validate.field).string.len = 32];
 
   int64 server_sync_cursor_usn = 3 [(buf.validate.field).int64.gte = 0];
 }
@@ -41,16 +42,8 @@ enum HandshakeStatus {
   // 其他客户端正在进行同步
   HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT = 4;
 
-  // 客户端版本过旧
+  // 客户端 protocol_version 或 db_schema_version 低于服务端最低支持版本
   HANDSHAKE_STATUS_CLIENT_TOO_OLD = 5;
-  // 服务端版本过旧
+  // 客户端 protocol_version 高于服务端当前支持版本
   HANDSHAKE_STATUS_SERVER_TOO_OLD = 6;
-
-  // 未授权
-  HANDSHAKE_STATUS_UNAUTHORIZED = 7;
-
-  // 服务器繁忙
-  HANDSHAKE_STATUS_TOO_MANY_REQUESTS = 8;
-  // 客户端请求参数非法
-  HANDSHAKE_STATUS_INVALID_CLIENT_STATE = 9;
 }

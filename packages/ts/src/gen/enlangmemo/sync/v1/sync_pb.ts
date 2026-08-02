@@ -2,104 +2,28 @@
 // @generated from file enlangmemo/sync/v1/sync.proto (package enlangmemo.sync.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import { file_buf_validate_validate } from "../../../buf/validate/validate_pb.js";
-import type { Message } from "@bufbuild/protobuf";
+import type { GenFile, GenService } from "@bufbuild/protobuf/codegenv2";
+import { fileDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { HandshakeRequestSchema, HandshakeResponseSchema } from "./handshake_pb.js";
+import { file_enlangmemo_sync_v1_handshake } from "./handshake_pb.js";
 
 /**
  * Describes the file enlangmemo/sync/v1/sync.proto.
  */
 export const file_enlangmemo_sync_v1_sync: GenFile = /*@__PURE__*/
-  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvc3luYy5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIicKC1BpbmdSZXF1ZXN0EhgKB21lc3NhZ2UYASABKAlCB7pIBHICEAEiHwoMUGluZ1Jlc3BvbnNlEg8KB21lc3NhZ2UYASABKAkiMQoTR2V0U3luY1N0YXRlUmVxdWVzdBIaCglkZXZpY2VfaWQYASABKAlCB7pIBHICEAEiLwoUR2V0U3luY1N0YXRlUmVzcG9uc2USFwoPc2VydmVyX3JldmlzaW9uGAEgASgDMrsBCgtTeW5jU2VydmljZRJJCgRQaW5nEh8uZW5sYW5nbWVtby5zeW5jLnYxLlBpbmdSZXF1ZXN0GiAuZW5sYW5nbWVtby5zeW5jLnYxLlBpbmdSZXNwb25zZRJhCgxHZXRTeW5jU3RhdGUSJy5lbmxhbmdtZW1vLnN5bmMudjEuR2V0U3luY1N0YXRlUmVxdWVzdBooLmVubGFuZ21lbW8uc3luYy52MS5HZXRTeW5jU3RhdGVSZXNwb25zZULgAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUIJU3luY1Byb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate]);
-
-/**
- * @generated from message enlangmemo.sync.v1.PingRequest
- */
-export type PingRequest = Message<"enlangmemo.sync.v1.PingRequest"> & {
-  /**
-   * @generated from field: string message = 1;
-   */
-  message: string;
-};
-
-/**
- * Describes the message enlangmemo.sync.v1.PingRequest.
- * Use `create(PingRequestSchema)` to create a new message.
- */
-export const PingRequestSchema: GenMessage<PingRequest> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_sync, 0);
-
-/**
- * @generated from message enlangmemo.sync.v1.PingResponse
- */
-export type PingResponse = Message<"enlangmemo.sync.v1.PingResponse"> & {
-  /**
-   * @generated from field: string message = 1;
-   */
-  message: string;
-};
-
-/**
- * Describes the message enlangmemo.sync.v1.PingResponse.
- * Use `create(PingResponseSchema)` to create a new message.
- */
-export const PingResponseSchema: GenMessage<PingResponse> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_sync, 1);
-
-/**
- * @generated from message enlangmemo.sync.v1.GetSyncStateRequest
- */
-export type GetSyncStateRequest = Message<"enlangmemo.sync.v1.GetSyncStateRequest"> & {
-  /**
-   * @generated from field: string device_id = 1;
-   */
-  deviceId: string;
-};
-
-/**
- * Describes the message enlangmemo.sync.v1.GetSyncStateRequest.
- * Use `create(GetSyncStateRequestSchema)` to create a new message.
- */
-export const GetSyncStateRequestSchema: GenMessage<GetSyncStateRequest> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_sync, 2);
-
-/**
- * @generated from message enlangmemo.sync.v1.GetSyncStateResponse
- */
-export type GetSyncStateResponse = Message<"enlangmemo.sync.v1.GetSyncStateResponse"> & {
-  /**
-   * @generated from field: int64 server_revision = 1;
-   */
-  serverRevision: bigint;
-};
-
-/**
- * Describes the message enlangmemo.sync.v1.GetSyncStateResponse.
- * Use `create(GetSyncStateResponseSchema)` to create a new message.
- */
-export const GetSyncStateResponseSchema: GenMessage<GetSyncStateResponse> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_sync, 3);
+  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvc3luYy5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxMmcKC1N5bmNTZXJ2aWNlElgKCUhhbmRzaGFrZRIkLmVubGFuZ21lbW8uc3luYy52MS5IYW5kc2hha2VSZXF1ZXN0GiUuZW5sYW5nbWVtby5zeW5jLnYxLkhhbmRzaGFrZVJlc3BvbnNlQuABChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQglTeW5jUHJvdG9QAVpRZ2l0aHViLmNvbS96YWRlbnlpcC9lbmxhbmdtZW1vLXN5bmMtYXBpL3BhY2thZ2VzL2dvL2dlbi9lbmxhbmdtZW1vL3N5bmMvdjE7c3luY3YxogIDRVNYqgISRW5sYW5nbWVtby5TeW5jLlYxygISRW5sYW5nbWVtb1xTeW5jXFYx4gIeRW5sYW5nbWVtb1xTeW5jXFYxXEdQQk1ldGFkYXRh6gIURW5sYW5nbWVtbzo6U3luYzo6VjFiBnByb3RvMw", [file_enlangmemo_sync_v1_handshake]);
 
 /**
  * @generated from service enlangmemo.sync.v1.SyncService
  */
 export const SyncService: GenService<{
   /**
-   * @generated from rpc enlangmemo.sync.v1.SyncService.Ping
+   * @generated from rpc enlangmemo.sync.v1.SyncService.Handshake
    */
-  ping: {
+  handshake: {
     methodKind: "unary";
-    input: typeof PingRequestSchema;
-    output: typeof PingResponseSchema;
-  },
-  /**
-   * @generated from rpc enlangmemo.sync.v1.SyncService.GetSyncState
-   */
-  getSyncState: {
-    methodKind: "unary";
-    input: typeof GetSyncStateRequestSchema;
-    output: typeof GetSyncStateResponseSchema;
+    input: typeof HandshakeRequestSchema;
+    output: typeof HandshakeResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_enlangmemo_sync_v1_sync, 0);

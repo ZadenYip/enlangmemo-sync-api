@@ -33,17 +33,13 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// SyncServicePingProcedure is the fully-qualified name of the SyncService's Ping RPC.
-	SyncServicePingProcedure = "/enlangmemo.sync.v1.SyncService/Ping"
-	// SyncServiceGetSyncStateProcedure is the fully-qualified name of the SyncService's GetSyncState
-	// RPC.
-	SyncServiceGetSyncStateProcedure = "/enlangmemo.sync.v1.SyncService/GetSyncState"
+	// SyncServiceHandshakeProcedure is the fully-qualified name of the SyncService's Handshake RPC.
+	SyncServiceHandshakeProcedure = "/enlangmemo.sync.v1.SyncService/Handshake"
 )
 
 // SyncServiceClient is a client for the enlangmemo.sync.v1.SyncService service.
 type SyncServiceClient interface {
-	Ping(context.Context, *connect.Request[v1.PingRequest]) (*connect.Response[v1.PingResponse], error)
-	GetSyncState(context.Context, *connect.Request[v1.GetSyncStateRequest]) (*connect.Response[v1.GetSyncStateResponse], error)
+	Handshake(context.Context, *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error)
 }
 
 // NewSyncServiceClient constructs a client for the enlangmemo.sync.v1.SyncService service. By
@@ -57,16 +53,10 @@ func NewSyncServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 	baseURL = strings.TrimRight(baseURL, "/")
 	syncServiceMethods := v1.File_enlangmemo_sync_v1_sync_proto.Services().ByName("SyncService").Methods()
 	return &syncServiceClient{
-		ping: connect.NewClient[v1.PingRequest, v1.PingResponse](
+		handshake: connect.NewClient[v1.HandshakeRequest, v1.HandshakeResponse](
 			httpClient,
-			baseURL+SyncServicePingProcedure,
-			connect.WithSchema(syncServiceMethods.ByName("Ping")),
-			connect.WithClientOptions(opts...),
-		),
-		getSyncState: connect.NewClient[v1.GetSyncStateRequest, v1.GetSyncStateResponse](
-			httpClient,
-			baseURL+SyncServiceGetSyncStateProcedure,
-			connect.WithSchema(syncServiceMethods.ByName("GetSyncState")),
+			baseURL+SyncServiceHandshakeProcedure,
+			connect.WithSchema(syncServiceMethods.ByName("Handshake")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -74,24 +64,17 @@ func NewSyncServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 
 // syncServiceClient implements SyncServiceClient.
 type syncServiceClient struct {
-	ping         *connect.Client[v1.PingRequest, v1.PingResponse]
-	getSyncState *connect.Client[v1.GetSyncStateRequest, v1.GetSyncStateResponse]
+	handshake *connect.Client[v1.HandshakeRequest, v1.HandshakeResponse]
 }
 
-// Ping calls enlangmemo.sync.v1.SyncService.Ping.
-func (c *syncServiceClient) Ping(ctx context.Context, req *connect.Request[v1.PingRequest]) (*connect.Response[v1.PingResponse], error) {
-	return c.ping.CallUnary(ctx, req)
-}
-
-// GetSyncState calls enlangmemo.sync.v1.SyncService.GetSyncState.
-func (c *syncServiceClient) GetSyncState(ctx context.Context, req *connect.Request[v1.GetSyncStateRequest]) (*connect.Response[v1.GetSyncStateResponse], error) {
-	return c.getSyncState.CallUnary(ctx, req)
+// Handshake calls enlangmemo.sync.v1.SyncService.Handshake.
+func (c *syncServiceClient) Handshake(ctx context.Context, req *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error) {
+	return c.handshake.CallUnary(ctx, req)
 }
 
 // SyncServiceHandler is an implementation of the enlangmemo.sync.v1.SyncService service.
 type SyncServiceHandler interface {
-	Ping(context.Context, *connect.Request[v1.PingRequest]) (*connect.Response[v1.PingResponse], error)
-	GetSyncState(context.Context, *connect.Request[v1.GetSyncStateRequest]) (*connect.Response[v1.GetSyncStateResponse], error)
+	Handshake(context.Context, *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error)
 }
 
 // NewSyncServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -101,24 +84,16 @@ type SyncServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	syncServiceMethods := v1.File_enlangmemo_sync_v1_sync_proto.Services().ByName("SyncService").Methods()
-	syncServicePingHandler := connect.NewUnaryHandler(
-		SyncServicePingProcedure,
-		svc.Ping,
-		connect.WithSchema(syncServiceMethods.ByName("Ping")),
-		connect.WithHandlerOptions(opts...),
-	)
-	syncServiceGetSyncStateHandler := connect.NewUnaryHandler(
-		SyncServiceGetSyncStateProcedure,
-		svc.GetSyncState,
-		connect.WithSchema(syncServiceMethods.ByName("GetSyncState")),
+	syncServiceHandshakeHandler := connect.NewUnaryHandler(
+		SyncServiceHandshakeProcedure,
+		svc.Handshake,
+		connect.WithSchema(syncServiceMethods.ByName("Handshake")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/enlangmemo.sync.v1.SyncService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case SyncServicePingProcedure:
-			syncServicePingHandler.ServeHTTP(w, r)
-		case SyncServiceGetSyncStateProcedure:
-			syncServiceGetSyncStateHandler.ServeHTTP(w, r)
+		case SyncServiceHandshakeProcedure:
+			syncServiceHandshakeHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -128,10 +103,6 @@ func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption
 // UnimplementedSyncServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedSyncServiceHandler struct{}
 
-func (UnimplementedSyncServiceHandler) Ping(context.Context, *connect.Request[v1.PingRequest]) (*connect.Response[v1.PingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.Ping is not implemented"))
-}
-
-func (UnimplementedSyncServiceHandler) GetSyncState(context.Context, *connect.Request[v1.GetSyncStateRequest]) (*connect.Response[v1.GetSyncStateResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.GetSyncState is not implemented"))
+func (UnimplementedSyncServiceHandler) Handshake(context.Context, *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.Handshake is not implemented"))
 }

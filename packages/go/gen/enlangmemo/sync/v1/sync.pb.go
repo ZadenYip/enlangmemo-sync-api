@@ -7,11 +7,9 @@
 package syncv1
 
 import (
-	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
-	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -22,226 +20,24 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type PingRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *PingRequest) Reset() {
-	*x = PingRequest{}
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PingRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PingRequest) ProtoMessage() {}
-
-func (x *PingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PingRequest.ProtoReflect.Descriptor instead.
-func (*PingRequest) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_sync_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *PingRequest) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-type PingResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *PingResponse) Reset() {
-	*x = PingResponse{}
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PingResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PingResponse) ProtoMessage() {}
-
-func (x *PingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PingResponse.ProtoReflect.Descriptor instead.
-func (*PingResponse) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_sync_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *PingResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-type GetSyncStateRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeviceId      string                 `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetSyncStateRequest) Reset() {
-	*x = GetSyncStateRequest{}
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetSyncStateRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetSyncStateRequest) ProtoMessage() {}
-
-func (x *GetSyncStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetSyncStateRequest.ProtoReflect.Descriptor instead.
-func (*GetSyncStateRequest) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_sync_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *GetSyncStateRequest) GetDeviceId() string {
-	if x != nil {
-		return x.DeviceId
-	}
-	return ""
-}
-
-type GetSyncStateResponse struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	ServerRevision int64                  `protobuf:"varint,1,opt,name=server_revision,json=serverRevision,proto3" json:"server_revision,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *GetSyncStateResponse) Reset() {
-	*x = GetSyncStateResponse{}
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetSyncStateResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetSyncStateResponse) ProtoMessage() {}
-
-func (x *GetSyncStateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_sync_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetSyncStateResponse.ProtoReflect.Descriptor instead.
-func (*GetSyncStateResponse) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_sync_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *GetSyncStateResponse) GetServerRevision() int64 {
-	if x != nil {
-		return x.ServerRevision
-	}
-	return 0
-}
-
 var File_enlangmemo_sync_v1_sync_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_sync_proto_rawDesc = "" +
 	"\n" +
-	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"0\n" +
-	"\vPingRequest\x12!\n" +
-	"\amessage\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\amessage\"(\n" +
-	"\fPingResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\";\n" +
-	"\x13GetSyncStateRequest\x12$\n" +
-	"\tdevice_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\bdeviceId\"?\n" +
-	"\x14GetSyncStateResponse\x12'\n" +
-	"\x0fserver_revision\x18\x01 \x01(\x03R\x0eserverRevision2\xbb\x01\n" +
-	"\vSyncService\x12I\n" +
-	"\x04Ping\x12\x1f.enlangmemo.sync.v1.PingRequest\x1a .enlangmemo.sync.v1.PingResponse\x12a\n" +
-	"\fGetSyncState\x12'.enlangmemo.sync.v1.GetSyncStateRequest\x1a(.enlangmemo.sync.v1.GetSyncStateResponseB\xe0\x01\n" +
+	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\"enlangmemo/sync/v1/handshake.proto2g\n" +
+	"\vSyncService\x12X\n" +
+	"\tHandshake\x12$.enlangmemo.sync.v1.HandshakeRequest\x1a%.enlangmemo.sync.v1.HandshakeResponseB\xe0\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\tSyncProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
-var (
-	file_enlangmemo_sync_v1_sync_proto_rawDescOnce sync.Once
-	file_enlangmemo_sync_v1_sync_proto_rawDescData []byte
-)
-
-func file_enlangmemo_sync_v1_sync_proto_rawDescGZIP() []byte {
-	file_enlangmemo_sync_v1_sync_proto_rawDescOnce.Do(func() {
-		file_enlangmemo_sync_v1_sync_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_enlangmemo_sync_v1_sync_proto_rawDesc), len(file_enlangmemo_sync_v1_sync_proto_rawDesc)))
-	})
-	return file_enlangmemo_sync_v1_sync_proto_rawDescData
-}
-
-var file_enlangmemo_sync_v1_sync_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_enlangmemo_sync_v1_sync_proto_goTypes = []any{
-	(*PingRequest)(nil),          // 0: enlangmemo.sync.v1.PingRequest
-	(*PingResponse)(nil),         // 1: enlangmemo.sync.v1.PingResponse
-	(*GetSyncStateRequest)(nil),  // 2: enlangmemo.sync.v1.GetSyncStateRequest
-	(*GetSyncStateResponse)(nil), // 3: enlangmemo.sync.v1.GetSyncStateResponse
+	(*HandshakeRequest)(nil),  // 0: enlangmemo.sync.v1.HandshakeRequest
+	(*HandshakeResponse)(nil), // 1: enlangmemo.sync.v1.HandshakeResponse
 }
 var file_enlangmemo_sync_v1_sync_proto_depIdxs = []int32{
-	0, // 0: enlangmemo.sync.v1.SyncService.Ping:input_type -> enlangmemo.sync.v1.PingRequest
-	2, // 1: enlangmemo.sync.v1.SyncService.GetSyncState:input_type -> enlangmemo.sync.v1.GetSyncStateRequest
-	1, // 2: enlangmemo.sync.v1.SyncService.Ping:output_type -> enlangmemo.sync.v1.PingResponse
-	3, // 3: enlangmemo.sync.v1.SyncService.GetSyncState:output_type -> enlangmemo.sync.v1.GetSyncStateResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	0, // 0: enlangmemo.sync.v1.SyncService.Handshake:input_type -> enlangmemo.sync.v1.HandshakeRequest
+	1, // 1: enlangmemo.sync.v1.SyncService.Handshake:output_type -> enlangmemo.sync.v1.HandshakeResponse
+	1, // [1:2] is the sub-list for method output_type
+	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -252,19 +48,19 @@ func file_enlangmemo_sync_v1_sync_proto_init() {
 	if File_enlangmemo_sync_v1_sync_proto != nil {
 		return
 	}
+	file_enlangmemo_sync_v1_handshake_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_enlangmemo_sync_v1_sync_proto_rawDesc), len(file_enlangmemo_sync_v1_sync_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_enlangmemo_sync_v1_sync_proto_goTypes,
 		DependencyIndexes: file_enlangmemo_sync_v1_sync_proto_depIdxs,
-		MessageInfos:      file_enlangmemo_sync_v1_sync_proto_msgTypes,
 	}.Build()
 	File_enlangmemo_sync_v1_sync_proto = out.File
 	file_enlangmemo_sync_v1_sync_proto_goTypes = nil
