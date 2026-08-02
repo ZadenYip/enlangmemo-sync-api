@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package enlangmemo.sync.v1;
+
+import "buf/validate/validate.proto";
+
+message HandshakeRequest {
+  string device_id = 1 [(buf.validate.field).string.len = 36]; // 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
+  string device_name = 2 [(buf.validate.field).string.max_len = 32]; // 设备展示名
+  string collection_id = 3 [(buf.validate.field).string.len = 36]; // 集合 UUIDv7
+
+  // 客户端 collection.sync_cursor_usn，已同步到的 USN 上界 / 下次增量 Pull 起点
+  int64 client_sync_cursor_usn = 4 [(buf.validate.field).int64.gte = 0];
+
+  int32 protocol_version = 5; // 同步协议版本
+  int32 db_schema_version = 6; // 客户端本地 SQLite schema 版本
+  // collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
+  int64 collection_schema_updated_at = 7;
+}
+
+message HandshakeResponse {
+  HandshakeStatus status = 1;
+
+  // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32），用于后续增量同步请求的身份验证
+  string session_id = 2 [(buf.validate.field).string.len = 32];
+
+  int64 server_sync_cursor_usn = 3 [(buf.validate.field).int64.gte = 0];
+}
+
+enum HandshakeStatus {
+  HANDSHAKE_STATUS_UNSPECIFIED = 0;
+
+  // client_sync_cursor_usn == server_sync_cursor_usn
+  HANDSHAKE_STATUS_NO_REMOTE_CHANGES = 1;
+  // client_sync_cursor_usn < server_sync_cursor_usn
+  HANDSHAKE_STATUS_NEED_PULL = 2;
+
+  // 普通增量同步不安全，需要用户选择覆盖方向
+  HANDSHAKE_STATUS_OVERWRITE_REQUIRED = 3;
+
+  // 其他客户端正在进行同步
+  HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT = 4;
+
+  // 客户端版本过旧
+  HANDSHAKE_STATUS_CLIENT_TOO_OLD = 5;
+  // 服务端版本过旧
+  HANDSHAKE_STATUS_SERVER_TOO_OLD = 6;
+
+  // 未授权
+  HANDSHAKE_STATUS_UNAUTHORIZED = 7;
+
+  // 服务器繁忙
+  HANDSHAKE_STATUS_TOO_MANY_REQUESTS = 8;
+  // 客户端请求参数非法
+  HANDSHAKE_STATUS_INVALID_CLIENT_STATE = 9;
+}
