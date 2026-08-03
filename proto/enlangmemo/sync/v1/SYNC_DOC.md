@@ -1,4 +1,4 @@
-# 技术选型
+﻿# 技术选型
 
 使用 ConnectRPC（一个兼容 gRPC 基于 Protobuf 的 RPC 协议）作为传输基础
 
@@ -29,7 +29,7 @@ unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN
 1. 双方握手
 2. 根据握手状态客户端决定下一步：
   - NO_REMOTE_CHANGES：远端无新增。客户端若有本地 usn=-1，则 PUSH；否则结束。
-  - NEED_PULL：远端有新增。客户端先 Pull；如果本地也有 usn=-1，则 Pull 后进行对象级合并，再 Push。
+  - NEED_PULL：远端有新增。客户端先 Pull；Pull 完成后若本地仍有 usn=-1，则 PUSH，否则结束。
   - OVERWRITE_REQUIRED：普通增量同步不安全，让用户选择覆盖方向，具体覆盖实现见“TODO覆盖同步流程”。
 3. 开始批量传输数据
 4. 数据传输完毕挥手
@@ -37,14 +37,14 @@ unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN
 ## 全局 Header
 
 注意所有的 ConnectRPC 操作都带上了全局 header
-Authorization: `Bearer ${accessToken}`
+ `Authorization: Bearer ${accessToken}`
 
 
 ## 握手
 
 ### 正常握手流程
 
-(一个状态图，在飞书上)
+(一个时序图，在飞书上)
 
 ### HandshakeRequest
 HandshakeRequest 是发起握手该携带的数据
@@ -187,9 +187,100 @@ collection_schema_updated_at 不一致，例如模板、字段、牌组结构冲
 
 ## 数据同步
 
-（状态机图在飞书上）
+### 状态机图
 
-### PULLING
+（这里是一个客户端状态机图，在飞书上）
 
+### 注意事项
+
+UUID 选择 string 类型，要求是使用连字符分隔的 36 个字符的格式。之所以不用 bytes 类型是因为可能存在大端序/小端序问题，避免不同语言不同库下表现不一致。
+
+### 数据 Payload 设计
+
+enlangmemo/sync/v1/entities.proto 定义同步数据的 Payload 是咋样的，除了不带 usn 基本上与 https://dbdiagram.io/d/EnLangMemo-69aafcb1a3f0aa31e1146507 表结构一致。
+
+collection 的 payload 还少了下面这两个字段
+```DBDiagram
+// 全局同步状态
+last_sync_time integer [not null, default: 0]
+sync_cursor_usn integer [not null, default: 0]
+```
+
+last_sync_time 是上次同步的时间，而 sync_cursor_usn 是上次同步的 usn 上界。这两个应该是由客户端每次进行同步操作的时候更新的，而不是直接用数据覆盖。
+
+
+### PULLING 状态
+
+PULLING 表示客户端正在从服务端拉取当前同步会话范围内的远端增量数据。
+
+进入 PULLING 的前提是 HandshakeResponse 返回 `NEED_PULL`，客户端持有本次同步会话的 `session_id`，并且服务端 SyncLock 中保存了本轮 Pull 的起点 `client_sync_cursor_usn_at_handshake` 与远端上界 `server_sync_cursor_usn_at_handshake`。
+
+Pull 的同步颗粒度是 batch。一个 batch 对应一个服务端 usn，也对应客户端本地的一次 SQLite 事务。客户端不指定 `batch_size`，服务端按照 usn 顺序返回每个 usn 下的全部变更。
+
+#### PullRequest
+
+```proto
+message PullRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+
+  // 当前请求的 batch 序号，从 1 开始
+  // 服务端校验 batch_seq == SyncLock.expected_batch_seq
+  int32 batch_seq = 2 [(buf.validate.field).int32.gte = 1];
+}
+```
+
+`batch_seq` 只用于保证请求顺序，不能用来表达客户端想拉哪个 usn。服务端必须根据 SyncLock 中的 session 状态决定当前 batch 对应的 usn。
+
+#### PullResponse
+
+```proto
+message PullResponse {
+  // 当前返回的 batch 序号，等于 request.batch_seq
+  int32 batch_seq = 1;
+
+  // 本 batch 对应的服务端 usn
+  // 一个 batch 包含一个 usn 下的全部变更
+  int64 usn = 2 [(buf.validate.field).int64.gte = 0];
+
+  // 这批数据的全部变更
+  repeated SyncChange changes = 3;
+
+  // 是否为本轮 Pull 的最后一个 batch。
+  bool last_batch = 4;
+}
+```
+
+`changes` 中每条 `SyncChange` 表示一个实体变更。这里的实体指的是卡片模板、卡片、复习记录等等，详细节见 SyncChange 的定义
+
+`entity_type = UPSERT` 时必须携带 `payload`
+
+`entity_type = DELETE` 时不携带 payload，客户端根据 `entity_id` 和 `entity_type` 删除对应本地数据库数据
+
+#### 客户端处理流程
+
+1. 客户端进入 PULLING 后，从 `batch_seq = 1` 开始发送 PullRequest
+2. 客户端收到 PullResponse 后，校验 `response.batch_seq == request.batch_seq`
+3. 客户端开启一个本地 SQLite 事务，按服务端返回顺序应用本 batch 的全部 `changes`
+4. 同一个事务内，`UPSERT` 实体的 `usn` 写为 `response.usn`；`DELETE` 按删除语义处理；全部变更应用成功后，将 `collection.sync_cursor_usn` 推进到 `response.usn + 1`
+5. 事务提交后，如果 `last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PullRequest。
+6. 如果 `last_batch = true`，本轮 Pull 完成。
+客户端此时的 `collection.sync_cursor_usn` 应等于本次会话的 `server_sync_cursor_usn`。
+7. Pull 完成后，如果本地仍存在 `usn = -1` 的未同步数据，客户端进入 PUSHING；否则进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
+
+#### 服务端处理规则
+
+1. 服务端收到 PullRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否仍在 PULLING 状态。
+2. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`；不一致时返回 ConnectRPC `FailedPrecondition`。
+3. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，按 usn 升序选择下一个待发送的 usn。
+4. 一个 usn 对应一个 batch；服务端准备该 usn 下的全部变更，并设置 `last_batch` 表示该 batch 是否为本轮 Pull 的最后一个 usn。
+5. 服务端先将 `SyncLock.expected_batch_seq` 递增 1，确认更新成功后，再返回 PullResponse。
+6. 如果当前 batch 是本轮 Pull 的最后一个 batch，服务端将 SyncLock 状态从 PULLING 改为 AWAITING_CLIENT_ACTION 状态（服务器特有的）。
+
+#### 中断与超时
+
+Pull 不额外设计 ACK。客户端只有在本地事务提交成功后，才继续请求下一个 batch。
+
+如果 PullRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端不继续猜测当前 batch 状态，直接视为本次同步结束。
 
 ### PUSHING
+

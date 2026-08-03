@@ -38,8 +38,6 @@ const (
 	HandshakeStatus_HANDSHAKE_STATUS_CLIENT_TOO_OLD HandshakeStatus = 5
 	// 客户端 protocol_version 高于服务端当前支持版本
 	HandshakeStatus_HANDSHAKE_STATUS_SERVER_TOO_OLD HandshakeStatus = 6
-	// 请求字段格式合法，但同步游标、集合元数据或 session 恢复状态非法
-	HandshakeStatus_HANDSHAKE_STATUS_INVALID_CLIENT_STATE HandshakeStatus = 7
 )
 
 // Enum value maps for HandshakeStatus.
@@ -52,7 +50,6 @@ var (
 		4: "HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT",
 		5: "HANDSHAKE_STATUS_CLIENT_TOO_OLD",
 		6: "HANDSHAKE_STATUS_SERVER_TOO_OLD",
-		7: "HANDSHAKE_STATUS_INVALID_CLIENT_STATE",
 	}
 	HandshakeStatus_value = map[string]int32{
 		"HANDSHAKE_STATUS_UNSPECIFIED":            0,
@@ -62,7 +59,6 @@ var (
 		"HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT": 4,
 		"HANDSHAKE_STATUS_CLIENT_TOO_OLD":         5,
 		"HANDSHAKE_STATUS_SERVER_TOO_OLD":         6,
-		"HANDSHAKE_STATUS_INVALID_CLIENT_STATE":   7,
 	}
 )
 
@@ -268,7 +264,7 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01 H\x00R\tsessionId\x88\x01\x01\x12<\n" +
 	"\x16server_sync_cursor_usn\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13serverSyncCursorUsnB\r\n" +
-	"\v_session_id*\xc6\x02\n" +
+	"\v_session_id*\x9b\x02\n" +
 	"\x0fHandshakeStatus\x12 \n" +
 	"\x1cHANDSHAKE_STATUS_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"HANDSHAKE_STATUS_NO_REMOTE_CHANGES\x10\x01\x12\x1e\n" +
@@ -276,8 +272,7 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"#HANDSHAKE_STATUS_OVERWRITE_REQUIRED\x10\x03\x12+\n" +
 	"'HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT\x10\x04\x12#\n" +
 	"\x1fHANDSHAKE_STATUS_CLIENT_TOO_OLD\x10\x05\x12#\n" +
-	"\x1fHANDSHAKE_STATUS_SERVER_TOO_OLD\x10\x06\x12)\n" +
-	"%HANDSHAKE_STATUS_INVALID_CLIENT_STATE\x10\aB\xe5\x01\n" +
+	"\x1fHANDSHAKE_STATUS_SERVER_TOO_OLD\x10\x06B\xe5\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\x0eHandshakeProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var (
