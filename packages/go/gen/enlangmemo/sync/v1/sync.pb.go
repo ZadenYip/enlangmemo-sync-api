@@ -24,20 +24,30 @@ var File_enlangmemo_sync_v1_sync_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_sync_proto_rawDesc = "" +
 	"\n" +
-	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\"enlangmemo/sync/v1/handshake.proto2g\n" +
+	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\"enlangmemo/sync/v1/handshake.proto\x1a\x1denlangmemo/sync/v1/pull.proto\x1a\x1denlangmemo/sync/v1/push.proto2\xfd\x01\n" +
 	"\vSyncService\x12X\n" +
-	"\tHandshake\x12$.enlangmemo.sync.v1.HandshakeRequest\x1a%.enlangmemo.sync.v1.HandshakeResponseB\xe0\x01\n" +
+	"\tHandshake\x12$.enlangmemo.sync.v1.HandshakeRequest\x1a%.enlangmemo.sync.v1.HandshakeResponse\x12I\n" +
+	"\x04Pull\x12\x1f.enlangmemo.sync.v1.PullRequest\x1a .enlangmemo.sync.v1.PullResponse\x12I\n" +
+	"\x04Push\x12\x1f.enlangmemo.sync.v1.PushRequest\x1a .enlangmemo.sync.v1.PushResponseB\xe0\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\tSyncProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var file_enlangmemo_sync_v1_sync_proto_goTypes = []any{
 	(*HandshakeRequest)(nil),  // 0: enlangmemo.sync.v1.HandshakeRequest
-	(*HandshakeResponse)(nil), // 1: enlangmemo.sync.v1.HandshakeResponse
+	(*PullRequest)(nil),       // 1: enlangmemo.sync.v1.PullRequest
+	(*PushRequest)(nil),       // 2: enlangmemo.sync.v1.PushRequest
+	(*HandshakeResponse)(nil), // 3: enlangmemo.sync.v1.HandshakeResponse
+	(*PullResponse)(nil),      // 4: enlangmemo.sync.v1.PullResponse
+	(*PushResponse)(nil),      // 5: enlangmemo.sync.v1.PushResponse
 }
 var file_enlangmemo_sync_v1_sync_proto_depIdxs = []int32{
 	0, // 0: enlangmemo.sync.v1.SyncService.Handshake:input_type -> enlangmemo.sync.v1.HandshakeRequest
-	1, // 1: enlangmemo.sync.v1.SyncService.Handshake:output_type -> enlangmemo.sync.v1.HandshakeResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	1, // 1: enlangmemo.sync.v1.SyncService.Pull:input_type -> enlangmemo.sync.v1.PullRequest
+	2, // 2: enlangmemo.sync.v1.SyncService.Push:input_type -> enlangmemo.sync.v1.PushRequest
+	3, // 3: enlangmemo.sync.v1.SyncService.Handshake:output_type -> enlangmemo.sync.v1.HandshakeResponse
+	4, // 4: enlangmemo.sync.v1.SyncService.Pull:output_type -> enlangmemo.sync.v1.PullResponse
+	5, // 5: enlangmemo.sync.v1.SyncService.Push:output_type -> enlangmemo.sync.v1.PushResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -49,6 +59,8 @@ func file_enlangmemo_sync_v1_sync_proto_init() {
 		return
 	}
 	file_enlangmemo_sync_v1_handshake_proto_init()
+	file_enlangmemo_sync_v1_pull_proto_init()
+	file_enlangmemo_sync_v1_push_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

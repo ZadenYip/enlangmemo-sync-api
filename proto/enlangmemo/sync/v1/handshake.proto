@@ -5,15 +5,20 @@ package enlangmemo.sync.v1;
 import "buf/validate/validate.proto";
 
 message HandshakeRequest {
-  string device_id = 1 [(buf.validate.field).string.len = 36]; // 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
-  string device_name = 2 [(buf.validate.field).string.max_len = 32]; // 设备展示名
-  string collection_id = 3 [(buf.validate.field).string.len = 36]; // 集合 UUIDv7
+  // 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
+  string device_id = 1 [(buf.validate.field).string.len = 36];
+  // 设备展示名
+  string device_name = 2 [(buf.validate.field).string.max_len = 32];
+  // 集合 UUIDv7
+  string collection_id = 3 [(buf.validate.field).string.len = 36];
 
   // 客户端 collection.sync_cursor_usn，已同步到的 USN 上界 / 下次增量 Pull 起点
   int64 client_sync_cursor_usn = 4 [(buf.validate.field).int64.gte = 0];
 
-  int32 protocol_version = 5; // 同步协议版本
-  int32 db_schema_version = 6; // 客户端本地 SQLite schema 版本
+  // 同步协议版本
+  int32 protocol_version = 5;
+  // 客户端本地 SQLite schema 版本
+  int32 db_schema_version = 6;
   // collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
   int64 collection_schema_updated_at = 7;
 }
@@ -21,7 +26,7 @@ message HandshakeRequest {
 message HandshakeResponse {
   HandshakeStatus status = 1;
 
-  // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）。
+  // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
   // NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
   optional string session_id = 2 [(buf.validate.field).string.len = 32];
 

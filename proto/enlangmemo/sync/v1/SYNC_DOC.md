@@ -51,15 +51,20 @@ HandshakeRequest 是发起握手该携带的数据
 
 ```proto
 message HandshakeRequest {
-  string device_id = 1 [(buf.validate.field).string.len = 36]; // 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
-  string device_name = 2 [(buf.validate.field).string.max_len = 32]; // 设备展示名
-  string collection_id = 3 [(buf.validate.field).string.len = 36]; // 集合 UUIDv7
+  // 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
+  string device_id = 1 [(buf.validate.field).string.len = 36];
+  // 设备展示名
+  string device_name = 2 [(buf.validate.field).string.max_len = 32];
+  // 集合 UUIDv7
+  string collection_id = 3 [(buf.validate.field).string.len = 36];
 
   // 客户端 collection.sync_cursor_usn，已同步到的 USN 上界 / 下次增量 Pull 起点
   int64 client_sync_cursor_usn = 4 [(buf.validate.field).int64.gte = 0];
 
-  int32 protocol_version = 5; // 同步协议版本
-  int32 db_schema_version = 6; // 客户端本地 SQLite schema 版本
+  // 同步协议版本
+  int32 protocol_version = 5;
+  // 客户端本地 SQLite schema 版本
+  int32 db_schema_version = 6;
   // collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
   int64 collection_schema_updated_at = 7;
 }
@@ -94,7 +99,7 @@ HandshakeResponse 表示此次握手结果。
 message HandshakeResponse {
   HandshakeStatus status = 1;
 
-  // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）。
+  // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
   // NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
   optional string session_id = 2 [(buf.validate.field).string.len = 32];
 
@@ -206,7 +211,7 @@ last_sync_time integer [not null, default: 0]
 sync_cursor_usn integer [not null, default: 0]
 ```
 
-last_sync_time 是上次同步的时间，而 sync_cursor_usn 是上次同步的 usn 上界。这两个应该是由客户端每次进行同步操作的时候更新的，而不是直接用数据覆盖。
+`last_sync_time` 是客户端本地辅助字段，表示该客户端上一次完整同步成功完成的时间。它不参与同步一致性判断，不进入 CollectionPayload，也不由服务端分配；客户端只在 FinishSync 成功返回后写入本机当前时间。`sync_cursor_usn` 是客户端已同步到的 usn 上界 / 下次增量 Pull 的起点，会在 Pull / Push batch 本地事务成功后推进。
 
 
 ### PULLING 状态
@@ -245,16 +250,16 @@ message PullResponse {
   // 这批数据的全部变更
   repeated SyncChange changes = 3;
 
-  // 是否为本轮 Pull 的最后一个 batch。
+  // 是否为本轮 Pull 的最后一个 batch
   bool last_batch = 4;
 }
 ```
 
 `changes` 中每条 `SyncChange` 表示一个实体变更。这里的实体指的是卡片模板、卡片、复习记录等等，详细节见 SyncChange 的定义
 
-`entity_type = UPSERT` 时必须携带 `payload`
+`ChangeOp = UPSERT` 时必须携带 `payload`
 
-`entity_type = DELETE` 时不携带 payload，客户端根据 `entity_id` 和 `entity_type` 删除对应本地数据库数据
+`ChangeOp = DELETE` 时不携带 payload，客户端根据 `entity_id` 和 `entity_type` 删除对应本地数据库数据
 
 #### 客户端处理流程
 
@@ -283,4 +288,87 @@ Pull 不额外设计 ACK。客户端只有在本地事务提交成功后，才�
 如果 PullRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端不继续猜测当前 batch 状态，直接视为本次同步结束。
 
 ### PUSHING
+
+PUSHING 表示客户端正在把本地 `usn = -1` 的未同步变更上传到服务端。
+
+进入 PUSHING 有两种情况：
+
+1. HandshakeResponse 返回 `NO_REMOTE_CHANGES` 后，服务端进入 AWAITING_CLIENT_ACTION；如果客户端本地存在 `usn = -1` 的未同步数据，则客户端发送第一个 PushRequest 进入 PUSHING。
+2. PULLING 完成后，客户端本地仍存在 `usn = -1` 的未同步数据；客户端向服务端发送第一个 PushRequest，服务端从 AWAITING_CLIENT_ACTION 切换到 PUSHING。
+
+Push 的同步颗粒度也是 batch。一个 Push batch 对应服务端一次数据库事务，服务端为该 batch 分配一个新的 usn，并将 batch 内所有变更写为同一个 usn。
+
+#### PushRequest
+
+```proto
+message PushRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+
+  // 当前请求的 batch 序号，从 1 开始
+  // 服务端校验 batch_seq == SyncLock.expected_batch_seq
+  int32 batch_seq = 2 [(buf.validate.field).int32.gte = 1];
+
+  // 客户端本地 usn = -1 的一批变更。
+  repeated SyncChange changes = 3 [(buf.validate.field).repeated.min_items = 1];
+
+  // 是否为本轮 Push 的最后一个 batch
+  bool last_batch = 4;
+}
+```
+
+PushRequest 不携带客户端本地的 `usn = -1`。`usn = -1` 只用于客户端本地标记待上传状态，不进入传输 payload。
+
+#### PushResponse
+
+```proto
+message PushResponse {
+  // 当前返回的 batch 序号，等于 request.batch_seq
+  int32 batch_seq = 1;
+
+  // 服务端为本 Push batch 分配的 usn
+  // 客户端用它更新本 batch 内已上传实体的 usn，并推进 collection.sync_cursor_usn = assigned_usn + 1。
+  // 如果本 batch 包含 CollectionPayload，collection 表自身的 usn 也写为 assigned_usn；assigned_usn 本身不是 sync_cursor_usn。
+  int64 assigned_usn = 2 [(buf.validate.field).int64.gte = 1];
+
+  // 是否为本轮同步的最后一个 batch
+  bool last_batch = 3;
+}
+```
+
+`assigned_usn` 是服务端为本 Push batch 分配的 usn。客户端收到 PushResponse 后，用它更新本 batch 内所有已上传实体的 `usn`，并将 `collection.sync_cursor_usn` 推进到 `assigned_usn + 1`。如果本 batch 包含 `CollectionPayload`，collection 表自身的 `usn` 也写为 `assigned_usn`。
+
+#### 客户端处理流程
+
+1. 客户端进入 PUSHING 后，从 `batch_seq = 1` 开始发送 PushRequest。
+2. 客户端从本地 `usn = -1` 的待上传数据中组装当前 batch，按实体依赖顺序放入 `changes`。
+3. 发送 PushRequest 后等待 PushResponse
+4. 收到 PushResponse 后，校验 `response.batch_seq == request.batch_seq`。
+5. 客户端开启一个本地 SQLite 事务，将本 batch 内已上传实体的 `usn` 更新为 `response.assigned_usn`，并将 `collection.sync_cursor_usn` 推进到 `response.assigned_usn + 1`。
+6. 事务提交后，如果 `response.last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PushRequest。
+7. 如果 `response.last_batch = true`，客户端进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
+
+#### 服务端处理规则
+
+1. 服务端收到 PushRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否处于允许 Push 的状态。
+2. 如果当前状态是 AWAITING_CLIENT_ACTION，并且 `request.batch_seq = 1`，服务端将 SyncLock 状态切换为 PUSHING。
+3. 如果当前状态是 PUSHING，服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`，不匹配时返回 ConnectRPC `FailedPrecondition`。
+4. 服务端校验：
+   - `changes` 非空
+   - 当 `ChangeOp = UPSERT` 时，确认 payload 与 `entity_type` 匹配
+   - 当 `ChangeOp = DELETE` 时，payload 为空。
+   - 校验失败返回 ConnectRPC `InvalidArgument`
+5. 服务端开启数据库事务，为当前 batch 分配一个新的 usn，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按删除语义处理。
+6. 服务端先将 `SyncLock.expected_batch_seq` 递增 1；如果 `request.last_batch = true`，同时将 SyncLock 状态改为 AWAITING_FINISH。
+7. 服务端确认数据库事务与 SyncLock 更新都成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
+
+#### 中断与超时
+
+Push 同样不额外设计 ACK。客户端只有在收到 PushResponse，并成功更新本地 `usn` 和 `collection.sync_cursor_usn` 后，才继续发送下一个 batch。
+
+`last_sync_time` 不在 Push batch 内更新。它表示一次完整同步成功完成的时间，应该在 FinishSync 成功返回后由客户端统一更新。
+
+如果 PushRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端直接视为本次同步结束。
+
+同步数据塞进数据库后，即使客户端没收到响应，也不会导致数据不一致。因为后续重新发起同步时，由于没收到响应本地的 usn 会落后服务端，会先 Pull 再 Push，保证数据一致。
+
 

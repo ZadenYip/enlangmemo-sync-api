@@ -16,7 +16,43 @@ enum EntityType {
   ENTITY_TYPE_DIC_NOTE_MAP = 8;
 }
 
-// CollectionPayload 承载集合元数据的 UPSERT 负载。
+// ChangeOp 表示同步实体的变更操作类型
+enum ChangeOp {
+  CHANGE_OP_UNSPECIFIED = 0;
+  CHANGE_OP_UPSERT = 1;
+  CHANGE_OP_DELETE = 2;
+}
+
+// SyncChange 表示一个同步实体变更。batch 的 usn 不在这里携带.
+message SyncChange {
+  // UUID
+  string entity_id = 1 [(buf.validate.field).string.len = 36];
+
+  // 实体类型
+  EntityType entity_type = 2;
+
+  // 变更操作类型
+  ChangeOp op = 3;
+
+  // op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
+  oneof payload {
+    // 这里是故意 Collection(16) 与 ReviewLog(10) 序号进行了调换
+    //
+    // protobuf 序号 16 需要 2 字节编码，0 ~ 15 只要 1 字节
+    // 把 16 给 Collection 比 ReviewLog 更省，
+    // 因为 ReviewLog 可能会有很多条，Collection 只有一条。
+    CollectionPayload collection = 16;
+    DeckPayload deck = 11;
+    NoteTypePayload note_type = 12;
+    ProcessingNotePayload processing_note = 13;
+    NotePayload note = 14;
+    CardPayload card = 15;
+    ReviewLogPayload review_log = 10;
+    DicNoteMapPayload dic_note_map = 17;
+  }
+}
+
+// CollectionPayload 承载集合元数据的 UPSERT 负载
 message CollectionPayload {
   int32 sqlite_schema_version = 1 [(buf.validate.field).int32.gte = 0];
   int64 created_at = 2 [(buf.validate.field).int64.gte = 0];
@@ -37,21 +73,21 @@ message DeckPayload {
   int32 learned_today = 6 [(buf.validate.field).int32.gte = 0];
   int32 reviewed_today = 7 [(buf.validate.field).int32.gte = 0];
 
-  // SQLite decks.config 的 JSON 字符串。
+  // SQLite decks.config 的 JSON 字符串
   string config_json = 8 [(buf.validate.field).string.min_len = 1];
 }
 
-// NoteTypePayload 承载笔记模板数据的 UPSERT 负载。
+// NoteTypePayload 承载笔记模板数据的 UPSERT 负载
 message NoteTypePayload {
   string id = 1 [(buf.validate.field).string.len = 36];
   string name = 2 [(buf.validate.field).string.min_len = 1];
   int64 updated_at = 3 [(buf.validate.field).int64.gte = 0];
 
-  // SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等。
+  // SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等
   string note_template_json = 4 [(buf.validate.field).string.min_len = 1];
 }
 
-// NotePayload 承载笔记数据的 UPSERT 负载。
+// NotePayload 承载笔记数据的 UPSERT 负载
 message NotePayload {
   string id = 1 [(buf.validate.field).string.len = 36];
   string note_type_id = 2 [(buf.validate.field).string.len = 36];
@@ -61,11 +97,11 @@ message NotePayload {
   optional string sort_field = 6;
   optional string search_fields = 7;
 
-  // SQLite notes.fields 的 JSON 字符串。
+  // SQLite notes.fields 的 JSON 字符串
   string fields_json = 8 [(buf.validate.field).string.min_len = 1];
 }
 
-// ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载。
+// ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载
 message ProcessingNotePayload {
   string id = 1 [(buf.validate.field).string.len = 36];
   string note_type_id = 2 [(buf.validate.field).string.len = 36];
@@ -73,11 +109,11 @@ message ProcessingNotePayload {
   int64 updated_at = 4 [(buf.validate.field).int64.gte = 0];
   optional string sense_id = 5 [(buf.validate.field).string.len = 36];
 
-  // SQLite processing_notes.fields 的 JSON 字符串。
+  // SQLite processing_notes.fields 的 JSON 字符串
   string fields_json = 6 [(buf.validate.field).string.min_len = 1];
 }
 
-// CardPayload 承载卡片数据的 UPSERT 负载。
+// CardPayload 承载卡片数据的 UPSERT 负载
 message CardPayload {
   string id = 1 [(buf.validate.field).string.len = 36];
   string note_id = 2 [(buf.validate.field).string.len = 36];
@@ -100,7 +136,7 @@ message CardPayload {
   int32 queue = 15;
 }
 
-// ReviewLogPayload 承载复习记录数据的 UPSERT 负载。
+// ReviewLogPayload 承载复习记录数据的 UPSERT 负载
 message ReviewLogPayload {
   string id = 1 [(buf.validate.field).string.len = 36];
   string card_id = 2 [(buf.validate.field).string.len = 36];
@@ -120,7 +156,7 @@ message ReviewLogPayload {
   int64 duration = 10 [(buf.validate.field).int64.gte = 0];
 }
 
-// DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载。
+// DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载
 message DicNoteMapPayload {
   string map_id = 1 [(buf.validate.field).string.len = 36];
   string note_type_id = 2 [(buf.validate.field).string.len = 36];

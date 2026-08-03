@@ -24,47 +24,6 @@ message PullResponse {
   // 这批数据的全部变更
   repeated SyncChange changes = 3;
 
-  // 是否为本轮 Pull 的最后一个 batch。
+  // 是否为本轮 Pull 的最后一个 batch
   bool last_batch = 4;
-}
-
-message SyncChange {
-  // UUID
-  string entity_id = 1 [(buf.validate.field).string.len = 36];
-
-  // 实体类型
-  EntityType entity_type = 2;
-
-  // 变更操作类型
-  ChangeOp op = 3;
-
-  // 服务端确认的 last_modified_usn
-  int64 usn = 4 [(buf.validate.field).int64.gte = 1];
-
-  // 服务端实体更新时间，可选，用于调试或冲突 UI，不作为主排序依据
-  int64 updated_at = 5;
-
-  // entity_type 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
-  oneof payload {
-    // 这里是故意 Collection(16) 与 ReviewLog(10) 序号进行了调换
-    //
-    // protobuf 序号 16 需要 2 字节编码，0 ~ 15 只要 1 字节
-    // 把 16 给 Collection 比 ReviewLog 更省，
-    // 因为 ReviewLog 可能会有很多条，Collection 只有一条
-    CollectionPayload collection = 16;
-    DeckPayload deck = 11;
-    NoteTypePayload note_type = 12;
-    ProcessingNotePayload processing_note = 13;
-    NotePayload note = 14;
-    CardPayload card = 15;
-    ReviewLogPayload review_log = 10;
-    DicNoteMapPayload dic_note_map = 17;
-  }
-}
-
-// 变更操作类型
-enum ChangeOp {
-  CHANGE_OP_UNSPECIFIED = 0;
-  CHANGE_OP_UPSERT = 1;
-  CHANGE_OP_DELETE = 2;
 }

@@ -90,14 +90,19 @@ func (HandshakeStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type HandshakeRequest struct {
-	state        protoimpl.MessageState `protogen:"open.v1"`
-	DeviceId     string                 `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`             // 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
-	DeviceName   string                 `protobuf:"bytes,2,opt,name=device_name,json=deviceName,proto3" json:"device_name,omitempty"`       // 设备展示名
-	CollectionId string                 `protobuf:"bytes,3,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"` // 集合 UUIDv7
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
+	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	// 设备展示名
+	DeviceName string `protobuf:"bytes,2,opt,name=device_name,json=deviceName,proto3" json:"device_name,omitempty"`
+	// 集合 UUIDv7
+	CollectionId string `protobuf:"bytes,3,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"`
 	// 客户端 collection.sync_cursor_usn，已同步到的 USN 上界 / 下次增量 Pull 起点
 	ClientSyncCursorUsn int64 `protobuf:"varint,4,opt,name=client_sync_cursor_usn,json=clientSyncCursorUsn,proto3" json:"client_sync_cursor_usn,omitempty"`
-	ProtocolVersion     int32 `protobuf:"varint,5,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`   // 同步协议版本
-	DbSchemaVersion     int32 `protobuf:"varint,6,opt,name=db_schema_version,json=dbSchemaVersion,proto3" json:"db_schema_version,omitempty"` // 客户端本地 SQLite schema 版本
+	// 同步协议版本
+	ProtocolVersion int32 `protobuf:"varint,5,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	// 客户端本地 SQLite schema 版本
+	DbSchemaVersion int32 `protobuf:"varint,6,opt,name=db_schema_version,json=dbSchemaVersion,proto3" json:"db_schema_version,omitempty"`
 	// collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
 	CollectionSchemaUpdatedAt int64 `protobuf:"varint,7,opt,name=collection_schema_updated_at,json=collectionSchemaUpdatedAt,proto3" json:"collection_schema_updated_at,omitempty"`
 	unknownFields             protoimpl.UnknownFields
@@ -186,7 +191,7 @@ func (x *HandshakeRequest) GetCollectionSchemaUpdatedAt() int64 {
 type HandshakeResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Status HandshakeStatus        `protobuf:"varint,1,opt,name=status,proto3,enum=enlangmemo.sync.v1.HandshakeStatus" json:"status,omitempty"`
-	// 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）。
+	// 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
 	// NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
 	SessionId           *string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3,oneof" json:"session_id,omitempty"`
 	ServerSyncCursorUsn int64   `protobuf:"varint,3,opt,name=server_sync_cursor_usn,json=serverSyncCursorUsn,proto3" json:"server_sync_cursor_usn,omitempty"`

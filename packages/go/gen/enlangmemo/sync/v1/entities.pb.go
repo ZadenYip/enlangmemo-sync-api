@@ -89,7 +89,270 @@ func (EntityType) EnumDescriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{0}
 }
 
-// CollectionPayload 承载集合元数据的 UPSERT 负载。
+// ChangeOp 表示同步实体的变更操作类型
+type ChangeOp int32
+
+const (
+	ChangeOp_CHANGE_OP_UNSPECIFIED ChangeOp = 0
+	ChangeOp_CHANGE_OP_UPSERT      ChangeOp = 1
+	ChangeOp_CHANGE_OP_DELETE      ChangeOp = 2
+)
+
+// Enum value maps for ChangeOp.
+var (
+	ChangeOp_name = map[int32]string{
+		0: "CHANGE_OP_UNSPECIFIED",
+		1: "CHANGE_OP_UPSERT",
+		2: "CHANGE_OP_DELETE",
+	}
+	ChangeOp_value = map[string]int32{
+		"CHANGE_OP_UNSPECIFIED": 0,
+		"CHANGE_OP_UPSERT":      1,
+		"CHANGE_OP_DELETE":      2,
+	}
+)
+
+func (x ChangeOp) Enum() *ChangeOp {
+	p := new(ChangeOp)
+	*p = x
+	return p
+}
+
+func (x ChangeOp) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ChangeOp) Descriptor() protoreflect.EnumDescriptor {
+	return file_enlangmemo_sync_v1_entities_proto_enumTypes[1].Descriptor()
+}
+
+func (ChangeOp) Type() protoreflect.EnumType {
+	return &file_enlangmemo_sync_v1_entities_proto_enumTypes[1]
+}
+
+func (x ChangeOp) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ChangeOp.Descriptor instead.
+func (ChangeOp) EnumDescriptor() ([]byte, []int) {
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{1}
+}
+
+// SyncChange 表示一个同步实体变更。batch 的 usn 不在这里携带.
+type SyncChange struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// UUID
+	EntityId string `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	// 实体类型
+	EntityType EntityType `protobuf:"varint,2,opt,name=entity_type,json=entityType,proto3,enum=enlangmemo.sync.v1.EntityType" json:"entity_type,omitempty"`
+	// 变更操作类型
+	Op ChangeOp `protobuf:"varint,3,opt,name=op,proto3,enum=enlangmemo.sync.v1.ChangeOp" json:"op,omitempty"`
+	// op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
+	//
+	// Types that are valid to be assigned to Payload:
+	//
+	//	*SyncChange_Collection
+	//	*SyncChange_Deck
+	//	*SyncChange_NoteType
+	//	*SyncChange_ProcessingNote
+	//	*SyncChange_Note
+	//	*SyncChange_Card
+	//	*SyncChange_ReviewLog
+	//	*SyncChange_DicNoteMap
+	Payload       isSyncChange_Payload `protobuf_oneof:"payload"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncChange) Reset() {
+	*x = SyncChange{}
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncChange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncChange) ProtoMessage() {}
+
+func (x *SyncChange) ProtoReflect() protoreflect.Message {
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncChange.ProtoReflect.Descriptor instead.
+func (*SyncChange) Descriptor() ([]byte, []int) {
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *SyncChange) GetEntityId() string {
+	if x != nil {
+		return x.EntityId
+	}
+	return ""
+}
+
+func (x *SyncChange) GetEntityType() EntityType {
+	if x != nil {
+		return x.EntityType
+	}
+	return EntityType_ENTITY_TYPE_UNSPECIFIED
+}
+
+func (x *SyncChange) GetOp() ChangeOp {
+	if x != nil {
+		return x.Op
+	}
+	return ChangeOp_CHANGE_OP_UNSPECIFIED
+}
+
+func (x *SyncChange) GetPayload() isSyncChange_Payload {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+func (x *SyncChange) GetCollection() *CollectionPayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_Collection); ok {
+			return x.Collection
+		}
+	}
+	return nil
+}
+
+func (x *SyncChange) GetDeck() *DeckPayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_Deck); ok {
+			return x.Deck
+		}
+	}
+	return nil
+}
+
+func (x *SyncChange) GetNoteType() *NoteTypePayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_NoteType); ok {
+			return x.NoteType
+		}
+	}
+	return nil
+}
+
+func (x *SyncChange) GetProcessingNote() *ProcessingNotePayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_ProcessingNote); ok {
+			return x.ProcessingNote
+		}
+	}
+	return nil
+}
+
+func (x *SyncChange) GetNote() *NotePayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_Note); ok {
+			return x.Note
+		}
+	}
+	return nil
+}
+
+func (x *SyncChange) GetCard() *CardPayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_Card); ok {
+			return x.Card
+		}
+	}
+	return nil
+}
+
+func (x *SyncChange) GetReviewLog() *ReviewLogPayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_ReviewLog); ok {
+			return x.ReviewLog
+		}
+	}
+	return nil
+}
+
+func (x *SyncChange) GetDicNoteMap() *DicNoteMapPayload {
+	if x != nil {
+		if x, ok := x.Payload.(*SyncChange_DicNoteMap); ok {
+			return x.DicNoteMap
+		}
+	}
+	return nil
+}
+
+type isSyncChange_Payload interface {
+	isSyncChange_Payload()
+}
+
+type SyncChange_Collection struct {
+	// 这里是故意 Collection(16) 与 ReviewLog(10) 序号进行了调换
+	//
+	// protobuf 序号 16 需要 2 字节编码，0 ~ 15 只要 1 字节
+	// 把 16 给 Collection 比 ReviewLog 更省，
+	// 因为 ReviewLog 可能会有很多条，Collection 只有一条。
+	Collection *CollectionPayload `protobuf:"bytes,16,opt,name=collection,proto3,oneof"`
+}
+
+type SyncChange_Deck struct {
+	Deck *DeckPayload `protobuf:"bytes,11,opt,name=deck,proto3,oneof"`
+}
+
+type SyncChange_NoteType struct {
+	NoteType *NoteTypePayload `protobuf:"bytes,12,opt,name=note_type,json=noteType,proto3,oneof"`
+}
+
+type SyncChange_ProcessingNote struct {
+	ProcessingNote *ProcessingNotePayload `protobuf:"bytes,13,opt,name=processing_note,json=processingNote,proto3,oneof"`
+}
+
+type SyncChange_Note struct {
+	Note *NotePayload `protobuf:"bytes,14,opt,name=note,proto3,oneof"`
+}
+
+type SyncChange_Card struct {
+	Card *CardPayload `protobuf:"bytes,15,opt,name=card,proto3,oneof"`
+}
+
+type SyncChange_ReviewLog struct {
+	ReviewLog *ReviewLogPayload `protobuf:"bytes,10,opt,name=review_log,json=reviewLog,proto3,oneof"`
+}
+
+type SyncChange_DicNoteMap struct {
+	DicNoteMap *DicNoteMapPayload `protobuf:"bytes,17,opt,name=dic_note_map,json=dicNoteMap,proto3,oneof"`
+}
+
+func (*SyncChange_Collection) isSyncChange_Payload() {}
+
+func (*SyncChange_Deck) isSyncChange_Payload() {}
+
+func (*SyncChange_NoteType) isSyncChange_Payload() {}
+
+func (*SyncChange_ProcessingNote) isSyncChange_Payload() {}
+
+func (*SyncChange_Note) isSyncChange_Payload() {}
+
+func (*SyncChange_Card) isSyncChange_Payload() {}
+
+func (*SyncChange_ReviewLog) isSyncChange_Payload() {}
+
+func (*SyncChange_DicNoteMap) isSyncChange_Payload() {}
+
+// CollectionPayload 承载集合元数据的 UPSERT 负载
 type CollectionPayload struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
 	SqliteSchemaVersion       int32                  `protobuf:"varint,1,opt,name=sqlite_schema_version,json=sqliteSchemaVersion,proto3" json:"sqlite_schema_version,omitempty"`
@@ -104,7 +367,7 @@ type CollectionPayload struct {
 
 func (x *CollectionPayload) Reset() {
 	*x = CollectionPayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[0]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -116,7 +379,7 @@ func (x *CollectionPayload) String() string {
 func (*CollectionPayload) ProtoMessage() {}
 
 func (x *CollectionPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[0]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -129,7 +392,7 @@ func (x *CollectionPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectionPayload.ProtoReflect.Descriptor instead.
 func (*CollectionPayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{0}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CollectionPayload) GetSqliteSchemaVersion() int32 {
@@ -177,7 +440,7 @@ type DeckPayload struct {
 	NewLearnedToday int32                  `protobuf:"varint,5,opt,name=new_learned_today,json=newLearnedToday,proto3" json:"new_learned_today,omitempty"`
 	LearnedToday    int32                  `protobuf:"varint,6,opt,name=learned_today,json=learnedToday,proto3" json:"learned_today,omitempty"`
 	ReviewedToday   int32                  `protobuf:"varint,7,opt,name=reviewed_today,json=reviewedToday,proto3" json:"reviewed_today,omitempty"`
-	// SQLite decks.config 的 JSON 字符串。
+	// SQLite decks.config 的 JSON 字符串
 	ConfigJson    string `protobuf:"bytes,8,opt,name=config_json,json=configJson,proto3" json:"config_json,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -185,7 +448,7 @@ type DeckPayload struct {
 
 func (x *DeckPayload) Reset() {
 	*x = DeckPayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[1]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -197,7 +460,7 @@ func (x *DeckPayload) String() string {
 func (*DeckPayload) ProtoMessage() {}
 
 func (x *DeckPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[1]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -210,7 +473,7 @@ func (x *DeckPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeckPayload.ProtoReflect.Descriptor instead.
 func (*DeckPayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{1}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *DeckPayload) GetId() string {
@@ -269,13 +532,13 @@ func (x *DeckPayload) GetConfigJson() string {
 	return ""
 }
 
-// NoteTypePayload 承载笔记模板数据的 UPSERT 负载。
+// NoteTypePayload 承载笔记模板数据的 UPSERT 负载
 type NoteTypePayload struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	Id        string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name      string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	UpdatedAt int64                  `protobuf:"varint,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等。
+	// SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等
 	NoteTemplateJson string `protobuf:"bytes,4,opt,name=note_template_json,json=noteTemplateJson,proto3" json:"note_template_json,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -283,7 +546,7 @@ type NoteTypePayload struct {
 
 func (x *NoteTypePayload) Reset() {
 	*x = NoteTypePayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[2]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -295,7 +558,7 @@ func (x *NoteTypePayload) String() string {
 func (*NoteTypePayload) ProtoMessage() {}
 
 func (x *NoteTypePayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[2]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -308,7 +571,7 @@ func (x *NoteTypePayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NoteTypePayload.ProtoReflect.Descriptor instead.
 func (*NoteTypePayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{2}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *NoteTypePayload) GetId() string {
@@ -339,7 +602,7 @@ func (x *NoteTypePayload) GetNoteTemplateJson() string {
 	return ""
 }
 
-// NotePayload 承载笔记数据的 UPSERT 负载。
+// NotePayload 承载笔记数据的 UPSERT 负载
 type NotePayload struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	Id           string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -349,7 +612,7 @@ type NotePayload struct {
 	SenseId      *string                `protobuf:"bytes,5,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
 	SortField    *string                `protobuf:"bytes,6,opt,name=sort_field,json=sortField,proto3,oneof" json:"sort_field,omitempty"`
 	SearchFields *string                `protobuf:"bytes,7,opt,name=search_fields,json=searchFields,proto3,oneof" json:"search_fields,omitempty"`
-	// SQLite notes.fields 的 JSON 字符串。
+	// SQLite notes.fields 的 JSON 字符串
 	FieldsJson    string `protobuf:"bytes,8,opt,name=fields_json,json=fieldsJson,proto3" json:"fields_json,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -357,7 +620,7 @@ type NotePayload struct {
 
 func (x *NotePayload) Reset() {
 	*x = NotePayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[3]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -369,7 +632,7 @@ func (x *NotePayload) String() string {
 func (*NotePayload) ProtoMessage() {}
 
 func (x *NotePayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[3]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -382,7 +645,7 @@ func (x *NotePayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NotePayload.ProtoReflect.Descriptor instead.
 func (*NotePayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{3}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *NotePayload) GetId() string {
@@ -441,7 +704,7 @@ func (x *NotePayload) GetFieldsJson() string {
 	return ""
 }
 
-// ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载。
+// ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载
 type ProcessingNotePayload struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	Id         string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -449,7 +712,7 @@ type ProcessingNotePayload struct {
 	CreatedAt  int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt  int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	SenseId    *string                `protobuf:"bytes,5,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
-	// SQLite processing_notes.fields 的 JSON 字符串。
+	// SQLite processing_notes.fields 的 JSON 字符串
 	FieldsJson    string `protobuf:"bytes,6,opt,name=fields_json,json=fieldsJson,proto3" json:"fields_json,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -457,7 +720,7 @@ type ProcessingNotePayload struct {
 
 func (x *ProcessingNotePayload) Reset() {
 	*x = ProcessingNotePayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[4]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -469,7 +732,7 @@ func (x *ProcessingNotePayload) String() string {
 func (*ProcessingNotePayload) ProtoMessage() {}
 
 func (x *ProcessingNotePayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[4]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -482,7 +745,7 @@ func (x *ProcessingNotePayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessingNotePayload.ProtoReflect.Descriptor instead.
 func (*ProcessingNotePayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{4}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ProcessingNotePayload) GetId() string {
@@ -527,7 +790,7 @@ func (x *ProcessingNotePayload) GetFieldsJson() string {
 	return ""
 }
 
-// CardPayload 承载卡片数据的 UPSERT 负载。
+// CardPayload 承载卡片数据的 UPSERT 负载
 type CardPayload struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -551,7 +814,7 @@ type CardPayload struct {
 
 func (x *CardPayload) Reset() {
 	*x = CardPayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[5]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -563,7 +826,7 @@ func (x *CardPayload) String() string {
 func (*CardPayload) ProtoMessage() {}
 
 func (x *CardPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[5]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -576,7 +839,7 @@ func (x *CardPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CardPayload.ProtoReflect.Descriptor instead.
 func (*CardPayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{5}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CardPayload) GetId() string {
@@ -684,7 +947,7 @@ func (x *CardPayload) GetQueue() int32 {
 	return 0
 }
 
-// ReviewLogPayload 承载复习记录数据的 UPSERT 负载。
+// ReviewLogPayload 承载复习记录数据的 UPSERT 负载
 type ReviewLogPayload struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -703,7 +966,7 @@ type ReviewLogPayload struct {
 
 func (x *ReviewLogPayload) Reset() {
 	*x = ReviewLogPayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[6]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -715,7 +978,7 @@ func (x *ReviewLogPayload) String() string {
 func (*ReviewLogPayload) ProtoMessage() {}
 
 func (x *ReviewLogPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[6]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -728,7 +991,7 @@ func (x *ReviewLogPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReviewLogPayload.ProtoReflect.Descriptor instead.
 func (*ReviewLogPayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{6}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ReviewLogPayload) GetId() string {
@@ -801,7 +1064,7 @@ func (x *ReviewLogPayload) GetDuration() int64 {
 	return 0
 }
 
-// DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载。
+// DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载
 type DicNoteMapPayload struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	MapId      string                 `protobuf:"bytes,1,opt,name=map_id,json=mapId,proto3" json:"map_id,omitempty"`
@@ -814,7 +1077,7 @@ type DicNoteMapPayload struct {
 
 func (x *DicNoteMapPayload) Reset() {
 	*x = DicNoteMapPayload{}
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[7]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -826,7 +1089,7 @@ func (x *DicNoteMapPayload) String() string {
 func (*DicNoteMapPayload) ProtoMessage() {}
 
 func (x *DicNoteMapPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[7]
+	mi := &file_enlangmemo_sync_v1_entities_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -839,7 +1102,7 @@ func (x *DicNoteMapPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DicNoteMapPayload.ProtoReflect.Descriptor instead.
 func (*DicNoteMapPayload) Descriptor() ([]byte, []int) {
-	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{7}
+	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DicNoteMapPayload) GetMapId() string {
@@ -867,7 +1130,27 @@ var File_enlangmemo_sync_v1_entities_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
-	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\x94\x02\n" +
+	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xc7\x05\n" +
+	"\n" +
+	"SyncChange\x12%\n" +
+	"\tentity_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bentityId\x12?\n" +
+	"\ventity_type\x18\x02 \x01(\x0e2\x1e.enlangmemo.sync.v1.EntityTypeR\n" +
+	"entityType\x12,\n" +
+	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12G\n" +
+	"\n" +
+	"collection\x18\x10 \x01(\v2%.enlangmemo.sync.v1.CollectionPayloadH\x00R\n" +
+	"collection\x125\n" +
+	"\x04deck\x18\v \x01(\v2\x1f.enlangmemo.sync.v1.DeckPayloadH\x00R\x04deck\x12B\n" +
+	"\tnote_type\x18\f \x01(\v2#.enlangmemo.sync.v1.NoteTypePayloadH\x00R\bnoteType\x12T\n" +
+	"\x0fprocessing_note\x18\r \x01(\v2).enlangmemo.sync.v1.ProcessingNotePayloadH\x00R\x0eprocessingNote\x125\n" +
+	"\x04note\x18\x0e \x01(\v2\x1f.enlangmemo.sync.v1.NotePayloadH\x00R\x04note\x125\n" +
+	"\x04card\x18\x0f \x01(\v2\x1f.enlangmemo.sync.v1.CardPayloadH\x00R\x04card\x12E\n" +
+	"\n" +
+	"review_log\x18\n" +
+	" \x01(\v2$.enlangmemo.sync.v1.ReviewLogPayloadH\x00R\treviewLog\x12I\n" +
+	"\fdic_note_map\x18\x11 \x01(\v2%.enlangmemo.sync.v1.DicNoteMapPayloadH\x00R\n" +
+	"dicNoteMapB\t\n" +
+	"\apayload\"\x94\x02\n" +
 	"\x11CollectionPayload\x12;\n" +
 	"\x15sqlite_schema_version\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x13sqliteSchemaVersion\x12&\n" +
 	"\n" +
@@ -975,7 +1258,11 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\x1bENTITY_TYPE_PROCESSING_NOTE\x10\x05\x12\x14\n" +
 	"\x10ENTITY_TYPE_CARD\x10\x06\x12\x1a\n" +
 	"\x16ENTITY_TYPE_REVIEW_LOG\x10\a\x12\x1c\n" +
-	"\x18ENTITY_TYPE_DIC_NOTE_MAP\x10\bB\xe4\x01\n" +
+	"\x18ENTITY_TYPE_DIC_NOTE_MAP\x10\b*Q\n" +
+	"\bChangeOp\x12\x19\n" +
+	"\x15CHANGE_OP_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10CHANGE_OP_UPSERT\x10\x01\x12\x14\n" +
+	"\x10CHANGE_OP_DELETE\x10\x02B\xe4\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\rEntitiesProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var (
@@ -990,25 +1277,37 @@ func file_enlangmemo_sync_v1_entities_proto_rawDescGZIP() []byte {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescData
 }
 
-var file_enlangmemo_sync_v1_entities_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_enlangmemo_sync_v1_entities_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_enlangmemo_sync_v1_entities_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_enlangmemo_sync_v1_entities_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_enlangmemo_sync_v1_entities_proto_goTypes = []any{
 	(EntityType)(0),               // 0: enlangmemo.sync.v1.EntityType
-	(*CollectionPayload)(nil),     // 1: enlangmemo.sync.v1.CollectionPayload
-	(*DeckPayload)(nil),           // 2: enlangmemo.sync.v1.DeckPayload
-	(*NoteTypePayload)(nil),       // 3: enlangmemo.sync.v1.NoteTypePayload
-	(*NotePayload)(nil),           // 4: enlangmemo.sync.v1.NotePayload
-	(*ProcessingNotePayload)(nil), // 5: enlangmemo.sync.v1.ProcessingNotePayload
-	(*CardPayload)(nil),           // 6: enlangmemo.sync.v1.CardPayload
-	(*ReviewLogPayload)(nil),      // 7: enlangmemo.sync.v1.ReviewLogPayload
-	(*DicNoteMapPayload)(nil),     // 8: enlangmemo.sync.v1.DicNoteMapPayload
+	(ChangeOp)(0),                 // 1: enlangmemo.sync.v1.ChangeOp
+	(*SyncChange)(nil),            // 2: enlangmemo.sync.v1.SyncChange
+	(*CollectionPayload)(nil),     // 3: enlangmemo.sync.v1.CollectionPayload
+	(*DeckPayload)(nil),           // 4: enlangmemo.sync.v1.DeckPayload
+	(*NoteTypePayload)(nil),       // 5: enlangmemo.sync.v1.NoteTypePayload
+	(*NotePayload)(nil),           // 6: enlangmemo.sync.v1.NotePayload
+	(*ProcessingNotePayload)(nil), // 7: enlangmemo.sync.v1.ProcessingNotePayload
+	(*CardPayload)(nil),           // 8: enlangmemo.sync.v1.CardPayload
+	(*ReviewLogPayload)(nil),      // 9: enlangmemo.sync.v1.ReviewLogPayload
+	(*DicNoteMapPayload)(nil),     // 10: enlangmemo.sync.v1.DicNoteMapPayload
 }
 var file_enlangmemo_sync_v1_entities_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: enlangmemo.sync.v1.SyncChange.entity_type:type_name -> enlangmemo.sync.v1.EntityType
+	1,  // 1: enlangmemo.sync.v1.SyncChange.op:type_name -> enlangmemo.sync.v1.ChangeOp
+	3,  // 2: enlangmemo.sync.v1.SyncChange.collection:type_name -> enlangmemo.sync.v1.CollectionPayload
+	4,  // 3: enlangmemo.sync.v1.SyncChange.deck:type_name -> enlangmemo.sync.v1.DeckPayload
+	5,  // 4: enlangmemo.sync.v1.SyncChange.note_type:type_name -> enlangmemo.sync.v1.NoteTypePayload
+	7,  // 5: enlangmemo.sync.v1.SyncChange.processing_note:type_name -> enlangmemo.sync.v1.ProcessingNotePayload
+	6,  // 6: enlangmemo.sync.v1.SyncChange.note:type_name -> enlangmemo.sync.v1.NotePayload
+	8,  // 7: enlangmemo.sync.v1.SyncChange.card:type_name -> enlangmemo.sync.v1.CardPayload
+	9,  // 8: enlangmemo.sync.v1.SyncChange.review_log:type_name -> enlangmemo.sync.v1.ReviewLogPayload
+	10, // 9: enlangmemo.sync.v1.SyncChange.dic_note_map:type_name -> enlangmemo.sync.v1.DicNoteMapPayload
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_enlangmemo_sync_v1_entities_proto_init() }
@@ -1016,16 +1315,26 @@ func file_enlangmemo_sync_v1_entities_proto_init() {
 	if File_enlangmemo_sync_v1_entities_proto != nil {
 		return
 	}
-	file_enlangmemo_sync_v1_entities_proto_msgTypes[3].OneofWrappers = []any{}
+	file_enlangmemo_sync_v1_entities_proto_msgTypes[0].OneofWrappers = []any{
+		(*SyncChange_Collection)(nil),
+		(*SyncChange_Deck)(nil),
+		(*SyncChange_NoteType)(nil),
+		(*SyncChange_ProcessingNote)(nil),
+		(*SyncChange_Note)(nil),
+		(*SyncChange_Card)(nil),
+		(*SyncChange_ReviewLog)(nil),
+		(*SyncChange_DicNoteMap)(nil),
+	}
 	file_enlangmemo_sync_v1_entities_proto_msgTypes[4].OneofWrappers = []any{}
 	file_enlangmemo_sync_v1_entities_proto_msgTypes[5].OneofWrappers = []any{}
+	file_enlangmemo_sync_v1_entities_proto_msgTypes[6].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_enlangmemo_sync_v1_entities_proto_rawDesc), len(file_enlangmemo_sync_v1_entities_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   8,
+			NumEnums:      2,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -2,10 +2,10 @@
 // @generated from file enlangmemo/sync/v1/pull.proto (package enlangmemo.sync.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import { file_buf_validate_validate } from "../../../buf/validate/validate_pb.js";
-import type { CardPayload, CollectionPayload, DeckPayload, DicNoteMapPayload, EntityType, NotePayload, NoteTypePayload, ProcessingNotePayload, ReviewLogPayload } from "./entities_pb.js";
+import type { SyncChange } from "./entities_pb.js";
 import { file_enlangmemo_sync_v1_entities } from "./entities_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file enlangmemo/sync/v1/pull.proto.
  */
 export const file_enlangmemo_sync_v1_pull: GenFile = /*@__PURE__*/
-  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVsbC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIkcKC1B1bGxSZXF1ZXN0EhwKCnNlc3Npb25faWQYASABKAlCCLpIBXIDmAEgEhoKCWJhdGNoX3NlcRgCIAEoBUIHukgEGgIoASJ8CgxQdWxsUmVzcG9uc2USEQoJYmF0Y2hfc2VxGAEgASgFEhQKA3VzbhgCIAEoA0IHukgEIgIoABIvCgdjaGFuZ2VzGAMgAygLMh4uZW5sYW5nbWVtby5zeW5jLnYxLlN5bmNDaGFuZ2USEgoKbGFzdF9iYXRjaBgEIAEoCCKIBQoKU3luY0NoYW5nZRIbCgllbnRpdHlfaWQYASABKAlCCLpIBXIDmAEkEjMKC2VudGl0eV90eXBlGAIgASgOMh4uZW5sYW5nbWVtby5zeW5jLnYxLkVudGl0eVR5cGUSKAoCb3AYAyABKA4yHC5lbmxhbmdtZW1vLnN5bmMudjEuQ2hhbmdlT3ASFAoDdXNuGAQgASgDQge6SAQiAigBEhIKCnVwZGF0ZWRfYXQYBSABKAMSOwoKY29sbGVjdGlvbhgQIAEoCzIlLmVubGFuZ21lbW8uc3luYy52MS5Db2xsZWN0aW9uUGF5bG9hZEgAEi8KBGRlY2sYCyABKAsyHy5lbmxhbmdtZW1vLnN5bmMudjEuRGVja1BheWxvYWRIABI4Cglub3RlX3R5cGUYDCABKAsyIy5lbmxhbmdtZW1vLnN5bmMudjEuTm90ZVR5cGVQYXlsb2FkSAASRAoPcHJvY2Vzc2luZ19ub3RlGA0gASgLMikuZW5sYW5nbWVtby5zeW5jLnYxLlByb2Nlc3NpbmdOb3RlUGF5bG9hZEgAEi8KBG5vdGUYDiABKAsyHy5lbmxhbmdtZW1vLnN5bmMudjEuTm90ZVBheWxvYWRIABIvCgRjYXJkGA8gASgLMh8uZW5sYW5nbWVtby5zeW5jLnYxLkNhcmRQYXlsb2FkSAASOgoKcmV2aWV3X2xvZxgKIAEoCzIkLmVubGFuZ21lbW8uc3luYy52MS5SZXZpZXdMb2dQYXlsb2FkSAASPQoMZGljX25vdGVfbWFwGBEgASgLMiUuZW5sYW5nbWVtby5zeW5jLnYxLkRpY05vdGVNYXBQYXlsb2FkSABCCQoHcGF5bG9hZCpRCghDaGFuZ2VPcBIZChVDSEFOR0VfT1BfVU5TUEVDSUZJRUQQABIUChBDSEFOR0VfT1BfVVBTRVJUEAESFAoQQ0hBTkdFX09QX0RFTEVURRACQuABChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQglQdWxsUHJvdG9QAVpRZ2l0aHViLmNvbS96YWRlbnlpcC9lbmxhbmdtZW1vLXN5bmMtYXBpL3BhY2thZ2VzL2dvL2dlbi9lbmxhbmdtZW1vL3N5bmMvdjE7c3luY3YxogIDRVNYqgISRW5sYW5nbWVtby5TeW5jLlYxygISRW5sYW5nbWVtb1xTeW5jXFYx4gIeRW5sYW5nbWVtb1xTeW5jXFYxXEdQQk1ldGFkYXRh6gIURW5sYW5nbWVtbzo6U3luYzo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
+  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVsbC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIkcKC1B1bGxSZXF1ZXN0EhwKCnNlc3Npb25faWQYASABKAlCCLpIBXIDmAEgEhoKCWJhdGNoX3NlcRgCIAEoBUIHukgEGgIoASJ8CgxQdWxsUmVzcG9uc2USEQoJYmF0Y2hfc2VxGAEgASgFEhQKA3VzbhgCIAEoA0IHukgEIgIoABIvCgdjaGFuZ2VzGAMgAygLMh4uZW5sYW5nbWVtby5zeW5jLnYxLlN5bmNDaGFuZ2USEgoKbGFzdF9iYXRjaBgEIAEoCELgAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUIJUHVsbFByb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
 
 /**
  * @generated from message enlangmemo.sync.v1.PullRequest
@@ -67,7 +67,7 @@ export type PullResponse = Message<"enlangmemo.sync.v1.PullResponse"> & {
   changes: SyncChange[];
 
   /**
-   * 是否为本轮 Pull 的最后一个 batch。
+   * 是否为本轮 Pull 的最后一个 batch
    *
    * @generated from field: bool last_batch = 4;
    */
@@ -80,140 +80,4 @@ export type PullResponse = Message<"enlangmemo.sync.v1.PullResponse"> & {
  */
 export const PullResponseSchema: GenMessage<PullResponse> = /*@__PURE__*/
   messageDesc(file_enlangmemo_sync_v1_pull, 1);
-
-/**
- * @generated from message enlangmemo.sync.v1.SyncChange
- */
-export type SyncChange = Message<"enlangmemo.sync.v1.SyncChange"> & {
-  /**
-   * UUID
-   *
-   * @generated from field: string entity_id = 1;
-   */
-  entityId: string;
-
-  /**
-   * 实体类型
-   *
-   * @generated from field: enlangmemo.sync.v1.EntityType entity_type = 2;
-   */
-  entityType: EntityType;
-
-  /**
-   * 变更操作类型
-   *
-   * @generated from field: enlangmemo.sync.v1.ChangeOp op = 3;
-   */
-  op: ChangeOp;
-
-  /**
-   * 服务端确认的 last_modified_usn
-   *
-   * @generated from field: int64 usn = 4;
-   */
-  usn: bigint;
-
-  /**
-   * 服务端实体更新时间，可选，用于调试或冲突 UI，不作为主排序依据
-   *
-   * @generated from field: int64 updated_at = 5;
-   */
-  updatedAt: bigint;
-
-  /**
-   * entity_type 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
-   *
-   * @generated from oneof enlangmemo.sync.v1.SyncChange.payload
-   */
-  payload: {
-    /**
-     * 这里是故意 Collection(16) 与 ReviewLog(10) 序号进行了调换
-     *
-     * protobuf 序号 16 需要 2 字节编码，0 ~ 15 只要 1 字节
-     * 把 16 给 Collection 比 ReviewLog 更省，
-     * 因为 ReviewLog 可能会有很多条，Collection 只有一条
-     *
-     * @generated from field: enlangmemo.sync.v1.CollectionPayload collection = 16;
-     */
-    value: CollectionPayload;
-    case: "collection";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.DeckPayload deck = 11;
-     */
-    value: DeckPayload;
-    case: "deck";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.NoteTypePayload note_type = 12;
-     */
-    value: NoteTypePayload;
-    case: "noteType";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.ProcessingNotePayload processing_note = 13;
-     */
-    value: ProcessingNotePayload;
-    case: "processingNote";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.NotePayload note = 14;
-     */
-    value: NotePayload;
-    case: "note";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.CardPayload card = 15;
-     */
-    value: CardPayload;
-    case: "card";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.ReviewLogPayload review_log = 10;
-     */
-    value: ReviewLogPayload;
-    case: "reviewLog";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.DicNoteMapPayload dic_note_map = 17;
-     */
-    value: DicNoteMapPayload;
-    case: "dicNoteMap";
-  } | { case: undefined; value?: undefined };
-};
-
-/**
- * Describes the message enlangmemo.sync.v1.SyncChange.
- * Use `create(SyncChangeSchema)` to create a new message.
- */
-export const SyncChangeSchema: GenMessage<SyncChange> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_pull, 2);
-
-/**
- * 变更操作类型
- *
- * @generated from enum enlangmemo.sync.v1.ChangeOp
- */
-export enum ChangeOp {
-  /**
-   * @generated from enum value: CHANGE_OP_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: CHANGE_OP_UPSERT = 1;
-   */
-  UPSERT = 1,
-
-  /**
-   * @generated from enum value: CHANGE_OP_DELETE = 2;
-   */
-  DELETE = 2,
-}
-
-/**
- * Describes the enum enlangmemo.sync.v1.ChangeOp.
- */
-export const ChangeOpSchema: GenEnum<ChangeOp> = /*@__PURE__*/
-  enumDesc(file_enlangmemo_sync_v1_pull, 0);
 

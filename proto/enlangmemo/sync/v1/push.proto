@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package enlangmemo.sync.v1;
+
+import "buf/validate/validate.proto";
+import "enlangmemo/sync/v1/entities.proto";
+
+message PushRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+
+  // 当前请求的 batch 序号，从 1 开始
+  // 服务端校验 batch_seq == SyncLock.expected_batch_seq
+  int32 batch_seq = 2 [(buf.validate.field).int32.gte = 1];
+
+  // 客户端本地 usn = -1 的一批变更。
+  repeated SyncChange changes = 3 [(buf.validate.field).repeated.min_items = 1];
+
+  // 是否为本轮同步的最后一个 batch
+  bool last_batch = 4;
+}
+
+message PushResponse {
+  // 当前返回的 batch 序号，等于 request.batch_seq
+  int32 batch_seq = 1;
+
+  // 服务端为本 Push batch 分配的 usn
+  // 客户端用它更新本 batch 内已上传实体的 usn，并推进 collection.sync_cursor_usn = assigned_usn + 1
+  // 如果本 batch 包含 CollectionPayload，collection 表自身的 usn 也写为 assigned_usn；assigned_usn 本身不是 sync_cursor_usn
+  int64 assigned_usn = 2 [(buf.validate.field).int64.gte = 1];
+}

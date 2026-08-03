@@ -11,10 +11,106 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file enlangmemo/sync/v1/entities.proto.
  */
 export const file_enlangmemo_sync_v1_entities: GenFile = /*@__PURE__*/
-  fileDesc("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A0IHukgEIgIoACJsChFEaWNOb3RlTWFwUGF5bG9hZBIYCgZtYXBfaWQYASABKAlCCLpIBXIDmAEkEh4KDG5vdGVfdHlwZV9pZBgCIAEoCUIIukgFcgOYASQSHQoMbWFwcGluZ19qc29uGAMgASgJQge6SARyAhABKv0BCgpFbnRpdHlUeXBlEhsKF0VOVElUWV9UWVBFX1VOU1BFQ0lGSUVEEAASGgoWRU5USVRZX1RZUEVfQ09MTEVDVElPThABEhQKEEVOVElUWV9UWVBFX0RFQ0sQAhIZChVFTlRJVFlfVFlQRV9OT1RFX1RZUEUQAxIUChBFTlRJVFlfVFlQRV9OT1RFEAQSHwobRU5USVRZX1RZUEVfUFJPQ0VTU0lOR19OT1RFEAUSFAoQRU5USVRZX1RZUEVfQ0FSRBAGEhoKFkVOVElUWV9UWVBFX1JFVklFV19MT0cQBxIcChhFTlRJVFlfVFlQRV9ESUNfTk9URV9NQVAQCELkAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUINRW50aXRpZXNQcm90b1ABWlFnaXRodWIuY29tL3phZGVueWlwL2VubGFuZ21lbW8tc3luYy1hcGkvcGFja2FnZXMvZ28vZ2VuL2VubGFuZ21lbW8vc3luYy92MTtzeW5jdjGiAgNFU1iqAhJFbmxhbmdtZW1vLlN5bmMuVjHKAhJFbmxhbmdtZW1vXFN5bmNcVjHiAh5FbmxhbmdtZW1vXFN5bmNcVjFcR1BCTWV0YWRhdGHqAhRFbmxhbmdtZW1vOjpTeW5jOjpWMWIGcHJvdG8z", [file_buf_validate_validate]);
+  fileDesc("CiFlbmxhbmdtZW1vL3N5bmMvdjEvZW50aXRpZXMucHJvdG8SEmVubGFuZ21lbW8uc3luYy52MSLeBAoKU3luY0NoYW5nZRIbCgllbnRpdHlfaWQYASABKAlCCLpIBXIDmAEkEjMKC2VudGl0eV90eXBlGAIgASgOMh4uZW5sYW5nbWVtby5zeW5jLnYxLkVudGl0eVR5cGUSKAoCb3AYAyABKA4yHC5lbmxhbmdtZW1vLnN5bmMudjEuQ2hhbmdlT3ASOwoKY29sbGVjdGlvbhgQIAEoCzIlLmVubGFuZ21lbW8uc3luYy52MS5Db2xsZWN0aW9uUGF5bG9hZEgAEi8KBGRlY2sYCyABKAsyHy5lbmxhbmdtZW1vLnN5bmMudjEuRGVja1BheWxvYWRIABI4Cglub3RlX3R5cGUYDCABKAsyIy5lbmxhbmdtZW1vLnN5bmMudjEuTm90ZVR5cGVQYXlsb2FkSAASRAoPcHJvY2Vzc2luZ19ub3RlGA0gASgLMikuZW5sYW5nbWVtby5zeW5jLnYxLlByb2Nlc3NpbmdOb3RlUGF5bG9hZEgAEi8KBG5vdGUYDiABKAsyHy5lbmxhbmdtZW1vLnN5bmMudjEuTm90ZVBheWxvYWRIABIvCgRjYXJkGA8gASgLMh8uZW5sYW5nbWVtby5zeW5jLnYxLkNhcmRQYXlsb2FkSAASOgoKcmV2aWV3X2xvZxgKIAEoCzIkLmVubGFuZ21lbW8uc3luYy52MS5SZXZpZXdMb2dQYXlsb2FkSAASPQoMZGljX25vdGVfbWFwGBEgASgLMiUuZW5sYW5nbWVtby5zeW5jLnYxLkRpY05vdGVNYXBQYXlsb2FkSABCCQoHcGF5bG9hZCLCAQoRQ29sbGVjdGlvblBheWxvYWQSJgoVc3FsaXRlX3NjaGVtYV92ZXJzaW9uGAEgASgFQge6SAQaAigAEhsKCmNyZWF0ZWRfYXQYAiABKANCB7pIBCICKAASGwoKdXBkYXRlZF9hdBgDIAEoA0IHukgEIgIoABItChxjb2xsZWN0aW9uX3NjaGVtYV91cGRhdGVkX2F0GAQgASgDQge6SAQiAigAEhwKC2NvbmZpZ19qc29uGAUgASgJQge6SARyAhABIvUBCgtEZWNrUGF5bG9hZBIUCgJpZBgBIAEoCUIIukgFcgOYASQSFQoEbmFtZRgCIAEoCUIHukgEcgIQARIbCgp1cGRhdGVkX2F0GAMgASgDQge6SAQiAigAEhkKEW5ld19jYXJkc19wZXJfZGF5GAQgASgFEiIKEW5ld19sZWFybmVkX3RvZGF5GAUgASgFQge6SAQaAigAEh4KDWxlYXJuZWRfdG9kYXkYBiABKAVCB7pIBBoCKAASHwoOcmV2aWV3ZWRfdG9kYXkYByABKAVCB7pIBBoCKAASHAoLY29uZmlnX2pzb24YCCABKAlCB7pIBHICEAEigAEKD05vdGVUeXBlUGF5bG9hZBIUCgJpZBgBIAEoCUIIukgFcgOYASQSFQoEbmFtZRgCIAEoCUIHukgEcgIQARIbCgp1cGRhdGVkX2F0GAMgASgDQge6SAQiAigAEiMKEm5vdGVfdGVtcGxhdGVfanNvbhgEIAEoCUIHukgEcgIQASKfAgoLTm90ZVBheWxvYWQSFAoCaWQYASABKAlCCLpIBXIDmAEkEh4KDG5vdGVfdHlwZV9pZBgCIAEoCUIIukgFcgOYASQSGwoKY3JlYXRlZF9hdBgDIAEoA0IHukgEIgIoABIbCgp1cGRhdGVkX2F0GAQgASgDQge6SAQiAigAEh8KCHNlbnNlX2lkGAUgASgJQgi6SAVyA5gBJEgAiAEBEhcKCnNvcnRfZmllbGQYBiABKAlIAYgBARIaCg1zZWFyY2hfZmllbGRzGAcgASgJSAKIAQESHAoLZmllbGRzX2pzb24YCCABKAlCB7pIBHICEAFCCwoJX3NlbnNlX2lkQg0KC19zb3J0X2ZpZWxkQhAKDl9zZWFyY2hfZmllbGRzItMBChVQcm9jZXNzaW5nTm90ZVBheWxvYWQSFAoCaWQYASABKAlCCLpIBXIDmAEkEh4KDG5vdGVfdHlwZV9pZBgCIAEoCUIIukgFcgOYASQSGwoKY3JlYXRlZF9hdBgDIAEoA0IHukgEIgIoABIbCgp1cGRhdGVkX2F0GAQgASgDQge6SAQiAigAEh8KCHNlbnNlX2lkGAUgASgJQgi6SAVyA5gBJEgAiAEBEhwKC2ZpZWxkc19qc29uGAYgASgJQge6SARyAhABQgsKCV9zZW5zZV9pZCKXAwoLQ2FyZFBheWxvYWQSFAoCaWQYASABKAlCCLpIBXIDmAEkEhkKB25vdGVfaWQYAiABKAlCCLpIBXIDmAEkEhkKB2RlY2tfaWQYAyABKAlCCLpIBXIDmAEkEhsKCnVwZGF0ZWRfYXQYBCABKANCB7pIBCICKAASIQoQY2FyZF90ZW1wbGF0ZV9pZBgFIAEoA0IHukgEIgIoABISCgpkaWZmaWN1bHR5GAYgASgBEhEKCXN0YWJpbGl0eRgHIAEoARIWCg5zY2hlZHVsZWRfZGF5cxgIIAEoBRIUCgNkdWUYCSABKANCB7pIBCICKAASIQoLbGFzdF9yZXZpZXcYCiABKANCB7pIBCICKABIAIgBARIXCgZsYXBzZXMYCyABKAVCB7pIBBoCKAASHwoObGVhcm5pbmdfc3RlcHMYDCABKAVCB7pIBBoCKAASHAoLcmVwZXRpdGlvbnMYDSABKAVCB7pIBBoCKAASDQoFc3RhdGUYDiABKAUSDQoFcXVldWUYDyABKAVCDgoMX2xhc3RfcmV2aWV3IoYCChBSZXZpZXdMb2dQYXlsb2FkEhQKAmlkGAEgASgJQgi6SAVyA5gBJBIZCgdjYXJkX2lkGAIgASgJQgi6SAVyA5gBJBIcCgtyZXZpZXdfdGltZRgDIAEoA0IHukgEIgIoABIWCg5zY2hlZHVsZWRfZGF5cxgEIAEoBRIZCgZyYXRpbmcYBSABKAVCCbpIBhoEGAQoARISCgpkaWZmaWN1bHR5GAYgASgBEhEKCXN0YWJpbGl0eRgHIAEoARIfCg5sZWFybmluZ19zdGVwcxgIIAEoBUIHukgEGgIoABINCgVzdGF0ZRgJIAEoBRIZCghkdXJhdGlvbhgKIAEoA0IHukgEIgIoACJsChFEaWNOb3RlTWFwUGF5bG9hZBIYCgZtYXBfaWQYASABKAlCCLpIBXIDmAEkEh4KDG5vdGVfdHlwZV9pZBgCIAEoCUIIukgFcgOYASQSHQoMbWFwcGluZ19qc29uGAMgASgJQge6SARyAhABKv0BCgpFbnRpdHlUeXBlEhsKF0VOVElUWV9UWVBFX1VOU1BFQ0lGSUVEEAASGgoWRU5USVRZX1RZUEVfQ09MTEVDVElPThABEhQKEEVOVElUWV9UWVBFX0RFQ0sQAhIZChVFTlRJVFlfVFlQRV9OT1RFX1RZUEUQAxIUChBFTlRJVFlfVFlQRV9OT1RFEAQSHwobRU5USVRZX1RZUEVfUFJPQ0VTU0lOR19OT1RFEAUSFAoQRU5USVRZX1RZUEVfQ0FSRBAGEhoKFkVOVElUWV9UWVBFX1JFVklFV19MT0cQBxIcChhFTlRJVFlfVFlQRV9ESUNfTk9URV9NQVAQCCpRCghDaGFuZ2VPcBIZChVDSEFOR0VfT1BfVU5TUEVDSUZJRUQQABIUChBDSEFOR0VfT1BfVVBTRVJUEAESFAoQQ0hBTkdFX09QX0RFTEVURRACQuQBChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQg1FbnRpdGllc1Byb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate]);
 
 /**
- * CollectionPayload 承载集合元数据的 UPSERT 负载。
+ * SyncChange 表示一个同步实体变更。batch 的 usn 不在这里携带.
+ *
+ * @generated from message enlangmemo.sync.v1.SyncChange
+ */
+export type SyncChange = Message<"enlangmemo.sync.v1.SyncChange"> & {
+  /**
+   * UUID
+   *
+   * @generated from field: string entity_id = 1;
+   */
+  entityId: string;
+
+  /**
+   * 实体类型
+   *
+   * @generated from field: enlangmemo.sync.v1.EntityType entity_type = 2;
+   */
+  entityType: EntityType;
+
+  /**
+   * 变更操作类型
+   *
+   * @generated from field: enlangmemo.sync.v1.ChangeOp op = 3;
+   */
+  op: ChangeOp;
+
+  /**
+   * op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
+   *
+   * @generated from oneof enlangmemo.sync.v1.SyncChange.payload
+   */
+  payload: {
+    /**
+     * 这里是故意 Collection(16) 与 ReviewLog(10) 序号进行了调换
+     *
+     * protobuf 序号 16 需要 2 字节编码，0 ~ 15 只要 1 字节
+     * 把 16 给 Collection 比 ReviewLog 更省，
+     * 因为 ReviewLog 可能会有很多条，Collection 只有一条。
+     *
+     * @generated from field: enlangmemo.sync.v1.CollectionPayload collection = 16;
+     */
+    value: CollectionPayload;
+    case: "collection";
+  } | {
+    /**
+     * @generated from field: enlangmemo.sync.v1.DeckPayload deck = 11;
+     */
+    value: DeckPayload;
+    case: "deck";
+  } | {
+    /**
+     * @generated from field: enlangmemo.sync.v1.NoteTypePayload note_type = 12;
+     */
+    value: NoteTypePayload;
+    case: "noteType";
+  } | {
+    /**
+     * @generated from field: enlangmemo.sync.v1.ProcessingNotePayload processing_note = 13;
+     */
+    value: ProcessingNotePayload;
+    case: "processingNote";
+  } | {
+    /**
+     * @generated from field: enlangmemo.sync.v1.NotePayload note = 14;
+     */
+    value: NotePayload;
+    case: "note";
+  } | {
+    /**
+     * @generated from field: enlangmemo.sync.v1.CardPayload card = 15;
+     */
+    value: CardPayload;
+    case: "card";
+  } | {
+    /**
+     * @generated from field: enlangmemo.sync.v1.ReviewLogPayload review_log = 10;
+     */
+    value: ReviewLogPayload;
+    case: "reviewLog";
+  } | {
+    /**
+     * @generated from field: enlangmemo.sync.v1.DicNoteMapPayload dic_note_map = 17;
+     */
+    value: DicNoteMapPayload;
+    case: "dicNoteMap";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message enlangmemo.sync.v1.SyncChange.
+ * Use `create(SyncChangeSchema)` to create a new message.
+ */
+export const SyncChangeSchema: GenMessage<SyncChange> = /*@__PURE__*/
+  messageDesc(file_enlangmemo_sync_v1_entities, 0);
+
+/**
+ * CollectionPayload 承载集合元数据的 UPSERT 负载
  *
  * @generated from message enlangmemo.sync.v1.CollectionPayload
  */
@@ -52,7 +148,7 @@ export type CollectionPayload = Message<"enlangmemo.sync.v1.CollectionPayload"> 
  * Use `create(CollectionPayloadSchema)` to create a new message.
  */
 export const CollectionPayloadSchema: GenMessage<CollectionPayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 0);
+  messageDesc(file_enlangmemo_sync_v1_entities, 1);
 
 /**
  * DeckPayload 承载牌组数据的 UPSERT 负载。
@@ -96,7 +192,7 @@ export type DeckPayload = Message<"enlangmemo.sync.v1.DeckPayload"> & {
   reviewedToday: number;
 
   /**
-   * SQLite decks.config 的 JSON 字符串。
+   * SQLite decks.config 的 JSON 字符串
    *
    * @generated from field: string config_json = 8;
    */
@@ -108,10 +204,10 @@ export type DeckPayload = Message<"enlangmemo.sync.v1.DeckPayload"> & {
  * Use `create(DeckPayloadSchema)` to create a new message.
  */
 export const DeckPayloadSchema: GenMessage<DeckPayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 1);
+  messageDesc(file_enlangmemo_sync_v1_entities, 2);
 
 /**
- * NoteTypePayload 承载笔记模板数据的 UPSERT 负载。
+ * NoteTypePayload 承载笔记模板数据的 UPSERT 负载
  *
  * @generated from message enlangmemo.sync.v1.NoteTypePayload
  */
@@ -132,7 +228,7 @@ export type NoteTypePayload = Message<"enlangmemo.sync.v1.NoteTypePayload"> & {
   updatedAt: bigint;
 
   /**
-   * SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等。
+   * SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等
    *
    * @generated from field: string note_template_json = 4;
    */
@@ -144,10 +240,10 @@ export type NoteTypePayload = Message<"enlangmemo.sync.v1.NoteTypePayload"> & {
  * Use `create(NoteTypePayloadSchema)` to create a new message.
  */
 export const NoteTypePayloadSchema: GenMessage<NoteTypePayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 2);
+  messageDesc(file_enlangmemo_sync_v1_entities, 3);
 
 /**
- * NotePayload 承载笔记数据的 UPSERT 负载。
+ * NotePayload 承载笔记数据的 UPSERT 负载
  *
  * @generated from message enlangmemo.sync.v1.NotePayload
  */
@@ -188,7 +284,7 @@ export type NotePayload = Message<"enlangmemo.sync.v1.NotePayload"> & {
   searchFields?: string | undefined;
 
   /**
-   * SQLite notes.fields 的 JSON 字符串。
+   * SQLite notes.fields 的 JSON 字符串
    *
    * @generated from field: string fields_json = 8;
    */
@@ -200,10 +296,10 @@ export type NotePayload = Message<"enlangmemo.sync.v1.NotePayload"> & {
  * Use `create(NotePayloadSchema)` to create a new message.
  */
 export const NotePayloadSchema: GenMessage<NotePayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 3);
+  messageDesc(file_enlangmemo_sync_v1_entities, 4);
 
 /**
- * ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载。
+ * ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载
  *
  * @generated from message enlangmemo.sync.v1.ProcessingNotePayload
  */
@@ -234,7 +330,7 @@ export type ProcessingNotePayload = Message<"enlangmemo.sync.v1.ProcessingNotePa
   senseId?: string | undefined;
 
   /**
-   * SQLite processing_notes.fields 的 JSON 字符串。
+   * SQLite processing_notes.fields 的 JSON 字符串
    *
    * @generated from field: string fields_json = 6;
    */
@@ -246,10 +342,10 @@ export type ProcessingNotePayload = Message<"enlangmemo.sync.v1.ProcessingNotePa
  * Use `create(ProcessingNotePayloadSchema)` to create a new message.
  */
 export const ProcessingNotePayloadSchema: GenMessage<ProcessingNotePayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 4);
+  messageDesc(file_enlangmemo_sync_v1_entities, 5);
 
 /**
- * CardPayload 承载卡片数据的 UPSERT 负载。
+ * CardPayload 承载卡片数据的 UPSERT 负载
  *
  * @generated from message enlangmemo.sync.v1.CardPayload
  */
@@ -335,10 +431,10 @@ export type CardPayload = Message<"enlangmemo.sync.v1.CardPayload"> & {
  * Use `create(CardPayloadSchema)` to create a new message.
  */
 export const CardPayloadSchema: GenMessage<CardPayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 5);
+  messageDesc(file_enlangmemo_sync_v1_entities, 6);
 
 /**
- * ReviewLogPayload 承载复习记录数据的 UPSERT 负载。
+ * ReviewLogPayload 承载复习记录数据的 UPSERT 负载
  *
  * @generated from message enlangmemo.sync.v1.ReviewLogPayload
  */
@@ -399,10 +495,10 @@ export type ReviewLogPayload = Message<"enlangmemo.sync.v1.ReviewLogPayload"> & 
  * Use `create(ReviewLogPayloadSchema)` to create a new message.
  */
 export const ReviewLogPayloadSchema: GenMessage<ReviewLogPayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 6);
+  messageDesc(file_enlangmemo_sync_v1_entities, 7);
 
 /**
- * DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载。
+ * DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载
  *
  * @generated from message enlangmemo.sync.v1.DicNoteMapPayload
  */
@@ -430,7 +526,7 @@ export type DicNoteMapPayload = Message<"enlangmemo.sync.v1.DicNoteMapPayload"> 
  * Use `create(DicNoteMapPayloadSchema)` to create a new message.
  */
 export const DicNoteMapPayloadSchema: GenMessage<DicNoteMapPayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 7);
+  messageDesc(file_enlangmemo_sync_v1_entities, 8);
 
 /**
  * @generated from enum enlangmemo.sync.v1.EntityType
@@ -487,4 +583,32 @@ export enum EntityType {
  */
 export const EntityTypeSchema: GenEnum<EntityType> = /*@__PURE__*/
   enumDesc(file_enlangmemo_sync_v1_entities, 0);
+
+/**
+ * ChangeOp 表示同步实体的变更操作类型
+ *
+ * @generated from enum enlangmemo.sync.v1.ChangeOp
+ */
+export enum ChangeOp {
+  /**
+   * @generated from enum value: CHANGE_OP_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: CHANGE_OP_UPSERT = 1;
+   */
+  UPSERT = 1,
+
+  /**
+   * @generated from enum value: CHANGE_OP_DELETE = 2;
+   */
+  DELETE = 2,
+}
+
+/**
+ * Describes the enum enlangmemo.sync.v1.ChangeOp.
+ */
+export const ChangeOpSchema: GenEnum<ChangeOp> = /*@__PURE__*/
+  enumDesc(file_enlangmemo_sync_v1_entities, 1);
 
