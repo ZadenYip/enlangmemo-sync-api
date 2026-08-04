@@ -21,6 +21,9 @@ message HandshakeRequest {
   int32 db_schema_version = 6;
   // collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
   int64 collection_schema_updated_at = 7;
+
+  // 客户端发起握手时的本地时间戳
+  int64 client_now = 8 [(buf.validate.field).int64.gte = 0];
 }
 
 message HandshakeResponse {
@@ -51,4 +54,7 @@ enum HandshakeStatus {
   HANDSHAKE_STATUS_CLIENT_TOO_OLD = 5;
   // 客户端 protocol_version 高于服务端当前支持版本
   HANDSHAKE_STATUS_SERVER_TOO_OLD = 6;
+
+  // 客户端本地时间与服务端时间偏差过大
+  HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE = 7;
 }

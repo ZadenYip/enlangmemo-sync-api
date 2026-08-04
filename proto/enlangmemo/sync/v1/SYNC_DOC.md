@@ -67,11 +67,16 @@ message HandshakeRequest {
   int32 db_schema_version = 6;
   // collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
   int64 collection_schema_updated_at = 7;
+
+  // 客户端发起握手时的本地时间戳
+  int64 client_now = 8 [(buf.validate.field).int64.gte = 0];
 }
 ```
 
 device_id 用于区分同一用户的不同设备，并辅助判断 SyncLock 存在时是否为同一设备重复握手。
 此外还会传集合元数据，以此确认目前服务器已有的数据是否有冲突问题（卡片模板变更，模板删除等）
+
+`client_now` 表示客户端发起握手时的本地时间戳。服务端用其对比自身时间，若偏差过大则返回 `CLIENT_TIME_SKEW_TOO_LARGE`，提示用户尝试校准系统时间后重新同步。
 
 ### SyncLock
 SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用
@@ -124,6 +129,9 @@ enum HandshakeStatus {
   HANDSHAKE_STATUS_CLIENT_TOO_OLD = 5;
   // 客户端 protocol_version 高于服务端当前支持版本
   HANDSHAKE_STATUS_SERVER_TOO_OLD = 6;
+
+  // 客户端本地时间与服务端时间偏差过大
+  HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE = 7;
 }
 
 ```
@@ -163,6 +171,11 @@ collection_schema_updated_at 不一致，例如模板、字段、牌组结构冲
 
 #### SERVER_TOO_OLD
 客户端 protocol_version 高于服务端当前支持版本，需要升级服务端。
+
+#### CLIENT_TIME_SKEW_TOO_LARGE
+
+客户端 `client_now` 与服务端当前时间偏差超过服务端允许阈值。该状态不创建可继续同步的 session，不返回 `session_id`。客户端应提示用户校准系统时间后重新同步。
+
 
 
 #### ConnectRPC 全局错误

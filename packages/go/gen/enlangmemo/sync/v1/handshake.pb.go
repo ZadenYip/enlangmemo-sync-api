@@ -38,6 +38,8 @@ const (
 	HandshakeStatus_HANDSHAKE_STATUS_CLIENT_TOO_OLD HandshakeStatus = 5
 	// 客户端 protocol_version 高于服务端当前支持版本
 	HandshakeStatus_HANDSHAKE_STATUS_SERVER_TOO_OLD HandshakeStatus = 6
+	// 客户端本地时间与服务端时间偏差过大
+	HandshakeStatus_HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE HandshakeStatus = 7
 )
 
 // Enum value maps for HandshakeStatus.
@@ -50,15 +52,17 @@ var (
 		4: "HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT",
 		5: "HANDSHAKE_STATUS_CLIENT_TOO_OLD",
 		6: "HANDSHAKE_STATUS_SERVER_TOO_OLD",
+		7: "HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE",
 	}
 	HandshakeStatus_value = map[string]int32{
-		"HANDSHAKE_STATUS_UNSPECIFIED":            0,
-		"HANDSHAKE_STATUS_NO_REMOTE_CHANGES":      1,
-		"HANDSHAKE_STATUS_NEED_PULL":              2,
-		"HANDSHAKE_STATUS_OVERWRITE_REQUIRED":     3,
-		"HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT": 4,
-		"HANDSHAKE_STATUS_CLIENT_TOO_OLD":         5,
-		"HANDSHAKE_STATUS_SERVER_TOO_OLD":         6,
+		"HANDSHAKE_STATUS_UNSPECIFIED":                0,
+		"HANDSHAKE_STATUS_NO_REMOTE_CHANGES":          1,
+		"HANDSHAKE_STATUS_NEED_PULL":                  2,
+		"HANDSHAKE_STATUS_OVERWRITE_REQUIRED":         3,
+		"HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT":     4,
+		"HANDSHAKE_STATUS_CLIENT_TOO_OLD":             5,
+		"HANDSHAKE_STATUS_SERVER_TOO_OLD":             6,
+		"HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE": 7,
 	}
 )
 
@@ -105,8 +109,10 @@ type HandshakeRequest struct {
 	DbSchemaVersion int32 `protobuf:"varint,6,opt,name=db_schema_version,json=dbSchemaVersion,proto3" json:"db_schema_version,omitempty"`
 	// collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
 	CollectionSchemaUpdatedAt int64 `protobuf:"varint,7,opt,name=collection_schema_updated_at,json=collectionSchemaUpdatedAt,proto3" json:"collection_schema_updated_at,omitempty"`
-	unknownFields             protoimpl.UnknownFields
-	sizeCache                 protoimpl.SizeCache
+	// 客户端发起握手时的本地时间戳
+	ClientNow     int64 `protobuf:"varint,8,opt,name=client_now,json=clientNow,proto3" json:"client_now,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HandshakeRequest) Reset() {
@@ -188,6 +194,13 @@ func (x *HandshakeRequest) GetCollectionSchemaUpdatedAt() int64 {
 	return 0
 }
 
+func (x *HandshakeRequest) GetClientNow() int64 {
+	if x != nil {
+		return x.ClientNow
+	}
+	return 0
+}
+
 type HandshakeResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Status HandshakeStatus        `protobuf:"varint,1,opt,name=status,proto3,enum=enlangmemo.sync.v1.HandshakeStatus" json:"status,omitempty"`
@@ -254,7 +267,7 @@ var File_enlangmemo_sync_v1_handshake_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
-	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xe8\x02\n" +
+	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\x90\x03\n" +
 	"\x10HandshakeRequest\x12%\n" +
 	"\tdevice_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bdeviceId\x12(\n" +
 	"\vdevice_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18 R\n" +
@@ -263,13 +276,15 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\x16client_sync_cursor_usn\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13clientSyncCursorUsn\x12)\n" +
 	"\x10protocol_version\x18\x05 \x01(\x05R\x0fprotocolVersion\x12*\n" +
 	"\x11db_schema_version\x18\x06 \x01(\x05R\x0fdbSchemaVersion\x12?\n" +
-	"\x1ccollection_schema_updated_at\x18\a \x01(\x03R\x19collectionSchemaUpdatedAt\"\xcb\x01\n" +
+	"\x1ccollection_schema_updated_at\x18\a \x01(\x03R\x19collectionSchemaUpdatedAt\x12&\n" +
+	"\n" +
+	"client_now\x18\b \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tclientNow\"\xcb\x01\n" +
 	"\x11HandshakeResponse\x12;\n" +
 	"\x06status\x18\x01 \x01(\x0e2#.enlangmemo.sync.v1.HandshakeStatusR\x06status\x12,\n" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01 H\x00R\tsessionId\x88\x01\x01\x12<\n" +
 	"\x16server_sync_cursor_usn\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13serverSyncCursorUsnB\r\n" +
-	"\v_session_id*\x9b\x02\n" +
+	"\v_session_id*\xcc\x02\n" +
 	"\x0fHandshakeStatus\x12 \n" +
 	"\x1cHANDSHAKE_STATUS_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"HANDSHAKE_STATUS_NO_REMOTE_CHANGES\x10\x01\x12\x1e\n" +
@@ -277,7 +292,8 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"#HANDSHAKE_STATUS_OVERWRITE_REQUIRED\x10\x03\x12+\n" +
 	"'HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT\x10\x04\x12#\n" +
 	"\x1fHANDSHAKE_STATUS_CLIENT_TOO_OLD\x10\x05\x12#\n" +
-	"\x1fHANDSHAKE_STATUS_SERVER_TOO_OLD\x10\x06B\xe5\x01\n" +
+	"\x1fHANDSHAKE_STATUS_SERVER_TOO_OLD\x10\x06\x12/\n" +
+	"+HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE\x10\aB\xe5\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\x0eHandshakeProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var (
