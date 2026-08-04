@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file enlangmemo/sync/v1/pull.proto.
  */
 export const file_enlangmemo_sync_v1_pull: GenFile = /*@__PURE__*/
-  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVsbC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIkcKC1B1bGxSZXF1ZXN0EhwKCnNlc3Npb25faWQYASABKAlCCLpIBXIDmAEgEhoKCWJhdGNoX3NlcRgCIAEoBUIHukgEGgIoASJ8CgxQdWxsUmVzcG9uc2USEQoJYmF0Y2hfc2VxGAEgASgFEhQKA3VzbhgCIAEoA0IHukgEIgIoABIvCgdjaGFuZ2VzGAMgAygLMh4uZW5sYW5nbWVtby5zeW5jLnYxLlN5bmNDaGFuZ2USEgoKbGFzdF9iYXRjaBgEIAEoCELgAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUIJUHVsbFByb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
+  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVsbC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIkcKC1B1bGxSZXF1ZXN0EhwKCnNlc3Npb25faWQYASABKAlCCLpIBXIDmAEgEhoKCWJhdGNoX3NlcRgCIAEoBUIHukgEGgIoASKQAQoMUHVsbFJlc3BvbnNlEhEKCWJhdGNoX3NlcRgBIAEoBRIeCg1iYXRjaF9tYXhfdXNuGAIgASgDQge6SAQiAigAEjkKB2NoYW5nZXMYAyADKAsyHi5lbmxhbmdtZW1vLnN5bmMudjEuU3luY0NoYW5nZUIIukgFkgECCAESEgoKbGFzdF9iYXRjaBgEIAEoCELgAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUIJUHVsbFByb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
 
 /**
  * @generated from message enlangmemo.sync.v1.PullRequest
@@ -52,12 +52,11 @@ export type PullResponse = Message<"enlangmemo.sync.v1.PullResponse"> & {
   batchSeq: number;
 
   /**
-   * 本 batch 对应的服务端 usn
-   * 一个 batch 包含一个 usn 下的全部变更
+   * 本 batch 最大的 usn
    *
-   * @generated from field: int64 usn = 2;
+   * @generated from field: int64 batch_max_usn = 2;
    */
-  usn: bigint;
+  batchMaxUsn: bigint;
 
   /**
    * 这批数据的全部变更

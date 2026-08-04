@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file enlangmemo/sync/v1/push.proto.
  */
 export const file_enlangmemo_sync_v1_push: GenFile = /*@__PURE__*/
-  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVzaC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIpYBCgtQdXNoUmVxdWVzdBIcCgpzZXNzaW9uX2lkGAEgASgJQgi6SAVyA5gBIBIaCgliYXRjaF9zZXEYAiABKAVCB7pIBBoCKAESOQoHY2hhbmdlcxgDIAMoCzIeLmVubGFuZ21lbW8uc3luYy52MS5TeW5jQ2hhbmdlQgi6SAWSAQIIARISCgpsYXN0X2JhdGNoGAQgASgIIkAKDFB1c2hSZXNwb25zZRIRCgliYXRjaF9zZXEYASABKAUSHQoMYXNzaWduZWRfdXNuGAIgASgDQge6SAQiAigBQuABChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQglQdXNoUHJvdG9QAVpRZ2l0aHViLmNvbS96YWRlbnlpcC9lbmxhbmdtZW1vLXN5bmMtYXBpL3BhY2thZ2VzL2dvL2dlbi9lbmxhbmdtZW1vL3N5bmMvdjE7c3luY3YxogIDRVNYqgISRW5sYW5nbWVtby5TeW5jLlYxygISRW5sYW5nbWVtb1xTeW5jXFYx4gIeRW5sYW5nbWVtb1xTeW5jXFYxXEdQQk1ldGFkYXRh6gIURW5sYW5nbWVtbzo6U3luYzo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
+  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVzaC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIpYBCgtQdXNoUmVxdWVzdBIcCgpzZXNzaW9uX2lkGAEgASgJQgi6SAVyA5gBIBIaCgliYXRjaF9zZXEYAiABKAVCB7pIBBoCKAESOQoHY2hhbmdlcxgDIAMoCzIeLmVubGFuZ21lbW8uc3luYy52MS5TeW5jQ2hhbmdlQgi6SAWSAQIIARISCgpsYXN0X2JhdGNoGAQgASgIIkAKDFB1c2hSZXNwb25zZRIRCgliYXRjaF9zZXEYASABKAUSHQoMYXNzaWduZWRfdXNuGAIgASgDQge6SAQiAigAQuABChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQglQdXNoUHJvdG9QAVpRZ2l0aHViLmNvbS96YWRlbnlpcC9lbmxhbmdtZW1vLXN5bmMtYXBpL3BhY2thZ2VzL2dvL2dlbi9lbmxhbmdtZW1vL3N5bmMvdjE7c3luY3YxogIDRVNYqgISRW5sYW5nbWVtby5TeW5jLlYxygISRW5sYW5nbWVtb1xTeW5jXFYx4gIeRW5sYW5nbWVtb1xTeW5jXFYxXEdQQk1ldGFkYXRh6gIURW5sYW5nbWVtbzo6U3luYzo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
 
 /**
  * @generated from message enlangmemo.sync.v1.PushRequest
@@ -33,7 +33,7 @@ export type PushRequest = Message<"enlangmemo.sync.v1.PushRequest"> & {
   batchSeq: number;
 
   /**
-   * 客户端本地 usn = -1 的一批变更。
+   * 客户端本地未同步到服务器的变更，每条 SyncChange.usn 为 -1
    *
    * @generated from field: repeated enlangmemo.sync.v1.SyncChange changes = 3;
    */
@@ -66,9 +66,8 @@ export type PushResponse = Message<"enlangmemo.sync.v1.PushResponse"> & {
   batchSeq: number;
 
   /**
-   * 服务端为本 Push batch 分配的 usn
-   * 客户端用它更新本 batch 内已上传实体的 usn，并推进 collection.sync_cursor_usn = assigned_usn + 1
-   * 如果本 batch 包含 CollectionPayload，collection 表自身的 usn 也写为 assigned_usn；assigned_usn 本身不是 sync_cursor_usn
+   * 服务端为本 Push batch 分配的 usn。
+   * 客户端用它更新本 batch 内已上传实体的 usn，并推进 collection.sync_cursor_usn = assigned_usn + 1。
    *
    * @generated from field: int64 assigned_usn = 2;
    */

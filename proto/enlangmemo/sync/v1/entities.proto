@@ -23,7 +23,7 @@ enum ChangeOp {
   CHANGE_OP_DELETE = 2;
 }
 
-// SyncChange 表示一个同步实体变更。batch 的 usn 不在这里携带.
+// SyncChange 表示实体的同步变更
 message SyncChange {
   // UUID
   string entity_id = 1 [(buf.validate.field).string.len = 36];
@@ -33,6 +33,8 @@ message SyncChange {
 
   // 变更操作类型
   ChangeOp op = 3;
+
+  int64 usn = 4 [(buf.validate.field).int64.gte = -1];
 
   // op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
   oneof payload {

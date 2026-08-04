@@ -139,7 +139,7 @@ func (ChangeOp) EnumDescriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{1}
 }
 
-// SyncChange 表示一个同步实体变更。batch 的 usn 不在这里携带.
+// SyncChange 表示实体的同步变更
 type SyncChange struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// UUID
@@ -147,7 +147,8 @@ type SyncChange struct {
 	// 实体类型
 	EntityType EntityType `protobuf:"varint,2,opt,name=entity_type,json=entityType,proto3,enum=enlangmemo.sync.v1.EntityType" json:"entity_type,omitempty"`
 	// 变更操作类型
-	Op ChangeOp `protobuf:"varint,3,opt,name=op,proto3,enum=enlangmemo.sync.v1.ChangeOp" json:"op,omitempty"`
+	Op  ChangeOp `protobuf:"varint,3,opt,name=op,proto3,enum=enlangmemo.sync.v1.ChangeOp" json:"op,omitempty"`
+	Usn int64    `protobuf:"varint,4,opt,name=usn,proto3" json:"usn,omitempty"`
 	// op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
 	//
 	// Types that are valid to be assigned to Payload:
@@ -214,6 +215,13 @@ func (x *SyncChange) GetOp() ChangeOp {
 		return x.Op
 	}
 	return ChangeOp_CHANGE_OP_UNSPECIFIED
+}
+
+func (x *SyncChange) GetUsn() int64 {
+	if x != nil {
+		return x.Usn
+	}
+	return 0
 }
 
 func (x *SyncChange) GetPayload() isSyncChange_Payload {
@@ -1130,13 +1138,14 @@ var File_enlangmemo_sync_v1_entities_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
-	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xc7\x05\n" +
+	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xeb\x05\n" +
 	"\n" +
 	"SyncChange\x12%\n" +
 	"\tentity_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bentityId\x12?\n" +
 	"\ventity_type\x18\x02 \x01(\x0e2\x1e.enlangmemo.sync.v1.EntityTypeR\n" +
 	"entityType\x12,\n" +
-	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12G\n" +
+	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12\"\n" +
+	"\x03usn\x18\x04 \x01(\x03B\x10\xbaH\r\"\v(\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01R\x03usn\x12G\n" +
 	"\n" +
 	"collection\x18\x10 \x01(\v2%.enlangmemo.sync.v1.CollectionPayloadH\x00R\n" +
 	"collection\x125\n" +

@@ -80,9 +80,8 @@ type PullResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 当前返回的 batch 序号，等于 request.batch_seq
 	BatchSeq int32 `protobuf:"varint,1,opt,name=batch_seq,json=batchSeq,proto3" json:"batch_seq,omitempty"`
-	// 本 batch 对应的服务端 usn
-	// 一个 batch 包含一个 usn 下的全部变更
-	Usn int64 `protobuf:"varint,2,opt,name=usn,proto3" json:"usn,omitempty"`
+	// 本 batch 最大的 usn
+	BatchMaxUsn int64 `protobuf:"varint,2,opt,name=batch_max_usn,json=batchMaxUsn,proto3" json:"batch_max_usn,omitempty"`
 	// 这批数据的全部变更
 	Changes []*SyncChange `protobuf:"bytes,3,rep,name=changes,proto3" json:"changes,omitempty"`
 	// 是否为本轮 Pull 的最后一个 batch
@@ -128,9 +127,9 @@ func (x *PullResponse) GetBatchSeq() int32 {
 	return 0
 }
 
-func (x *PullResponse) GetUsn() int64 {
+func (x *PullResponse) GetBatchMaxUsn() int64 {
 	if x != nil {
-		return x.Usn
+		return x.BatchMaxUsn
 	}
 	return 0
 }
@@ -157,11 +156,11 @@ const file_enlangmemo_sync_v1_pull_proto_rawDesc = "" +
 	"\vPullRequest\x12'\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01 R\tsessionId\x12$\n" +
-	"\tbatch_seq\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\bbatchSeq\"\x9f\x01\n" +
+	"\tbatch_seq\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\bbatchSeq\"\xbb\x01\n" +
 	"\fPullResponse\x12\x1b\n" +
-	"\tbatch_seq\x18\x01 \x01(\x05R\bbatchSeq\x12\x19\n" +
-	"\x03usn\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x03usn\x128\n" +
-	"\achanges\x18\x03 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeR\achanges\x12\x1d\n" +
+	"\tbatch_seq\x18\x01 \x01(\x05R\bbatchSeq\x12+\n" +
+	"\rbatch_max_usn\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\vbatchMaxUsn\x12B\n" +
+	"\achanges\x18\x03 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeB\b\xbaH\x05\x92\x01\x02\b\x01R\achanges\x12\x1d\n" +
 	"\n" +
 	"last_batch\x18\x04 \x01(\bR\tlastBatchB\xe0\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\tPullProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"

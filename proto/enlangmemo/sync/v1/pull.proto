@@ -17,12 +17,11 @@ message PullResponse {
   // 当前返回的 batch 序号，等于 request.batch_seq
   int32 batch_seq = 1;
 
-  // 本 batch 对应的服务端 usn
-  // 一个 batch 包含一个 usn 下的全部变更
-  int64 usn = 2 [(buf.validate.field).int64.gte = 0];
+  // 本 batch 最大的 usn
+  int64 batch_max_usn = 2 [(buf.validate.field).int64.gte = 0];
 
   // 这批数据的全部变更
-  repeated SyncChange changes = 3;
+  repeated SyncChange changes = 3 [(buf.validate.field).repeated.min_items = 1];
 
   // 是否为本轮 Pull 的最后一个 batch
   bool last_batch = 4;
