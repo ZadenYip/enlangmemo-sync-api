@@ -211,7 +211,7 @@ last_sync_time integer [not null, default: 0]
 sync_cursor_usn integer [not null, default: 0]
 ```
 
-`last_sync_time` 是客户端本地辅助字段，表示该客户端上一次完整同步成功完成的时间。它不参与同步一致性判断，不进入 CollectionPayload，也不由服务端分配；客户端只在 FinishSync 成功返回后写入本机当前时间。`sync_cursor_usn` 是客户端已同步到的 usn 上界 / 下次增量 Pull 的起点，会在 Pull / Push batch 本地事务成功后推进。
+`last_sync_time` 是客户端本地辅助字段，表示该客户端上一次完整同步成功完成的服务端时间。它不参与同步一致性判断，不进入 CollectionPayload；客户端只在 FinishSync 成功返回后写入 `FinishSyncResponse.server_finished_at`。`sync_cursor_usn` 是客户端已同步到的 usn 上界 / 下次增量 Pull 的起点，会在 Pull / Push batch 本地事务成功后推进。
 
 
 ### PULLING 状态
@@ -329,9 +329,6 @@ message PushResponse {
   // 客户端用它更新本 batch 内已上传实体的 usn，并推进 collection.sync_cursor_usn = assigned_usn + 1。
   // 如果本 batch 包含 CollectionPayload，collection 表自身的 usn 也写为 assigned_usn；assigned_usn 本身不是 sync_cursor_usn。
   int64 assigned_usn = 2 [(buf.validate.field).int64.gte = 1];
-
-  // 是否为本轮同步的最后一个 batch
-  bool last_batch = 3;
 }
 ```
 
@@ -344,8 +341,8 @@ message PushResponse {
 3. 发送 PushRequest 后等待 PushResponse
 4. 收到 PushResponse 后，校验 `response.batch_seq == request.batch_seq`。
 5. 客户端开启一个本地 SQLite 事务，将本 batch 内已上传实体的 `usn` 更新为 `response.assigned_usn`，并将 `collection.sync_cursor_usn` 推进到 `response.assigned_usn + 1`。
-6. 事务提交后，如果 `response.last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PushRequest。
-7. 如果 `response.last_batch = true`，客户端进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
+6. 事务提交后，如果本次 `request.last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PushRequest。
+7. 如果本次 `request.last_batch = true`，客户端进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
 
 #### 服务端处理规则
 
@@ -365,10 +362,67 @@ message PushResponse {
 
 Push 同样不额外设计 ACK。客户端只有在收到 PushResponse，并成功更新本地 `usn` 和 `collection.sync_cursor_usn` 后，才继续发送下一个 batch。
 
-`last_sync_time` 不在 Push batch 内更新。它表示一次完整同步成功完成的时间，应该在 FinishSync 成功返回后由客户端统一更新。
+`last_sync_time` 不在 Push batch 内更新。它表示一次完整同步成功完成的服务端时间，应该在 FinishSync 成功返回后由客户端使用 `server_finished_at` 统一更新。
 
 如果 PushRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端直接视为本次同步结束。
 
 同步数据塞进数据库后，即使客户端没收到响应，也不会导致数据不一致。因为后续重新发起同步时，由于没收到响应本地的 usn 会落后服务端，会先 Pull 再 Push，保证数据一致。
+
+### FINISHING 状态
+
+FINISHING 表示同步数据传输已经完成，客户端正在通知服务端结束当前同步会话，释放 SyncLock。
+
+客户端进入 FINISHING 有三种情况：
+
+1. HandshakeResponse 返回 `NO_REMOTE_CHANGES`，并且客户端本地没有 `usn = -1` 的未同步数据。
+2. PULLING 完成后，客户端本地没有 `usn = -1` 的未同步数据。
+3. PUSHING 完成后，客户端已经成功处理最后一个 PushResponse。
+
+#### FinishSyncRequest
+
+```proto
+message FinishSyncRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+```
+
+FinishSyncRequest 必须携带 `session_id`，服务端用它确认客户端结束的是当前同步会话，避免误释放其他 session。
+
+#### FinishSyncResponse
+
+```proto
+message FinishSyncResponse {
+  // 服务端确认完成同步并释放 session / SyncLock 的时间
+  //
+  // 客户端用其更新本地 collection.last_sync_time
+  int64 server_finished_at = 1 [(buf.validate.field).int64.gte = 0];
+}
+```
+
+FinishSyncResponse 成功返回即表示 FinishSync ACK：服务端已经接受本次完成请求，并释放当前 session / SyncLock。`server_finished_at` 是服务端确认完成同步的时间，客户端用它更新本地 `collection.last_sync_time`。
+
+#### 客户端处理流程
+
+1. 客户端进入 FINISHING 后，发送 FinishSyncRequest。
+2. 客户端收到 FinishSyncResponse 成功响应后，进入 FINISHED。
+3. 客户端在进入 FINISHED 时，将本地 `collection.last_sync_time` 更新为 `response.server_finished_at`。
+
+#### 服务端处理规则
+
+1. 服务端收到 FinishSyncRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否处于允许 Finish 的状态。
+2. 允许 Finish 的状态包括 AWAITING_CLIENT_ACTION 和 AWAITING_FINISH。
+3. 校验通过后，服务端释放当前 session / SyncLock。
+4. 服务端确认释放成功后，返回 FinishSyncResponse，并将当前服务端时间写入 `server_finished_at`。
+
+如果 `session_id` 不存在、已经过期、属于其他用户或状态不允许 Finish，服务端返回 ConnectRPC `FailedPrecondition`。
+
+#### 中断与超时
+
+如果 FinishSyncRequest 超时、网络中断或客户端崩溃，客户端不能确认服务端是否已经释放 SyncLock。客户端直接视为本次同步结束，不更新 `last_sync_time`。
+
+如果服务端已经释放 SyncLock，但客户端没有收到 FinishSyncResponse，不过此时数据都已经同步完成，唯独 `last_sync_time` 没有更新，而这个字段仅用于客户端展示上次同步时间，不影响数据一致性。
+
+
+
 
 

@@ -6,6 +6,8 @@ import type { GenFile, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { HandshakeRequestSchema, HandshakeResponseSchema } from "./handshake_pb.js";
 import { file_enlangmemo_sync_v1_handshake } from "./handshake_pb.js";
+import type { FinishSyncRequestSchema, FinishSyncResponseSchema } from "./finish_pb.js";
+import { file_enlangmemo_sync_v1_finish } from "./finish_pb.js";
 import type { PullRequestSchema, PullResponseSchema } from "./pull_pb.js";
 import { file_enlangmemo_sync_v1_pull } from "./pull_pb.js";
 import type { PushRequestSchema, PushResponseSchema } from "./push_pb.js";
@@ -15,7 +17,7 @@ import { file_enlangmemo_sync_v1_push } from "./push_pb.js";
  * Describes the file enlangmemo/sync/v1/sync.proto.
  */
 export const file_enlangmemo_sync_v1_sync: GenFile = /*@__PURE__*/
-  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvc3luYy5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxMv0BCgtTeW5jU2VydmljZRJYCglIYW5kc2hha2USJC5lbmxhbmdtZW1vLnN5bmMudjEuSGFuZHNoYWtlUmVxdWVzdBolLmVubGFuZ21lbW8uc3luYy52MS5IYW5kc2hha2VSZXNwb25zZRJJCgRQdWxsEh8uZW5sYW5nbWVtby5zeW5jLnYxLlB1bGxSZXF1ZXN0GiAuZW5sYW5nbWVtby5zeW5jLnYxLlB1bGxSZXNwb25zZRJJCgRQdXNoEh8uZW5sYW5nbWVtby5zeW5jLnYxLlB1c2hSZXF1ZXN0GiAuZW5sYW5nbWVtby5zeW5jLnYxLlB1c2hSZXNwb25zZULgAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUIJU3luY1Byb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_enlangmemo_sync_v1_handshake, file_enlangmemo_sync_v1_pull, file_enlangmemo_sync_v1_push]);
+  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvc3luYy5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxMtoCCgtTeW5jU2VydmljZRJYCglIYW5kc2hha2USJC5lbmxhbmdtZW1vLnN5bmMudjEuSGFuZHNoYWtlUmVxdWVzdBolLmVubGFuZ21lbW8uc3luYy52MS5IYW5kc2hha2VSZXNwb25zZRJJCgRQdWxsEh8uZW5sYW5nbWVtby5zeW5jLnYxLlB1bGxSZXF1ZXN0GiAuZW5sYW5nbWVtby5zeW5jLnYxLlB1bGxSZXNwb25zZRJJCgRQdXNoEh8uZW5sYW5nbWVtby5zeW5jLnYxLlB1c2hSZXF1ZXN0GiAuZW5sYW5nbWVtby5zeW5jLnYxLlB1c2hSZXNwb25zZRJbCgpGaW5pc2hTeW5jEiUuZW5sYW5nbWVtby5zeW5jLnYxLkZpbmlzaFN5bmNSZXF1ZXN0GiYuZW5sYW5nbWVtby5zeW5jLnYxLkZpbmlzaFN5bmNSZXNwb25zZULgAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUIJU3luY1Byb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_enlangmemo_sync_v1_handshake, file_enlangmemo_sync_v1_finish, file_enlangmemo_sync_v1_pull, file_enlangmemo_sync_v1_push]);
 
 /**
  * @generated from service enlangmemo.sync.v1.SyncService
@@ -44,6 +46,14 @@ export const SyncService: GenService<{
     methodKind: "unary";
     input: typeof PushRequestSchema;
     output: typeof PushResponseSchema;
+  },
+  /**
+   * @generated from rpc enlangmemo.sync.v1.SyncService.FinishSync
+   */
+  finishSync: {
+    methodKind: "unary";
+    input: typeof FinishSyncRequestSchema;
+    output: typeof FinishSyncResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_enlangmemo_sync_v1_sync, 0);

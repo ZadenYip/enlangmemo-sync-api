@@ -3,6 +3,7 @@ syntax = "proto3";
 package enlangmemo.sync.v1;
 
 import "enlangmemo/sync/v1/handshake.proto";
+import "enlangmemo/sync/v1/finish.proto";
 import "enlangmemo/sync/v1/pull.proto";
 import "enlangmemo/sync/v1/push.proto";
 
@@ -10,4 +11,5 @@ service SyncService {
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
   rpc Pull(PullRequest) returns (PullResponse);
   rpc Push(PushRequest) returns (PushResponse);
+  rpc FinishSync(FinishSyncRequest) returns (FinishSyncResponse);
 }

@@ -39,6 +39,8 @@ const (
 	SyncServicePullProcedure = "/enlangmemo.sync.v1.SyncService/Pull"
 	// SyncServicePushProcedure is the fully-qualified name of the SyncService's Push RPC.
 	SyncServicePushProcedure = "/enlangmemo.sync.v1.SyncService/Push"
+	// SyncServiceFinishSyncProcedure is the fully-qualified name of the SyncService's FinishSync RPC.
+	SyncServiceFinishSyncProcedure = "/enlangmemo.sync.v1.SyncService/FinishSync"
 )
 
 // SyncServiceClient is a client for the enlangmemo.sync.v1.SyncService service.
@@ -46,6 +48,7 @@ type SyncServiceClient interface {
 	Handshake(context.Context, *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error)
 	Pull(context.Context, *connect.Request[v1.PullRequest]) (*connect.Response[v1.PullResponse], error)
 	Push(context.Context, *connect.Request[v1.PushRequest]) (*connect.Response[v1.PushResponse], error)
+	FinishSync(context.Context, *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error)
 }
 
 // NewSyncServiceClient constructs a client for the enlangmemo.sync.v1.SyncService service. By
@@ -77,14 +80,21 @@ func NewSyncServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(syncServiceMethods.ByName("Push")),
 			connect.WithClientOptions(opts...),
 		),
+		finishSync: connect.NewClient[v1.FinishSyncRequest, v1.FinishSyncResponse](
+			httpClient,
+			baseURL+SyncServiceFinishSyncProcedure,
+			connect.WithSchema(syncServiceMethods.ByName("FinishSync")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // syncServiceClient implements SyncServiceClient.
 type syncServiceClient struct {
-	handshake *connect.Client[v1.HandshakeRequest, v1.HandshakeResponse]
-	pull      *connect.Client[v1.PullRequest, v1.PullResponse]
-	push      *connect.Client[v1.PushRequest, v1.PushResponse]
+	handshake  *connect.Client[v1.HandshakeRequest, v1.HandshakeResponse]
+	pull       *connect.Client[v1.PullRequest, v1.PullResponse]
+	push       *connect.Client[v1.PushRequest, v1.PushResponse]
+	finishSync *connect.Client[v1.FinishSyncRequest, v1.FinishSyncResponse]
 }
 
 // Handshake calls enlangmemo.sync.v1.SyncService.Handshake.
@@ -102,11 +112,17 @@ func (c *syncServiceClient) Push(ctx context.Context, req *connect.Request[v1.Pu
 	return c.push.CallUnary(ctx, req)
 }
 
+// FinishSync calls enlangmemo.sync.v1.SyncService.FinishSync.
+func (c *syncServiceClient) FinishSync(ctx context.Context, req *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error) {
+	return c.finishSync.CallUnary(ctx, req)
+}
+
 // SyncServiceHandler is an implementation of the enlangmemo.sync.v1.SyncService service.
 type SyncServiceHandler interface {
 	Handshake(context.Context, *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error)
 	Pull(context.Context, *connect.Request[v1.PullRequest]) (*connect.Response[v1.PullResponse], error)
 	Push(context.Context, *connect.Request[v1.PushRequest]) (*connect.Response[v1.PushResponse], error)
+	FinishSync(context.Context, *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error)
 }
 
 // NewSyncServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -134,6 +150,12 @@ func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(syncServiceMethods.ByName("Push")),
 		connect.WithHandlerOptions(opts...),
 	)
+	syncServiceFinishSyncHandler := connect.NewUnaryHandler(
+		SyncServiceFinishSyncProcedure,
+		svc.FinishSync,
+		connect.WithSchema(syncServiceMethods.ByName("FinishSync")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/enlangmemo.sync.v1.SyncService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SyncServiceHandshakeProcedure:
@@ -142,6 +164,8 @@ func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption
 			syncServicePullHandler.ServeHTTP(w, r)
 		case SyncServicePushProcedure:
 			syncServicePushHandler.ServeHTTP(w, r)
+		case SyncServiceFinishSyncProcedure:
+			syncServiceFinishSyncHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -161,4 +185,8 @@ func (UnimplementedSyncServiceHandler) Pull(context.Context, *connect.Request[v1
 
 func (UnimplementedSyncServiceHandler) Push(context.Context, *connect.Request[v1.PushRequest]) (*connect.Response[v1.PushResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.Push is not implemented"))
+}
+
+func (UnimplementedSyncServiceHandler) FinishSync(context.Context, *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.FinishSync is not implemented"))
 }
