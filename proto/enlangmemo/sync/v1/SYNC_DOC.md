@@ -226,6 +226,20 @@ sync_cursor_usn integer [not null, default: 0]
 
 `last_sync_time` 是客户端本地辅助字段，表示该客户端上一次完整同步成功完成的服务端时间。它不参与同步一致性判断，不进入 CollectionPayload；客户端只在 FinishSync 成功返回后写入 `FinishSyncResponse.server_finished_at`。`sync_cursor_usn` 是客户端已同步到的 usn 上界 / 下次增量 Pull 的起点，会在 Pull / Push batch 本地事务成功后推进。
 
+### 删除同步策略
+
+同步删除采用删除优先策略，也就是只要任何一端有删除意图，所有终端的数据都进行同步后这个数据不会再出现在设备中。
+
+客户端本地 tombstones 表表示本地待上传删除意图，至少记录 `entity_type`、`entity_id`、`deleted_at`。客户端删除实体时，可以物理删除本地实体行，并插入 tombstone，对应实体的 tombstone 存在 row 则表示该删除尚未被服务端确认。
+
+对于客户端：
+PULLING 远端变更前，客户端必须先检查同一 `entity_type` 和 `entity_id` 是否存在本地 tombstone。
+- 如果本地有对应的 tombstone，同步变更要删除 tombstone，即使 PULL 的 SyncChange 是 UPSERT。
+- 如果没有 tombstone，按正常尝试删除本地实体即可。
+
+对于服务端：
+服务端删除采用软删除。服务端收到 DELETE 变更时，不物理删除同步实体，而是写入删除标记与该 batch 的 `assigned_usn`，后续客户端 Pull 根据删除标记返回 `CHANGE_OP_DELETE`，不携带 payload。
+
 
 ### PULLING 状态
 
@@ -276,15 +290,35 @@ message PullResponse {
 
 `ChangeOp = UPSERT` 时必须携带 `payload`
 
-`ChangeOp = DELETE` 时不携带 payload，客户端根据 `entity_id` 和 `entity_type` 删除对应本地数据库数据
+`ChangeOp = DELETE` 时不携带 payload，客户端根据 `entity_id` 和 `entity_type` 按删除同步策略处理本地实体和 tombstone。
+
+#### Pull 本地未同步变更处理
+
+Pull 阶段是否应用某条远端 `SyncChange` 由客户端决定。服务端只负责返回当前同步会话范围内的远端增量，不判断客户端数据是否冲突。
+
+客户端应用远端变更前，必须检查同一 `entity_type` 和 `entity_id` 是否存在本地未同步变更。本地未同步变更包括：
+
+1. 本地实体 `unit.usn = -1` 的 UPSERT。
+2. 本地 tombstone 中待上传的 DELETE。
+
+如果本地没有未同步变更，则客户端正常应用远端 `SyncChange`。
+
+如果本地存在 `unit.usn = -1` 的未同步 UPSERT，则客户端按下面规则处理远端 `SyncChange`：
+
+- 若服务端该实体的 `change.usn <= client_sync_cursor_usn`，表示客户端本地修改是基于已同步到本地的服务端版本产生的，所以不该应用这条 `SyncChange`，而是保留本地 `unit.usn = -1`，Pull 完成后在 PUSHING 阶段上传本地变更。
+- 若服务端该实体的 `change.usn > client_sync_cursor_usn`，表示服务端在客户端本地修改基线之后也发生了更新，属于并发修改冲突；客户端采用 LWW（Last Write Wins）的策略处理。
+
+LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChange` 的对象更新时间。若客户端时间戳更加新，则不应用远端 `SyncChange`，保留本地 `unit.usn = -1` 等待 PUSHING。若`SyncChange`的时间戳更加新，则应用 `SyncChange`，并覆盖本地未同步变更。
+
+对象更新时间由各实体类型的业务更新时间字段决定，如果是删除的对象则由本地 tombstone 使用 `deleted_at` 作为删除变更时间。客户端必须保证进入 PUSHING 阶段时仍然保留的 `unit.usn = -1` 或 tombstone 都是需要上传到服务端的最终本地变更。
 
 #### 客户端处理流程
 
 1. 客户端进入 PULLING 后，从 `batch_seq = 1` 开始发送 PullRequest
 2. 客户端收到 PullResponse 后，校验 `response.batch_seq == request.batch_seq`
-3. 客户端开启一个本地 SQLite 事务，按服务端返回顺序应用本 batch 的全部 `changes`
-4. 客户端计算本 batch 内最大 `change.usn`，并校验其等于 `response.batch_max_usn`；不一致时视为协议错误，本次同步失败
-5. 同一个事务内，`UPSERT` 实体的 `usn` 写为对应 `change.usn`；`DELETE` 按删除语义处理；全部变更应用成功后，客户端必须在每个 batch 成功应用后将 `collection.sync_cursor_usn` 推进到 `response.batch_max_usn + 1`
+3. 客户端开启一个本地 SQLite 事务，按服务端返回顺序处理本 batch 的全部 `changes`。应用每条变更前，先按删除同步策略与本地未同步变更处理规则判断是否应用。
+4. 客户端计算本 batch 内最大 `change.usn`，并校验其等于 `response.batch_max_usn`；不一致时视为协议错误，本次同步失败。
+5. 同一个事务内，远端 UPSERT / DELETE 按删除同步策略落库；全部变更应用成功后，客户端必须在每个 batch 成功应用后将 `collection.sync_cursor_usn` 推进到 `response.batch_max_usn + 1`。
 6. 事务提交后，如果 `last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PullRequest。
 7. 如果 `last_batch = true`，表示本轮 Pull 范围内的远端增量已全部落库。
 客户端此时的 `collection.sync_cursor_usn` 应等于本次会话的 `server_sync_cursor_usn`。
@@ -315,6 +349,8 @@ PUSHING 表示客户端正在把本地 `usn = -1` 的未同步变更上传到服
 2. PULLING 完成后，客户端本地仍存在 `usn = -1` 的未同步数据；客户端向服务端发送第一个 PushRequest，服务端从 AWAITING_CLIENT_ACTION 切换到 PUSHING。
 
 Push 的同步颗粒度也是 batch。一个 Push batch 对应服务端一次数据库事务，服务端为该 batch 分配一个新的 usn，并将 batch 内所有变更写为同一个 usn。客户端上传时本地未同步变更的 `SyncChange.usn` 为 -1，该值表示待上传
+
+Push 阶段服务端原则上应全部应用客户端上传的变更。变更是否应该覆盖远端数据、是否应放弃本地变更，应在客户端 PULLING 阶段自行处理完成。Pull 完成后仍然保留为 `unit.usn = -1` 或 tombstone 的变更，都表示客户端决定需要推送到服务端的最终本地变更。
 
 #### PushRequest
 
@@ -372,7 +408,7 @@ message PushResponse {
    - 当 `ChangeOp = UPSERT` 时，确认 payload 与 `entity_type` 匹配
    - 当 `ChangeOp = DELETE` 时，payload 为空。
    - 校验失败返回 ConnectRPC `InvalidArgument`
-5. 服务端开启数据库事务，为当前 batch 分配一个新的 usn，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按删除语义处理。
+5. 服务端开启数据库事务，为当前 batch 分配一个新的 usn，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按软删除语义处理并写入该 usn。
 6. 服务端先将 `SyncLock.expected_batch_seq` 递增 1；如果 `request.last_batch = true`，同时将 SyncLock 状态改为 AWAITING_FINISH。
 7. 服务端确认数据库事务与 SyncLock 更新都成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
 
