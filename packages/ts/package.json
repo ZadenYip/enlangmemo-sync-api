@@ -1,11 +1,14 @@
 {
   "name": "@enlangmemo/sync-api",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Generated TypeScript SDK for EnLangMemo sync API.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "repository": "github:zadenyip/enlangmemo-sync-api",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZadenYip/enlangmemo-sync-api"
+  },
   "files": ["dist"],
   "exports": {
     ".": {
