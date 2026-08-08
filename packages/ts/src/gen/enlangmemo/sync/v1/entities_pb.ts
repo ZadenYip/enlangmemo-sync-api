@@ -11,7 +11,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file enlangmemo/sync/v1/entities.proto.
  */
 export const file_enlangmemo_sync_v1_entities: GenFile = /*@__PURE__*/
-  fileDesc("CiFlbmxhbmdtZW1vL3N5bmMvdjEvZW50aXRpZXMucHJvdG8SEmVubGFuZ21lbW8uc3luYy52MSL9BAoKU3luY0NoYW5nZRIbCgllbnRpdHlfaWQYASABKAlCCLpIBXIDmAEkEjMKC2VudGl0eV90eXBlGAIgASgOMh4uZW5sYW5nbWVtby5zeW5jLnYxLkVudGl0eVR5cGUSKAoCb3AYAyABKA4yHC5lbmxhbmdtZW1vLnN5bmMudjEuQ2hhbmdlT3ASHQoDdXNuGAQgASgDQhC6SA0iCyj///////////8BEjsKCmNvbGxlY3Rpb24YECABKAsyJS5lbmxhbmdtZW1vLnN5bmMudjEuQ29sbGVjdGlvblBheWxvYWRIABIvCgRkZWNrGAsgASgLMh8uZW5sYW5nbWVtby5zeW5jLnYxLkRlY2tQYXlsb2FkSAASOAoJbm90ZV90eXBlGAwgASgLMiMuZW5sYW5nbWVtby5zeW5jLnYxLk5vdGVUeXBlUGF5bG9hZEgAEkQKD3Byb2Nlc3Npbmdfbm90ZRgNIAEoCzIpLmVubGFuZ21lbW8uc3luYy52MS5Qcm9jZXNzaW5nTm90ZVBheWxvYWRIABIvCgRub3RlGA4gASgLMh8uZW5sYW5nbWVtby5zeW5jLnYxLk5vdGVQYXlsb2FkSAASLwoEY2FyZBgPIAEoCzIfLmVubGFuZ21lbW8uc3luYy52MS5DYXJkUGF5bG9hZEgAEjoKCnJldmlld19sb2cYCiABKAsyJC5lbmxhbmdtZW1vLnN5bmMudjEuUmV2aWV3TG9nUGF5bG9hZEgAEj0KDGRpY19ub3RlX21hcBgRIAEoCzIlLmVubGFuZ21lbW8uc3luYy52MS5EaWNOb3RlTWFwUGF5bG9hZEgAQgkKB3BheWxvYWQiwgEKEUNvbGxlY3Rpb25QYXlsb2FkEiYKFXNxbGl0ZV9zY2hlbWFfdmVyc2lvbhgBIAEoBUIHukgEGgIoABIbCgpjcmVhdGVkX2F0GAIgASgDQge6SAQiAigAEhsKCnVwZGF0ZWRfYXQYAyABKANCB7pIBCICKAASLQocY29sbGVjdGlvbl9zY2hlbWFfdXBkYXRlZF9hdBgEIAEoA0IHukgEIgIoABIcCgtjb25maWdfanNvbhgFIAEoCUIHukgEcgIQASL1AQoLRGVja1BheWxvYWQSFAoCaWQYASABKAlCCLpIBXIDmAEkEhUKBG5hbWUYAiABKAlCB7pIBHICEAESGwoKdXBkYXRlZF9hdBgDIAEoA0IHukgEIgIoABIZChFuZXdfY2FyZHNfcGVyX2RheRgEIAEoBRIiChFuZXdfbGVhcm5lZF90b2RheRgFIAEoBUIHukgEGgIoABIeCg1sZWFybmVkX3RvZGF5GAYgASgFQge6SAQaAigAEh8KDnJldmlld2VkX3RvZGF5GAcgASgFQge6SAQaAigAEhwKC2NvbmZpZ19qc29uGAggASgJQge6SARyAhABIoABCg9Ob3RlVHlwZVBheWxvYWQSFAoCaWQYASABKAlCCLpIBXIDmAEkEhUKBG5hbWUYAiABKAlCB7pIBHICEAESGwoKdXBkYXRlZF9hdBgDIAEoA0IHukgEIgIoABIjChJub3RlX3RlbXBsYXRlX2pzb24YBCABKAlCB7pIBHICEAEinwIKC05vdGVQYXlsb2FkEhQKAmlkGAEgASgJQgi6SAVyA5gBJBIeCgxub3RlX3R5cGVfaWQYAiABKAlCCLpIBXIDmAEkEhsKCmNyZWF0ZWRfYXQYAyABKANCB7pIBCICKAASGwoKdXBkYXRlZF9hdBgEIAEoA0IHukgEIgIoABIfCghzZW5zZV9pZBgFIAEoCUIIukgFcgOYASRIAIgBARIXCgpzb3J0X2ZpZWxkGAYgASgJSAGIAQESGgoNc2VhcmNoX2ZpZWxkcxgHIAEoCUgCiAEBEhwKC2ZpZWxkc19qc29uGAggASgJQge6SARyAhABQgsKCV9zZW5zZV9pZEINCgtfc29ydF9maWVsZEIQCg5fc2VhcmNoX2ZpZWxkcyLTAQoVUHJvY2Vzc2luZ05vdGVQYXlsb2FkEhQKAmlkGAEgASgJQgi6SAVyA5gBJBIeCgxub3RlX3R5cGVfaWQYAiABKAlCCLpIBXIDmAEkEhsKCmNyZWF0ZWRfYXQYAyABKANCB7pIBCICKAASGwoKdXBkYXRlZF9hdBgEIAEoA0IHukgEIgIoABIfCghzZW5zZV9pZBgFIAEoCUIIukgFcgOYASRIAIgBARIcCgtmaWVsZHNfanNvbhgGIAEoCUIHukgEcgIQAUILCglfc2Vuc2VfaWQilwMKC0NhcmRQYXlsb2FkEhQKAmlkGAEgASgJQgi6SAVyA5gBJBIZCgdub3RlX2lkGAIgASgJQgi6SAVyA5gBJBIZCgdkZWNrX2lkGAMgASgJQgi6SAVyA5gBJBIbCgp1cGRhdGVkX2F0GAQgASgDQge6SAQiAigAEiEKEGNhcmRfdGVtcGxhdGVfaWQYBSABKANCB7pIBCICKAASEgoKZGlmZmljdWx0eRgGIAEoARIRCglzdGFiaWxpdHkYByABKAESFgoOc2NoZWR1bGVkX2RheXMYCCABKAUSFAoDZHVlGAkgASgDQge6SAQiAigAEiEKC2xhc3RfcmV2aWV3GAogASgDQge6SAQiAigASACIAQESFwoGbGFwc2VzGAsgASgFQge6SAQaAigAEh8KDmxlYXJuaW5nX3N0ZXBzGAwgASgFQge6SAQaAigAEhwKC3JlcGV0aXRpb25zGA0gASgFQge6SAQaAigAEg0KBXN0YXRlGA4gASgFEg0KBXF1ZXVlGA8gASgFQg4KDF9sYXN0X3JldmlldyKGAgoQUmV2aWV3TG9nUGF5bG9hZBIUCgJpZBgBIAEoCUIIukgFcgOYASQSGQoHY2FyZF9pZBgCIAEoCUIIukgFcgOYASQSHAoLcmV2aWV3X3RpbWUYAyABKANCB7pIBCICKAASFgoOc2NoZWR1bGVkX2RheXMYBCABKAUSGQoGcmF0aW5nGAUgASgFQgm6SAYaBBgEKAESEgoKZGlmZmljdWx0eRgGIAEoARIRCglzdGFiaWxpdHkYByABKAESHwoObGVhcm5pbmdfc3RlcHMYCCABKAVCB7pIBBoCKAASDQoFc3RhdGUYCSABKAUSGQoIZHVyYXRpb24YCiABKANCB7pIBCICKAAibAoRRGljTm90ZU1hcFBheWxvYWQSGAoGbWFwX2lkGAEgASgJQgi6SAVyA5gBJBIeCgxub3RlX3R5cGVfaWQYAiABKAlCCLpIBXIDmAEkEh0KDG1hcHBpbmdfanNvbhgDIAEoCUIHukgEcgIQASr9AQoKRW50aXR5VHlwZRIbChdFTlRJVFlfVFlQRV9VTlNQRUNJRklFRBAAEhoKFkVOVElUWV9UWVBFX0NPTExFQ1RJT04QARIUChBFTlRJVFlfVFlQRV9ERUNLEAISGQoVRU5USVRZX1RZUEVfTk9URV9UWVBFEAMSFAoQRU5USVRZX1RZUEVfTk9URRAEEh8KG0VOVElUWV9UWVBFX1BST0NFU1NJTkdfTk9URRAFEhQKEEVOVElUWV9UWVBFX0NBUkQQBhIaChZFTlRJVFlfVFlQRV9SRVZJRVdfTE9HEAcSHAoYRU5USVRZX1RZUEVfRElDX05PVEVfTUFQEAgqUQoIQ2hhbmdlT3ASGQoVQ0hBTkdFX09QX1VOU1BFQ0lGSUVEEAASFAoQQ0hBTkdFX09QX1VQU0VSVBABEhQKEENIQU5HRV9PUF9ERUxFVEUQAkLkAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUINRW50aXRpZXNQcm90b1ABWlFnaXRodWIuY29tL3phZGVueWlwL2VubGFuZ21lbW8tc3luYy1hcGkvcGFja2FnZXMvZ28vZ2VuL2VubGFuZ21lbW8vc3luYy92MTtzeW5jdjGiAgNFU1iqAhJFbmxhbmdtZW1vLlN5bmMuVjHKAhJFbmxhbmdtZW1vXFN5bmNcVjHiAh5FbmxhbmdtZW1vXFN5bmNcVjFcR1BCTWV0YWRhdGHqAhRFbmxhbmdtZW1vOjpTeW5jOjpWMWIGcHJvdG8z", [file_buf_validate_validate]);
+  fileDesc("CiFlbmxhbmdtZW1vL3N5bmMvdjEvZW50aXRpZXMucHJvdG8SEmVubGFuZ21lbW8uc3luYy52MSK+BAoKU3luY0NoYW5nZRIbCgllbnRpdHlfaWQYASABKAlCCLpIBXIDmAEkEjMKC2VudGl0eV90eXBlGAIgASgOMh4uZW5sYW5nbWVtby5zeW5jLnYxLkVudGl0eVR5cGUSKAoCb3AYAyABKA4yHC5lbmxhbmdtZW1vLnN5bmMudjEuQ2hhbmdlT3ASHQoDdXNuGAQgASgDQhC6SA0iCyj///////////8BEjsKCmNvbGxlY3Rpb24YECABKAsyJS5lbmxhbmdtZW1vLnN5bmMudjEuQ29sbGVjdGlvblBheWxvYWRIABIvCgRkZWNrGAsgASgLMh8uZW5sYW5nbWVtby5zeW5jLnYxLkRlY2tQYXlsb2FkSAASOAoJbm90ZV90eXBlGAwgASgLMiMuZW5sYW5nbWVtby5zeW5jLnYxLk5vdGVUeXBlUGF5bG9hZEgAEkQKD3Byb2Nlc3Npbmdfbm90ZRgNIAEoCzIpLmVubGFuZ21lbW8uc3luYy52MS5Qcm9jZXNzaW5nTm90ZVBheWxvYWRIABIvCgRub3RlGA4gASgLMh8uZW5sYW5nbWVtby5zeW5jLnYxLk5vdGVQYXlsb2FkSAASLwoEY2FyZBgPIAEoCzIfLmVubGFuZ21lbW8uc3luYy52MS5DYXJkUGF5bG9hZEgAEjoKCnJldmlld19sb2cYCiABKAsyJC5lbmxhbmdtZW1vLnN5bmMudjEuUmV2aWV3TG9nUGF5bG9hZEgAQgkKB3BheWxvYWQikwEKEUNvbGxlY3Rpb25QYXlsb2FkEiYKFXNxbGl0ZV9zY2hlbWFfdmVyc2lvbhgBIAEoBUIHukgEGgIoABIbCgpjcmVhdGVkX2F0GAIgASgDQge6SAQiAigAEhsKCnVwZGF0ZWRfYXQYAyABKANCB7pIBCICKAASHAoLY29uZmlnX2pzb24YBCABKAlCB7pIBHICEAEi9QEKC0RlY2tQYXlsb2FkEhQKAmlkGAEgASgJQgi6SAVyA5gBJBIVCgRuYW1lGAIgASgJQge6SARyAhABEhsKCnVwZGF0ZWRfYXQYAyABKANCB7pIBCICKAASGQoRbmV3X2NhcmRzX3Blcl9kYXkYBCABKAUSIgoRbmV3X2xlYXJuZWRfdG9kYXkYBSABKAVCB7pIBBoCKAASHgoNbGVhcm5lZF90b2RheRgGIAEoBUIHukgEGgIoABIfCg5yZXZpZXdlZF90b2RheRgHIAEoBUIHukgEGgIoABIcCgtjb25maWdfanNvbhgIIAEoCUIHukgEcgIQASKlAQoPTm90ZVR5cGVQYXlsb2FkEhQKAmlkGAEgASgJQgi6SAVyA5gBJBIVCgRuYW1lGAIgASgJQge6SARyAhABEiMKEnByZXNldF90ZW1wbGF0ZV9pZBgDIAEoBUIHukgEGgIoABIbCgp1cGRhdGVkX2F0GAQgASgDQge6SAQiAigAEiMKEm5vdGVfdGVtcGxhdGVfanNvbhgFIAEoCUIHukgEcgIQASKeAgoLTm90ZVBheWxvYWQSFAoCaWQYASABKAlCCLpIBXIDmAEkEh4KDG5vdGVfdHlwZV9pZBgCIAEoCUIIukgFcgOYASQSGwoKY3JlYXRlZF9hdBgDIAEoA0IHukgEIgIoABIbCgp1cGRhdGVkX2F0GAQgASgDQge6SAQiAigAEh4KCHNlbnNlX2lkGAUgASgDQge6SAQiAigASACIAQESFwoKc29ydF9maWVsZBgGIAEoCUgBiAEBEhoKDXNlYXJjaF9maWVsZHMYByABKAlIAogBARIcCgtmaWVsZHNfanNvbhgIIAEoCUIHukgEcgIQAUILCglfc2Vuc2VfaWRCDQoLX3NvcnRfZmllbGRCEAoOX3NlYXJjaF9maWVsZHMi0gEKFVByb2Nlc3NpbmdOb3RlUGF5bG9hZBIUCgJpZBgBIAEoCUIIukgFcgOYASQSHgoMbm90ZV90eXBlX2lkGAIgASgJQgi6SAVyA5gBJBIbCgpjcmVhdGVkX2F0GAMgASgDQge6SAQiAigAEhsKCnVwZGF0ZWRfYXQYBCABKANCB7pIBCICKAASHgoIc2Vuc2VfaWQYBSABKANCB7pIBCICKABIAIgBARIcCgtmaWVsZHNfanNvbhgGIAEoCUIHukgEcgIQAUILCglfc2Vuc2VfaWQi9AIKC0NhcmRQYXlsb2FkEhQKAmlkGAEgASgJQgi6SAVyA5gBJBIZCgdub3RlX2lkGAIgASgJQgi6SAVyA5gBJBIZCgdkZWNrX2lkGAMgASgJQgi6SAVyA5gBJBIbCgp1cGRhdGVkX2F0GAQgASgDQge6SAQiAigAEhIKCmRpZmZpY3VsdHkYBSABKAESEQoJc3RhYmlsaXR5GAYgASgBEhYKDnNjaGVkdWxlZF9kYXlzGAcgASgFEhQKA2R1ZRgIIAEoA0IHukgEIgIoABIhCgtsYXN0X3JldmlldxgJIAEoA0IHukgEIgIoAEgAiAEBEhcKBmxhcHNlcxgKIAEoBUIHukgEGgIoABIfCg5sZWFybmluZ19zdGVwcxgLIAEoBUIHukgEGgIoABIcCgtyZXBldGl0aW9ucxgMIAEoBUIHukgEGgIoABINCgVzdGF0ZRgNIAEoBRINCgVxdWV1ZRgOIAEoBUIOCgxfbGFzdF9yZXZpZXcihgIKEFJldmlld0xvZ1BheWxvYWQSFAoCaWQYASABKAlCCLpIBXIDmAEkEhkKB2NhcmRfaWQYAiABKAlCCLpIBXIDmAEkEhwKC3Jldmlld190aW1lGAMgASgDQge6SAQiAigAEhYKDnNjaGVkdWxlZF9kYXlzGAQgASgFEhkKBnJhdGluZxgFIAEoBUIJukgGGgQYBCgBEhIKCmRpZmZpY3VsdHkYBiABKAESEQoJc3RhYmlsaXR5GAcgASgBEh8KDmxlYXJuaW5nX3N0ZXBzGAggASgFQge6SAQaAigAEg0KBXN0YXRlGAkgASgFEhkKCGR1cmF0aW9uGAogASgDQge6SAQiAigAKt8BCgpFbnRpdHlUeXBlEhsKF0VOVElUWV9UWVBFX1VOU1BFQ0lGSUVEEAASGgoWRU5USVRZX1RZUEVfQ09MTEVDVElPThABEhQKEEVOVElUWV9UWVBFX0RFQ0sQAhIZChVFTlRJVFlfVFlQRV9OT1RFX1RZUEUQAxIUChBFTlRJVFlfVFlQRV9OT1RFEAQSHwobRU5USVRZX1RZUEVfUFJPQ0VTU0lOR19OT1RFEAUSFAoQRU5USVRZX1RZUEVfQ0FSRBAGEhoKFkVOVElUWV9UWVBFX1JFVklFV19MT0cQBypRCghDaGFuZ2VPcBIZChVDSEFOR0VfT1BfVU5TUEVDSUZJRUQQABIUChBDSEFOR0VfT1BfVVBTRVJUEAESFAoQQ0hBTkdFX09QX0RFTEVURRACQuQBChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQg1FbnRpdGllc1Byb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate]);
 
 /**
  * SyncChange 表示实体的同步变更
@@ -98,12 +98,6 @@ export type SyncChange = Message<"enlangmemo.sync.v1.SyncChange"> & {
      */
     value: ReviewLogPayload;
     case: "reviewLog";
-  } | {
-    /**
-     * @generated from field: enlangmemo.sync.v1.DicNoteMapPayload dic_note_map = 17;
-     */
-    value: DicNoteMapPayload;
-    case: "dicNoteMap";
   } | { case: undefined; value?: undefined };
 };
 
@@ -136,14 +130,9 @@ export type CollectionPayload = Message<"enlangmemo.sync.v1.CollectionPayload"> 
   updatedAt: bigint;
 
   /**
-   * @generated from field: int64 collection_schema_updated_at = 4;
-   */
-  collectionSchemaUpdatedAt: bigint;
-
-  /**
    * SQLite collection.config 的 JSON 字符串。
    *
-   * @generated from field: string config_json = 5;
+   * @generated from field: string config_json = 4;
    */
   configJson: string;
 };
@@ -228,14 +217,19 @@ export type NoteTypePayload = Message<"enlangmemo.sync.v1.NoteTypePayload"> & {
   name: string;
 
   /**
-   * @generated from field: int64 updated_at = 3;
+   * @generated from field: int32 preset_template_id = 3;
+   */
+  presetTemplateId: number;
+
+  /**
+   * @generated from field: int64 updated_at = 4;
    */
   updatedAt: bigint;
 
   /**
-   * SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等
+   * SQLite note_types.note_template 的 JSON 字符串，包含 css、front、back、sortField、fields 等。
    *
-   * @generated from field: string note_template_json = 4;
+   * @generated from field: string note_template_json = 5;
    */
   noteTemplateJson: string;
 };
@@ -274,9 +268,9 @@ export type NotePayload = Message<"enlangmemo.sync.v1.NotePayload"> & {
   updatedAt: bigint;
 
   /**
-   * @generated from field: optional string sense_id = 5;
+   * @generated from field: optional int64 sense_id = 5;
    */
-  senseId?: string | undefined;
+  senseId?: bigint | undefined;
 
   /**
    * @generated from field: optional string sort_field = 6;
@@ -330,9 +324,9 @@ export type ProcessingNotePayload = Message<"enlangmemo.sync.v1.ProcessingNotePa
   updatedAt: bigint;
 
   /**
-   * @generated from field: optional string sense_id = 5;
+   * @generated from field: optional int64 sense_id = 5;
    */
-  senseId?: string | undefined;
+  senseId?: bigint | undefined;
 
   /**
    * SQLite processing_notes.fields 的 JSON 字符串
@@ -376,57 +370,52 @@ export type CardPayload = Message<"enlangmemo.sync.v1.CardPayload"> & {
   updatedAt: bigint;
 
   /**
-   * @generated from field: int64 card_template_id = 5;
-   */
-  cardTemplateId: bigint;
-
-  /**
-   * @generated from field: double difficulty = 6;
+   * @generated from field: double difficulty = 5;
    */
   difficulty: number;
 
   /**
-   * @generated from field: double stability = 7;
+   * @generated from field: double stability = 6;
    */
   stability: number;
 
   /**
-   * @generated from field: int32 scheduled_days = 8;
+   * @generated from field: int32 scheduled_days = 7;
    */
   scheduledDays: number;
 
   /**
-   * @generated from field: int64 due = 9;
+   * @generated from field: int64 due = 8;
    */
   due: bigint;
 
   /**
-   * @generated from field: optional int64 last_review = 10;
+   * @generated from field: optional int64 last_review = 9;
    */
   lastReview?: bigint | undefined;
 
   /**
-   * @generated from field: int32 lapses = 11;
+   * @generated from field: int32 lapses = 10;
    */
   lapses: number;
 
   /**
-   * @generated from field: int32 learning_steps = 12;
+   * @generated from field: int32 learning_steps = 11;
    */
   learningSteps: number;
 
   /**
-   * @generated from field: int32 repetitions = 13;
+   * @generated from field: int32 repetitions = 12;
    */
   repetitions: number;
 
   /**
-   * @generated from field: int32 state = 14;
+   * @generated from field: int32 state = 13;
    */
   state: number;
 
   /**
-   * @generated from field: int32 queue = 15;
+   * @generated from field: int32 queue = 14;
    */
   queue: number;
 };
@@ -503,37 +492,6 @@ export const ReviewLogPayloadSchema: GenMessage<ReviewLogPayload> = /*@__PURE__*
   messageDesc(file_enlangmemo_sync_v1_entities, 7);
 
 /**
- * DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载
- *
- * @generated from message enlangmemo.sync.v1.DicNoteMapPayload
- */
-export type DicNoteMapPayload = Message<"enlangmemo.sync.v1.DicNoteMapPayload"> & {
-  /**
-   * @generated from field: string map_id = 1;
-   */
-  mapId: string;
-
-  /**
-   * @generated from field: string note_type_id = 2;
-   */
-  noteTypeId: string;
-
-  /**
-   * SQLite dic_note_map.mapping 的 JSON 字符串。
-   *
-   * @generated from field: string mapping_json = 3;
-   */
-  mappingJson: string;
-};
-
-/**
- * Describes the message enlangmemo.sync.v1.DicNoteMapPayload.
- * Use `create(DicNoteMapPayloadSchema)` to create a new message.
- */
-export const DicNoteMapPayloadSchema: GenMessage<DicNoteMapPayload> = /*@__PURE__*/
-  messageDesc(file_enlangmemo_sync_v1_entities, 8);
-
-/**
  * @generated from enum enlangmemo.sync.v1.EntityType
  */
 export enum EntityType {
@@ -576,11 +534,6 @@ export enum EntityType {
    * @generated from enum value: ENTITY_TYPE_REVIEW_LOG = 7;
    */
   REVIEW_LOG = 7,
-
-  /**
-   * @generated from enum value: ENTITY_TYPE_DIC_NOTE_MAP = 8;
-   */
-  DIC_NOTE_MAP = 8,
 }
 
 /**

@@ -13,7 +13,6 @@ enum EntityType {
   ENTITY_TYPE_PROCESSING_NOTE = 5;
   ENTITY_TYPE_CARD = 6;
   ENTITY_TYPE_REVIEW_LOG = 7;
-  ENTITY_TYPE_DIC_NOTE_MAP = 8;
 }
 
 // ChangeOp 表示同步实体的变更操作类型
@@ -50,7 +49,6 @@ message SyncChange {
     NotePayload note = 14;
     CardPayload card = 15;
     ReviewLogPayload review_log = 10;
-    DicNoteMapPayload dic_note_map = 17;
   }
 }
 
@@ -59,10 +57,9 @@ message CollectionPayload {
   int32 sqlite_schema_version = 1 [(buf.validate.field).int32.gte = 0];
   int64 created_at = 2 [(buf.validate.field).int64.gte = 0];
   int64 updated_at = 3 [(buf.validate.field).int64.gte = 0];
-  int64 collection_schema_updated_at = 4 [(buf.validate.field).int64.gte = 0];
 
   // SQLite collection.config 的 JSON 字符串。
-  string config_json = 5 [(buf.validate.field).string.min_len = 1];
+  string config_json = 4 [(buf.validate.field).string.min_len = 1];
 }
 
 // DeckPayload 承载牌组数据的 UPSERT 负载。
@@ -83,10 +80,11 @@ message DeckPayload {
 message NoteTypePayload {
   string id = 1 [(buf.validate.field).string.len = 36];
   string name = 2 [(buf.validate.field).string.min_len = 1];
-  int64 updated_at = 3 [(buf.validate.field).int64.gte = 0];
+  int32 preset_template_id = 3 [(buf.validate.field).int32.gte = 0];
+  int64 updated_at = 4 [(buf.validate.field).int64.gte = 0];
 
-  // SQLite note_types.note_template 的 JSON 字符串，包含 css、sortField、fields、cardTpls 等
-  string note_template_json = 4 [(buf.validate.field).string.min_len = 1];
+  // SQLite note_types.note_template 的 JSON 字符串，包含 css、front、back、sortField、fields 等。
+  string note_template_json = 5 [(buf.validate.field).string.min_len = 1];
 }
 
 // NotePayload 承载笔记数据的 UPSERT 负载
@@ -95,7 +93,7 @@ message NotePayload {
   string note_type_id = 2 [(buf.validate.field).string.len = 36];
   int64 created_at = 3 [(buf.validate.field).int64.gte = 0];
   int64 updated_at = 4 [(buf.validate.field).int64.gte = 0];
-  optional string sense_id = 5 [(buf.validate.field).string.len = 36];
+  optional int64 sense_id = 5 [(buf.validate.field).int64.gte = 0];
   optional string sort_field = 6;
   optional string search_fields = 7;
 
@@ -109,7 +107,7 @@ message ProcessingNotePayload {
   string note_type_id = 2 [(buf.validate.field).string.len = 36];
   int64 created_at = 3 [(buf.validate.field).int64.gte = 0];
   int64 updated_at = 4 [(buf.validate.field).int64.gte = 0];
-  optional string sense_id = 5 [(buf.validate.field).string.len = 36];
+  optional int64 sense_id = 5 [(buf.validate.field).int64.gte = 0];
 
   // SQLite processing_notes.fields 的 JSON 字符串
   string fields_json = 6 [(buf.validate.field).string.min_len = 1];
@@ -122,20 +120,18 @@ message CardPayload {
   string deck_id = 3 [(buf.validate.field).string.len = 36];
   int64 updated_at = 4 [(buf.validate.field).int64.gte = 0];
 
-  int64 card_template_id = 5 [(buf.validate.field).int64.gte = 0];
+  double difficulty = 5;
+  double stability = 6;
+  int32 scheduled_days = 7;
 
-  double difficulty = 6;
-  double stability = 7;
-  int32 scheduled_days = 8;
+  int64 due = 8 [(buf.validate.field).int64.gte = 0];
 
-  int64 due = 9 [(buf.validate.field).int64.gte = 0];
-
-  optional int64 last_review = 10 [(buf.validate.field).int64.gte = 0];
-  int32 lapses = 11 [(buf.validate.field).int32.gte = 0];
-  int32 learning_steps = 12 [(buf.validate.field).int32.gte = 0];
-  int32 repetitions = 13 [(buf.validate.field).int32.gte = 0];
-  int32 state = 14;
-  int32 queue = 15;
+  optional int64 last_review = 9 [(buf.validate.field).int64.gte = 0];
+  int32 lapses = 10 [(buf.validate.field).int32.gte = 0];
+  int32 learning_steps = 11 [(buf.validate.field).int32.gte = 0];
+  int32 repetitions = 12 [(buf.validate.field).int32.gte = 0];
+  int32 state = 13;
+  int32 queue = 14;
 }
 
 // ReviewLogPayload 承载复习记录数据的 UPSERT 负载
@@ -156,13 +152,4 @@ message ReviewLogPayload {
   int32 learning_steps = 8 [(buf.validate.field).int32.gte = 0];
   int32 state = 9;
   int64 duration = 10 [(buf.validate.field).int64.gte = 0];
-}
-
-// DicNoteMapPayload 承载字典制卡字段映射数据的 UPSERT 负载
-message DicNoteMapPayload {
-  string map_id = 1 [(buf.validate.field).string.len = 36];
-  string note_type_id = 2 [(buf.validate.field).string.len = 36];
-
-  // SQLite dic_note_map.mapping 的 JSON 字符串。
-  string mapping_json = 3 [(buf.validate.field).string.min_len = 1];
 }

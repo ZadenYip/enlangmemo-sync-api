@@ -19,18 +19,15 @@ message HandshakeRequest {
   int32 protocol_version = 5;
   // 客户端本地 SQLite schema 版本
   int32 db_schema_version = 6;
-  // collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
-  int64 collection_schema_updated_at = 7;
-
   // 客户端发起握手时的本地时间戳
-  int64 client_now = 8 [(buf.validate.field).int64.gte = 0];
+  int64 client_now = 7 [(buf.validate.field).int64.gte = 0];
 }
 
 message HandshakeResponse {
   HandshakeStatus status = 1;
 
   // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
-  // NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
+  // NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 返回，其他状态不返回
   optional string session_id = 2 [(buf.validate.field).string.len = 32];
 
   int64 server_sync_cursor_usn = 3 [(buf.validate.field).int64.gte = 0];
@@ -44,8 +41,8 @@ enum HandshakeStatus {
   // client_sync_cursor_usn < server_sync_cursor_usn
   HANDSHAKE_STATUS_NEED_PULL = 2;
 
-  // 普通增量同步不安全，需要用户选择覆盖方向
-  HANDSHAKE_STATUS_OVERWRITE_REQUIRED = 3;
+  // client_sync_cursor_usn > server_sync_cursor_usn，客户端需要全量上传本地数据恢复服务端
+  HANDSHAKE_STATUS_UPLOAD_ALL = 3;
 
   // 其他客户端正在进行同步
   HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT = 4;

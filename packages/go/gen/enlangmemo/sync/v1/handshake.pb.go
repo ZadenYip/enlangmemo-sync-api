@@ -30,8 +30,8 @@ const (
 	HandshakeStatus_HANDSHAKE_STATUS_NO_REMOTE_CHANGES HandshakeStatus = 1
 	// client_sync_cursor_usn < server_sync_cursor_usn
 	HandshakeStatus_HANDSHAKE_STATUS_NEED_PULL HandshakeStatus = 2
-	// 普通增量同步不安全，需要用户选择覆盖方向
-	HandshakeStatus_HANDSHAKE_STATUS_OVERWRITE_REQUIRED HandshakeStatus = 3
+	// client_sync_cursor_usn > server_sync_cursor_usn，客户端需要全量上传本地数据恢复服务端
+	HandshakeStatus_HANDSHAKE_STATUS_UPLOAD_ALL HandshakeStatus = 3
 	// 其他客户端正在进行同步
 	HandshakeStatus_HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT HandshakeStatus = 4
 	// 客户端 protocol_version 或 db_schema_version 低于服务端最低支持版本
@@ -48,7 +48,7 @@ var (
 		0: "HANDSHAKE_STATUS_UNSPECIFIED",
 		1: "HANDSHAKE_STATUS_NO_REMOTE_CHANGES",
 		2: "HANDSHAKE_STATUS_NEED_PULL",
-		3: "HANDSHAKE_STATUS_OVERWRITE_REQUIRED",
+		3: "HANDSHAKE_STATUS_UPLOAD_ALL",
 		4: "HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT",
 		5: "HANDSHAKE_STATUS_CLIENT_TOO_OLD",
 		6: "HANDSHAKE_STATUS_SERVER_TOO_OLD",
@@ -58,7 +58,7 @@ var (
 		"HANDSHAKE_STATUS_UNSPECIFIED":                0,
 		"HANDSHAKE_STATUS_NO_REMOTE_CHANGES":          1,
 		"HANDSHAKE_STATUS_NEED_PULL":                  2,
-		"HANDSHAKE_STATUS_OVERWRITE_REQUIRED":         3,
+		"HANDSHAKE_STATUS_UPLOAD_ALL":                 3,
 		"HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT":     4,
 		"HANDSHAKE_STATUS_CLIENT_TOO_OLD":             5,
 		"HANDSHAKE_STATUS_SERVER_TOO_OLD":             6,
@@ -107,10 +107,8 @@ type HandshakeRequest struct {
 	ProtocolVersion int32 `protobuf:"varint,5,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
 	// 客户端本地 SQLite schema 版本
 	DbSchemaVersion int32 `protobuf:"varint,6,opt,name=db_schema_version,json=dbSchemaVersion,proto3" json:"db_schema_version,omitempty"`
-	// collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
-	CollectionSchemaUpdatedAt int64 `protobuf:"varint,7,opt,name=collection_schema_updated_at,json=collectionSchemaUpdatedAt,proto3" json:"collection_schema_updated_at,omitempty"`
 	// 客户端发起握手时的本地时间戳
-	ClientNow     int64 `protobuf:"varint,8,opt,name=client_now,json=clientNow,proto3" json:"client_now,omitempty"`
+	ClientNow     int64 `protobuf:"varint,7,opt,name=client_now,json=clientNow,proto3" json:"client_now,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -187,13 +185,6 @@ func (x *HandshakeRequest) GetDbSchemaVersion() int32 {
 	return 0
 }
 
-func (x *HandshakeRequest) GetCollectionSchemaUpdatedAt() int64 {
-	if x != nil {
-		return x.CollectionSchemaUpdatedAt
-	}
-	return 0
-}
-
 func (x *HandshakeRequest) GetClientNow() int64 {
 	if x != nil {
 		return x.ClientNow
@@ -205,7 +196,7 @@ type HandshakeResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Status HandshakeStatus        `protobuf:"varint,1,opt,name=status,proto3,enum=enlangmemo.sync.v1.HandshakeStatus" json:"status,omitempty"`
 	// 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
-	// NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
+	// NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 返回，其他状态不返回
 	SessionId           *string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3,oneof" json:"session_id,omitempty"`
 	ServerSyncCursorUsn int64   `protobuf:"varint,3,opt,name=server_sync_cursor_usn,json=serverSyncCursorUsn,proto3" json:"server_sync_cursor_usn,omitempty"`
 	unknownFields       protoimpl.UnknownFields
@@ -267,7 +258,7 @@ var File_enlangmemo_sync_v1_handshake_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
-	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\x90\x03\n" +
+	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xcf\x02\n" +
 	"\x10HandshakeRequest\x12%\n" +
 	"\tdevice_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bdeviceId\x12(\n" +
 	"\vdevice_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18 R\n" +
@@ -275,21 +266,20 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\rcollection_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\fcollectionId\x12<\n" +
 	"\x16client_sync_cursor_usn\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13clientSyncCursorUsn\x12)\n" +
 	"\x10protocol_version\x18\x05 \x01(\x05R\x0fprotocolVersion\x12*\n" +
-	"\x11db_schema_version\x18\x06 \x01(\x05R\x0fdbSchemaVersion\x12?\n" +
-	"\x1ccollection_schema_updated_at\x18\a \x01(\x03R\x19collectionSchemaUpdatedAt\x12&\n" +
+	"\x11db_schema_version\x18\x06 \x01(\x05R\x0fdbSchemaVersion\x12&\n" +
 	"\n" +
-	"client_now\x18\b \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tclientNow\"\xcb\x01\n" +
+	"client_now\x18\a \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tclientNow\"\xcb\x01\n" +
 	"\x11HandshakeResponse\x12;\n" +
 	"\x06status\x18\x01 \x01(\x0e2#.enlangmemo.sync.v1.HandshakeStatusR\x06status\x12,\n" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01 H\x00R\tsessionId\x88\x01\x01\x12<\n" +
 	"\x16server_sync_cursor_usn\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13serverSyncCursorUsnB\r\n" +
-	"\v_session_id*\xcc\x02\n" +
+	"\v_session_id*\xc4\x02\n" +
 	"\x0fHandshakeStatus\x12 \n" +
 	"\x1cHANDSHAKE_STATUS_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"HANDSHAKE_STATUS_NO_REMOTE_CHANGES\x10\x01\x12\x1e\n" +
-	"\x1aHANDSHAKE_STATUS_NEED_PULL\x10\x02\x12'\n" +
-	"#HANDSHAKE_STATUS_OVERWRITE_REQUIRED\x10\x03\x12+\n" +
+	"\x1aHANDSHAKE_STATUS_NEED_PULL\x10\x02\x12\x1f\n" +
+	"\x1bHANDSHAKE_STATUS_UPLOAD_ALL\x10\x03\x12+\n" +
 	"'HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT\x10\x04\x12#\n" +
 	"\x1fHANDSHAKE_STATUS_CLIENT_TOO_OLD\x10\x05\x12#\n" +
 	"\x1fHANDSHAKE_STATUS_SERVER_TOO_OLD\x10\x06\x12/\n" +

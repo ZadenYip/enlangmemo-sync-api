@@ -19,7 +19,6 @@ unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN
 1. 是否处理超时的情形
 2. 是否处理超时后重连情形
 3. 是否处理了传输中断数据不一致的问题
-4. 是否服务器崩溃故障转移了
 
 
 # 流程
@@ -30,7 +29,7 @@ unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN
 2. 根据握手状态客户端决定下一步：
   - NO_REMOTE_CHANGES：远端无新增。客户端若有本地 usn=-1，则 PUSH；否则结束。
   - NEED_PULL：远端有新增。客户端先 Pull；Pull 完成后若本地仍有 usn=-1，则 PUSH，否则结束。
-  - OVERWRITE_REQUIRED：普通增量同步不安全，让用户选择覆盖方向，具体覆盖实现见“TODO覆盖同步流程”。
+  - UPLOAD_ALL：客户端同步游标大于服务端同步游标，属于极端情况下服务端数据丢失/回退；客户端全量上传本地数据恢复服务端，完成后进入 FINISHING。
 3. 开始批量传输数据
 4. 数据传输完毕挥手
 
@@ -45,6 +44,7 @@ unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN
 ### 正常握手流程
 
 (一个时序图，在飞书上)
+
 
 ### HandshakeRequest
 HandshakeRequest 是发起握手该携带的数据
@@ -65,22 +65,24 @@ message HandshakeRequest {
   int32 protocol_version = 5;
   // 客户端本地 SQLite schema 版本
   int32 db_schema_version = 6;
-  // collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
-  int64 collection_schema_updated_at = 7;
 
   // 客户端发起握手时的本地时间戳
-  int64 client_now = 8 [(buf.validate.field).int64.gte = 0];
+  int64 client_now = 7 [(buf.validate.field).int64.gte = 0];
 }
 ```
 
-device_id 用于区分同一用户的不同设备，并辅助判断 SyncLock 存在时是否为同一设备重复握手。
-此外还会传集合元数据，以此确认目前服务器已有的数据是否有冲突问题（卡片模板变更，模板删除等）
+`device_id` 用于区分同一用户的不同设备，并辅助判断 SyncLock 存在时是否为同一设备重复握手。
 
-`client_now` 表示客户端发起握手时的本地时间戳。服务端用其对比自身时间，若偏差过大则返回 `CLIENT_TIME_SKEW_TOO_LARGE`，提示用户尝试校准系统时间后重新同步。
+`client_now` 表示客户端发起握手时的本地时间戳。服务端用其对比自身时间，若偏差过大则返回 `CLIENT_TIME_SKEW_TOO_LARGE`，提示用户校准系统时间再同步。
 
 ### SyncLock
-SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用
-在验证 access_token 有效并解析出 user_id 后存一个分布式锁，除非 TTL 到了或者用户完成了后续同步操作后才会释放，目的是禁止同步期间用户用其他设备也同步。若再次握手时 SyncLock 仍存在，则根据 device_id 判断是否为同一设备恢复当前 session
+SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用。
+
+在验证 access_token 有效后并解析出 user_id 后才会存这个分布式锁，而在 TTL 到了或者用户完成了后续同步操作后才会释放。
+
+目的是禁止同步期间用户用其他设备同时进行同步，避免造成用户自己设备并发同步造成一致性问题，可以理解为类似于互斥锁的作用。
+
+若再次握手时 SyncLock 仍存在，则根据 device_id 判断是否为同一设备恢复当前 session。
 此时的 TTL 为 1 分钟, key 为用户 sync:{userID}:sync_lock
 
 ```json
@@ -96,6 +98,7 @@ SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的�
 }
 ```
 
+
 ### HandshakeResponse
 HandshakeResponse 表示此次握手结果。
 握手结果有以下：
@@ -105,7 +108,7 @@ message HandshakeResponse {
   HandshakeStatus status = 1;
 
   // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
-  // NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
+  // NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 返回，其他状态不返回
   optional string session_id = 2 [(buf.validate.field).string.len = 32];
 
   int64 server_sync_cursor_usn = 3 [(buf.validate.field).int64.gte = 0];
@@ -119,8 +122,8 @@ enum HandshakeStatus {
   // client_sync_cursor_usn < server_sync_cursor_usn
   HANDSHAKE_STATUS_NEED_PULL = 2;
 
-  // 普通增量同步不安全，需要用户选择覆盖方向
-  HANDSHAKE_STATUS_OVERWRITE_REQUIRED = 3;
+  // client_sync_cursor_usn > server_sync_cursor_usn，客户端需要全量上传本地数据恢复服务端
+  HANDSHAKE_STATUS_UPLOAD_ALL = 3;
 
   // 其他客户端正在进行同步
   HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT = 4;
@@ -138,7 +141,9 @@ enum HandshakeStatus {
 
 session_id 由服务端在允许继续当前同步会话时生成，用于标识本次同步会话。
 
-NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回 session_id，其他状态下不返回 session_id。字段存在时必须是 32 位字符串，后续 Pull / Push / FinishSync 都需要携带 session_id。
+NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 下会返回 session_id，其他状态下不返回 session_id。
+
+字段存在时必须是 32 位字符串，后续 Pull / Push / FinishSync 都需要携带 session_id。
 
 
 #### NO_REMOTE_CHANGES
@@ -149,14 +154,20 @@ NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服�
 
 client_sync_cursor_usn < server_sync_cursor_usn，服务器在 [client_sync_cursor_usn, server_sync_cursor_usn) 有客户端未拉取的数据。
 
-#### OVERWRITE_REQUIRED
+
+#### UPLOAD_ALL
 
 以下场景会触发：
 client_sync_cursor_usn > server_sync_cursor_usn，这种情况下可能是由于服务器回滚、恢复旧备份或云端数据被重置。
-collection_schema_updated_at 不一致，例如模板、字段、牌组结构冲突，无法安全增量合并。
-该状态下用户需要选择覆盖方向：
-1. 本地覆盖服务器
-2. 服务器覆盖本地
+该状态表示客户端已经确认过的同步游标（cursor_usn）超过服务端的，普通的 Pull 没法处理。客户端应进入 UPLOAD_ALL，将本地 collection 当前数据全量上传到服务端，用于恢复服务端缺失的数据。
+
+客户端在进入 UPLOAD_ALL 前会提示用户确认是否继续上传本地数据覆盖服务端。
+
+这里采取全量同步的考虑原因见下：
+
+因为服务器的数据丢失，客户端版本超前。因此，可能出现客户端已经删除的数据 A 在服务器上依然存在，可客户端很可能 tombstone 没有对记录 A 删除的标记了，所以没法通过 tombstone 标记删除服务器已有的改记录 A。
+
+所以，为了数据一致性这时候采取全量覆盖服务器数据。
 
 
 #### LOCKED_BY_OTHER_CLIENT
@@ -172,10 +183,10 @@ collection_schema_updated_at 不一致，例如模板、字段、牌组结构冲
 #### SERVER_TOO_OLD
 客户端 protocol_version 高于服务端当前支持版本，需要升级服务端。
 
+
 #### CLIENT_TIME_SKEW_TOO_LARGE
 
 客户端 `client_now` 与服务端当前时间偏差超过服务端允许阈值。该状态不创建可继续同步的 session，不返回 `session_id`。客户端应提示用户校准系统时间后重新同步。
-
 
 
 #### ConnectRPC 全局错误
@@ -201,7 +212,7 @@ collection_schema_updated_at 不一致，例如模板、字段、牌组结构冲
 
 为了避免服务器或网络意外，可能用户手动点重复同步导致重复发握手消息，所以服务端创建一个 TTL 为 60 秒的用户级分布式锁 SyncLock。
 
-如果客户端未收到 Handshake 响应，视为本次 RPC 结果未知。未知导致的情况由 SyncLock 处理：若再次握手时 SyncLock 仍存在，则根据device_id 判断是否为同一设备恢复当前 session（TODO 根据复杂度决定是否实现）；否则返回 LOCKED_BY_OTHER_CLIENT。若 SyncLock 已过期，则重新创建 session。
+如果客户端未收到 Handshake 响应，视为本次 RPC 结果未知。未知导致的情况由 SyncLock 处理：若再次握手时 SyncLock 仍存在，则根据 device_id 判断是否为同一设备恢复当前 session（TODO 根据复杂度决定是否实现）；否则返回 LOCKED_BY_OTHER_CLIENT。若 SyncLock 已过期，则重新创建 session。
 
 ## 数据同步
 
@@ -209,22 +220,35 @@ collection_schema_updated_at 不一致，例如模板、字段、牌组结构冲
 
 （这里是一个客户端状态机图，在飞书上）
 
+
 ### 注意事项
 
 UUID 选择 string 类型，要求是使用连字符分隔的 36 个字符的格式。之所以不用 bytes 类型是因为可能存在大端序/小端序问题，避免不同语言不同库下表现不一致。
 
+
 ### 数据 Payload 设计
 
-enlangmemo/sync/v1/entities.proto 定义同步数据的 Payload 是咋样的，除了不带 usn 基本上与 https://dbdiagram.io/d/EnLangMemo-69aafcb1a3f0aa31e1146507 表结构一致。
+v1/entities.proto 定义同步数据的 payload。payload 基本与当前 SQLite 表结构一致，除了个别字段。
 
-collection 的 payload 还少了下面这两个字段
+`dic_note_map` 属于客户端本地配置，这个属于本地客户端配置摘录词的映射到哪个模板用的功能，因为还没确定正式版所以不参与同步。
+
+collection 的 payload 不包含客户端 SQLite 表下面这两个字段：
 ```DBDiagram
 // 全局同步状态
 last_sync_time integer [not null, default: 0]
 sync_cursor_usn integer [not null, default: 0]
 ```
 
-`last_sync_time` 是客户端本地辅助字段，表示该客户端上一次完整同步成功完成的服务端时间。它不参与同步一致性判断，不进入 CollectionPayload；客户端只在 FinishSync 成功返回后写入 `FinishSyncResponse.server_finished_at`。`sync_cursor_usn` 是客户端已同步到的 usn 上界 / 下次增量 Pull 的起点，会在 Pull / Push batch 本地事务成功后推进。
+`last_sync_time` 是客户端本地辅助字段，展示给用户上次同步时间所以暂时不参与同步。
+
+客户端只在 FinishSync 成功返回后写入 `FinishSyncResponse.server_finished_at`。
+
+`sync_cursor_usn` 是客户端已同步到的 usn 上界 / 下次增量 Pull 的起点，会在 Pull / Push batch 本地事务成功后推进。
+
+note_types 的字段结构约束由客户端业务层保证：不支持在同一个 `note_type.id` 上原地新增、删除或重排字段；如果需要改变字段集合，应创建新的 note_type。修改 `css`、`front`、`back`、`sortField` 等展示模板内容只需要同步 `note_types` 自身，不要求引用它的 notes/cards 一起变为 `usn = -1`。
+
+服务端不校验 note_type 字段集合、notes.fields 与 note_type.fields 是否匹配、deck 配置语义等业务规则，服务端主要负责处理 session、batch_seq、usn 分配、UPSERT / DELETE 持久化等同步协议规则。
+
 
 ### 删除同步策略
 
@@ -264,6 +288,7 @@ message PullRequest {
 }
 ```
 
+
 `batch_seq` 用于保证请求顺序。服务端必须根据 SyncLock 中的 session 状态决定当前 batch 从哪里继续读取。
 
 #### PullResponse
@@ -291,6 +316,7 @@ message PullResponse {
 `ChangeOp = UPSERT` 时必须携带 `payload`
 
 `ChangeOp = DELETE` 时不携带 payload，客户端根据 `entity_id` 和 `entity_type` 按删除同步策略处理本地实体和 tombstone。
+
 
 #### Pull 本地未同步变更处理
 
@@ -324,6 +350,7 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 客户端此时的 `collection.sync_cursor_usn` 应等于本次会话的 `server_sync_cursor_usn`。
 8. Pull 完成后，如果本地仍存在 `usn = -1` 的未同步数据，客户端进入 PUSHING；否则进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
 
+
 #### 服务端处理规则
 
 1. 服务端收到 PullRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否仍在 PULLING 状态。
@@ -333,11 +360,13 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 5. 服务端先将 `SyncLock.expected_batch_seq` 递增 1，确认更新成功后，再返回 PullResponse。
 6. 如果当前 batch 是本轮 Pull 的最后一个 batch，服务端将 SyncLock 状态从 PULLING 改为 AWAITING_CLIENT_ACTION 状态（服务器特有的）。
 
+
 #### 中断与超时
 
 Pull 不额外设计 ACK。客户端只有在本地事务提交成功后，才继续请求下一个 batch。
 
 如果 PullRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端不继续猜测当前 batch 状态，直接视为本次同步结束。
+
 
 ### PUSHING
 
@@ -351,6 +380,7 @@ PUSHING 表示客户端正在把本地 `usn = -1` 的未同步变更上传到服
 Push 的同步颗粒度也是 batch。一个 Push batch 对应服务端一次数据库事务，服务端为该 batch 分配一个新的 usn，并将 batch 内所有变更写为同一个 usn。客户端上传时本地未同步变更的 `SyncChange.usn` 为 -1，该值表示待上传
 
 Push 阶段服务端原则上应全部应用客户端上传的变更。变更是否应该覆盖远端数据、是否应放弃本地变更，应在客户端 PULLING 阶段自行处理完成。Pull 完成后仍然保留为 `unit.usn = -1` 或 tombstone 的变更，都表示客户端决定需要推送到服务端的最终本地变更。
+
 
 #### PushRequest
 
@@ -372,6 +402,7 @@ message PushRequest {
 
 PushRequest 中每条 `SyncChange.usn` 必须为 `-1`。`usn = -1` 表示客户端本地待上传状态，服务端要自己分配一个新的 usn 并写入数据库，用当前的 server_sync_cursor_usn 作为本 batch 的 usn，然后 usn 自增。
 
+
 #### PushResponse
 
 ```proto
@@ -387,6 +418,7 @@ message PushResponse {
 
 `assigned_usn` 是服务端为本 Push batch 分配的 usn。客户端收到 PushResponse 后，用它更新本 batch 内所有已上传实体的 `usn`，并将 `collection.sync_cursor_usn` 推进到 `assigned_usn + 1`。如果本 batch 包含 Collection 变更，collection 表自身的 `usn` 也写为 `assigned_usn`。
 
+
 #### 客户端处理流程
 
 1. 客户端进入 PUSHING 后，从 `batch_seq = 1` 开始发送 PushRequest。
@@ -396,6 +428,7 @@ message PushResponse {
 5. 客户端开启一个本地 SQLite 事务，将本 batch 内已上传实体的 `usn` 更新为 `response.assigned_usn`，并将 `collection.sync_cursor_usn` 推进到 `response.assigned_usn + 1`。
 6. 事务提交后，如果本次 `request.last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PushRequest。
 7. 如果本次 `request.last_batch = true`，客户端进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
+
 
 #### 服务端处理规则
 
@@ -412,6 +445,7 @@ message PushResponse {
 6. 服务端先将 `SyncLock.expected_batch_seq` 递增 1；如果 `request.last_batch = true`，同时将 SyncLock 状态改为 AWAITING_FINISH。
 7. 服务端确认数据库事务与 SyncLock 更新都成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
 
+
 #### 中断与超时
 
 Push 同样不额外设计 ACK。客户端只有在收到 PushResponse，并成功更新本地 `usn` 和 `collection.sync_cursor_usn` 后，才继续发送下一个 batch。
@@ -421,6 +455,7 @@ Push 同样不额外设计 ACK。客户端只有在收到 PushResponse，并成�
 如果 PushRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端直接视为本次同步结束。
 
 同步数据塞进数据库后，即使客户端没收到响应，也不会导致数据不一致。因为后续重新发起同步时，由于没收到响应本地的 usn 会落后服务端，会先 Pull 再 Push，保证数据一致。
+
 
 ### FINISHING 状态
 
@@ -432,6 +467,7 @@ FINISHING 表示同步数据传输已经完成，客户端正在通知服务端�
 2. PULLING 完成后，客户端本地没有 `usn = -1` 的未同步数据。
 3. PUSHING 完成后，客户端已经成功处理最后一个 PushResponse。
 
+
 #### FinishSyncRequest
 
 ```proto
@@ -439,6 +475,7 @@ message FinishSyncRequest {
   string session_id = 1 [(buf.validate.field).string.len = 32];
 }
 ```
+
 
 FinishSyncRequest 必须携带 `session_id`，服务端用它确认客户端结束的是当前同步会话，避免误释放其他 session。
 
@@ -455,11 +492,13 @@ message FinishSyncResponse {
 
 FinishSyncResponse 成功返回即表示 FinishSync ACK：服务端已经接受本次完成请求，并释放当前 session / SyncLock。`server_finished_at` 是服务端确认完成同步的时间，客户端用它更新本地 `collection.last_sync_time`。
 
+
 #### 客户端处理流程
 
 1. 客户端进入 FINISHING 后，发送 FinishSyncRequest。
 2. 客户端收到 FinishSyncResponse 成功响应后，进入 FINISHED。
 3. 客户端在进入 FINISHED 时，将本地 `collection.last_sync_time` 更新为 `response.server_finished_at`。
+
 
 #### 服务端处理规则
 
@@ -469,6 +508,7 @@ FinishSyncResponse 成功返回即表示 FinishSync ACK：服务端已经接受�
 4. 服务端确认释放成功后，返回 FinishSyncResponse，并将当前服务端时间写入 `server_finished_at`。
 
 如果 `session_id` 不存在、已经过期、属于其他用户或状态不允许 Finish，服务端返回 ConnectRPC `FailedPrecondition`。
+
 
 #### 中断与超时
 

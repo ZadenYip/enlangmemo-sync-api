@@ -11,7 +11,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file enlangmemo/sync/v1/handshake.proto.
  */
 export const file_enlangmemo_sync_v1_handshake: GenFile = /*@__PURE__*/
-  fileDesc("CiJlbmxhbmdtZW1vL3N5bmMvdjEvaGFuZHNoYWtlLnByb3RvEhJlbmxhbmdtZW1vLnN5bmMudjEijwIKEEhhbmRzaGFrZVJlcXVlc3QSGwoJZGV2aWNlX2lkGAEgASgJQgi6SAVyA5gBJBIcCgtkZXZpY2VfbmFtZRgCIAEoCUIHukgEcgIYIBIfCg1jb2xsZWN0aW9uX2lkGAMgASgJQgi6SAVyA5gBJBInChZjbGllbnRfc3luY19jdXJzb3JfdXNuGAQgASgDQge6SAQiAigAEhgKEHByb3RvY29sX3ZlcnNpb24YBSABKAUSGQoRZGJfc2NoZW1hX3ZlcnNpb24YBiABKAUSJAocY29sbGVjdGlvbl9zY2hlbWFfdXBkYXRlZF9hdBgHIAEoAxIbCgpjbGllbnRfbm93GAggASgDQge6SAQiAigAIqMBChFIYW5kc2hha2VSZXNwb25zZRIzCgZzdGF0dXMYASABKA4yIy5lbmxhbmdtZW1vLnN5bmMudjEuSGFuZHNoYWtlU3RhdHVzEiEKCnNlc3Npb25faWQYAiABKAlCCLpIBXIDmAEgSACIAQESJwoWc2VydmVyX3N5bmNfY3Vyc29yX3VzbhgDIAEoA0IHukgEIgIoAEINCgtfc2Vzc2lvbl9pZCrMAgoPSGFuZHNoYWtlU3RhdHVzEiAKHEhBTkRTSEFLRV9TVEFUVVNfVU5TUEVDSUZJRUQQABImCiJIQU5EU0hBS0VfU1RBVFVTX05PX1JFTU9URV9DSEFOR0VTEAESHgoaSEFORFNIQUtFX1NUQVRVU19ORUVEX1BVTEwQAhInCiNIQU5EU0hBS0VfU1RBVFVTX09WRVJXUklURV9SRVFVSVJFRBADEisKJ0hBTkRTSEFLRV9TVEFUVVNfTE9DS0VEX0JZX09USEVSX0NMSUVOVBAEEiMKH0hBTkRTSEFLRV9TVEFUVVNfQ0xJRU5UX1RPT19PTEQQBRIjCh9IQU5EU0hBS0VfU1RBVFVTX1NFUlZFUl9UT09fT0xEEAYSLworSEFORFNIQUtFX1NUQVRVU19DTElFTlRfVElNRV9TS0VXX1RPT19MQVJHRRAHQuUBChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQg5IYW5kc2hha2VQcm90b1ABWlFnaXRodWIuY29tL3phZGVueWlwL2VubGFuZ21lbW8tc3luYy1hcGkvcGFja2FnZXMvZ28vZ2VuL2VubGFuZ21lbW8vc3luYy92MTtzeW5jdjGiAgNFU1iqAhJFbmxhbmdtZW1vLlN5bmMuVjHKAhJFbmxhbmdtZW1vXFN5bmNcVjHiAh5FbmxhbmdtZW1vXFN5bmNcVjFcR1BCTWV0YWRhdGHqAhRFbmxhbmdtZW1vOjpTeW5jOjpWMWIGcHJvdG8z", [file_buf_validate_validate]);
+  fileDesc("CiJlbmxhbmdtZW1vL3N5bmMvdjEvaGFuZHNoYWtlLnByb3RvEhJlbmxhbmdtZW1vLnN5bmMudjEi6QEKEEhhbmRzaGFrZVJlcXVlc3QSGwoJZGV2aWNlX2lkGAEgASgJQgi6SAVyA5gBJBIcCgtkZXZpY2VfbmFtZRgCIAEoCUIHukgEcgIYIBIfCg1jb2xsZWN0aW9uX2lkGAMgASgJQgi6SAVyA5gBJBInChZjbGllbnRfc3luY19jdXJzb3JfdXNuGAQgASgDQge6SAQiAigAEhgKEHByb3RvY29sX3ZlcnNpb24YBSABKAUSGQoRZGJfc2NoZW1hX3ZlcnNpb24YBiABKAUSGwoKY2xpZW50X25vdxgHIAEoA0IHukgEIgIoACKjAQoRSGFuZHNoYWtlUmVzcG9uc2USMwoGc3RhdHVzGAEgASgOMiMuZW5sYW5nbWVtby5zeW5jLnYxLkhhbmRzaGFrZVN0YXR1cxIhCgpzZXNzaW9uX2lkGAIgASgJQgi6SAVyA5gBIEgAiAEBEicKFnNlcnZlcl9zeW5jX2N1cnNvcl91c24YAyABKANCB7pIBCICKABCDQoLX3Nlc3Npb25faWQqxAIKD0hhbmRzaGFrZVN0YXR1cxIgChxIQU5EU0hBS0VfU1RBVFVTX1VOU1BFQ0lGSUVEEAASJgoiSEFORFNIQUtFX1NUQVRVU19OT19SRU1PVEVfQ0hBTkdFUxABEh4KGkhBTkRTSEFLRV9TVEFUVVNfTkVFRF9QVUxMEAISHwobSEFORFNIQUtFX1NUQVRVU19VUExPQURfQUxMEAMSKwonSEFORFNIQUtFX1NUQVRVU19MT0NLRURfQllfT1RIRVJfQ0xJRU5UEAQSIwofSEFORFNIQUtFX1NUQVRVU19DTElFTlRfVE9PX09MRBAFEiMKH0hBTkRTSEFLRV9TVEFUVVNfU0VSVkVSX1RPT19PTEQQBhIvCitIQU5EU0hBS0VfU1RBVFVTX0NMSUVOVF9USU1FX1NLRVdfVE9PX0xBUkdFEAdC5QEKFmNvbS5lbmxhbmdtZW1vLnN5bmMudjFCDkhhbmRzaGFrZVByb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate]);
 
 /**
  * @generated from message enlangmemo.sync.v1.HandshakeRequest
@@ -60,16 +60,9 @@ export type HandshakeRequest = Message<"enlangmemo.sync.v1.HandshakeRequest"> & 
   dbSchemaVersion: number;
 
   /**
-   * collection schema 变更时间，仅用于相等性比较，不用于判断哪一方更新
-   *
-   * @generated from field: int64 collection_schema_updated_at = 7;
-   */
-  collectionSchemaUpdatedAt: bigint;
-
-  /**
    * 客户端发起握手时的本地时间戳
    *
-   * @generated from field: int64 client_now = 8;
+   * @generated from field: int64 client_now = 7;
    */
   clientNow: bigint;
 };
@@ -92,7 +85,7 @@ export type HandshakeResponse = Message<"enlangmemo.sync.v1.HandshakeResponse"> 
 
   /**
    * 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
-   * NO_REMOTE_CHANGES / NEED_PULL / OVERWRITE_REQUIRED 返回，其他状态不返回
+   * NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 返回，其他状态不返回
    *
    * @generated from field: optional string session_id = 2;
    */
@@ -135,11 +128,11 @@ export enum HandshakeStatus {
   NEED_PULL = 2,
 
   /**
-   * 普通增量同步不安全，需要用户选择覆盖方向
+   * client_sync_cursor_usn > server_sync_cursor_usn，客户端需要全量上传本地数据恢复服务端
    *
-   * @generated from enum value: HANDSHAKE_STATUS_OVERWRITE_REQUIRED = 3;
+   * @generated from enum value: HANDSHAKE_STATUS_UPLOAD_ALL = 3;
    */
-  OVERWRITE_REQUIRED = 3,
+  UPLOAD_ALL = 3,
 
   /**
    * 其他客户端正在进行同步
