@@ -4,7 +4,8 @@ on:
   pull_request:
   push:
     tags:
-      - "v*"
+      - "packages/go/v*"
+      - "packages/ts/v*"
 
 permissions:
   contents: read
@@ -54,20 +55,23 @@ jobs:
         run: git diff --exit-code
 
       - name: Setup Go
+        if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/packages/go/v')
         uses: actions/setup-go@v7
         with:
           go-version-file: packages/go/go.mod
           cache-dependency-path: packages/go/go.sum
 
       - name: Test Go SDK
+        if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/packages/go/v')
         working-directory: packages/go
         run: go test ./...
 
       - name: Build TypeScript SDK
+        if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/packages/ts/v')
         working-directory: packages/ts
         run: pnpm build
 
       - name: Publish TypeScript SDK
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/packages/ts/v')
         working-directory: packages/ts
         run: pnpm publish --no-git-checks
