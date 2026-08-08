@@ -68,12 +68,17 @@ message HandshakeRequest {
 
   // 客户端发起握手时的本地时间戳
   int64 client_now = 7 [(buf.validate.field).int64.gte = 0];
+
+  // 客户端 collection.last_sync_time，上一次完整同步成功完成的服务端时间
+  int64 client_last_sync_time = 8 [(buf.validate.field).int64.gte = 0];
 }
 ```
 
 `device_id` 用于区分同一用户的不同设备，并辅助判断 SyncLock 存在时是否为同一设备重复握手。
 
 `client_now` 表示客户端发起握手时的本地时间戳。服务端用其对比自身时间，若偏差过大则返回 `CLIENT_TIME_SKEW_TOO_LARGE`，提示用户校准系统时间再同步。
+
+`client_last_sync_time` 表示客户端本地记录的上一次完整同步成功时间，该值来自上次 `FinishSyncResponse.server_finished_at`，因此是服务端分配的可信时间。服务端用它判断客户端是否落后过久。如果服务端运维正式删除某个时间之前的实体（原本是用 delete 标记逻辑删除的），而客户端最后同步时间如果比这个时间点早，则握手会返回 `CLIENT_DATA_TOO_OLD`。
 
 ### SyncLock
 SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用。
@@ -135,6 +140,9 @@ enum HandshakeStatus {
 
   // 客户端本地时间与服务端时间偏差过大
   HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE = 7;
+
+  // 客户端数据落后过久，服务端已正式删除被 delete 标记的数据，客户端需要重置本地数据后重新同步
+  HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD = 8;
 }
 
 ```
@@ -187,6 +195,14 @@ client_sync_cursor_usn > server_sync_cursor_usn，这种情况下可能是由于
 #### CLIENT_TIME_SKEW_TOO_LARGE
 
 客户端 `client_now` 与服务端当前时间偏差超过服务端允许阈值。该状态不创建可继续同步的 session，不返回 `session_id`。客户端应提示用户校准系统时间后重新同步。
+
+#### CLIENT_DATA_TOO_OLD
+
+客户端 `client_last_sync_time` 比服务端运维正式删除了标记数据的时间还要早，因为服务端删除了客户端要利用同步删除本地数据的 delete 记录。
+
+此时普通 Pull 可能无法让客户端知道某些旧实体已经在服务端被删除，因此服务端拒绝本次增量同步，不返回 `session_id`。
+
+客户端收到该状态后，提示用户当前本地数据已经落后太久，需要先清空本地 collection 数据。用户点击重置后，客户端清理本地同步数据，清理完后再重新发起同步。重置完成前不允许正常同步。
 
 
 #### ConnectRPC 全局错误
@@ -249,21 +265,78 @@ note_types 的字段结构约束由客户端业务层保证：不支持在同一
 
 服务端不校验 note_type 字段集合、notes.fields 与 note_type.fields 是否匹配、deck 配置语义等业务规则，服务端主要负责处理 session、batch_seq、usn 分配、UPSERT / DELETE 持久化等同步协议规则。
 
+### 同步实体顺序
+
+Pull 和 Push 传输数据时，UPSERT 变更优先按下面顺序组织：
+
+1. Collection
+2. Deck
+3. NoteType
+4. Note
+5. ProcessingNote
+6. Card
+7. ReviewLog
+
+DELETE 变更也按上面的优先级组织。不过具体的 DELETE 的应用逻辑与 UPSERT 有些不同，详细见下面。
+
+
+### 服务端同步索引表
+
+服务端维护一张 `sync_units` 表用于记录每个同步实体当前最新的服务端同步状态，避免 Pull 时分别扫描多张业务表再合并 usn 顺序。`sync_units` 只作为同步索引和删除标记索引，同一实体再次 UPSERT / DELETE 时，要更新的是已有的记录。
+
+字段：
+
+```text
+sync_units
+- user_id
+- entity_id
+- entity_type
+- usn
+- op
+- updated_at
+```
+
+主键与索引：
+
+```text
+PRIMARY KEY (user_id, entity_id)
+INDEX ix_sync_units_pull (user_id, usn)
+INDEX ix_sync_units_delete_retention (op, updated_at)
+```
+
+服务端在是在同一个数据库事务内同时写入业务表、`sync_units`。
+
+`updated_at` 用于服务端运维清理过期 DELETE marker。
+
+服务端可以删除 `op = CHANGE_OP_DELETE` 且 `updated_at` 早于删除标记保留边界的 `sync_units` 行
+
+握手时如果客户端的 `client_last_sync_time` 比这个时间边界早，则返回 `CLIENT_DATA_TOO_OLD`，要求客户端重置本地数据后再同步。
+
 
 ### 删除同步策略
 
 同步删除采用删除优先策略，也就是只要任何一端有删除意图，所有终端的数据都进行同步后这个数据不会再出现在设备中。
 
-客户端本地 tombstones 表表示本地待上传删除意图，至少记录 `entity_type`、`entity_id`、`deleted_at`。客户端删除实体时，可以物理删除本地实体行，并插入 tombstone，对应实体的 tombstone 存在 row 则表示该删除尚未被服务端确认。
+当客户端本地删除数据后，因为数据记录删除后，数据本身就已经不存在了，所以也无法告知服务器，因此引入 tombstones 表记录本地已经删除的数据，同步上传给服务器确认删除后，同步的时候会上传 tombstones 的记录，服务器确认后，该表下的记录即可删除，这样子就完成了告知服务器客户端删除数据的操作。
 
-对于客户端：
+因此 tombstones 需要  `entity_type`、`entity_id`、`deleted_at`，用来表示删除的是哪个表哪个实体的数据，以及时间。
+
+#### 客户端删除策略
 PULLING 远端变更前，客户端必须先检查同一 `entity_type` 和 `entity_id` 是否存在本地 tombstone。
-- 如果本地有对应的 tombstone，同步变更要删除 tombstone，即使 PULL 的 SyncChange 是 UPSERT。
-- 如果没有 tombstone，按正常尝试删除本地实体即可。
+- 如果本地有对应的 tombstone 记录，说明本地已经存在删除意图，客户端可以直接确认该删除并清理 tombstone，不需要再查询正式表删除数据。
+- 如果本地没有对应的 tombstone 记录，客户端需要另外从正式表查找并删除对应实体
+- 收到远端 UPSERT 时，而数据在本地已经选择了删除，那么 UPSERT 会被忽略。
 
-对于服务端：
-服务端删除采用软删除。服务端收到 DELETE 变更时，不物理删除同步实体，而是写入删除标记与该 batch 的 `assigned_usn`，后续客户端 Pull 根据删除标记返回 `CHANGE_OP_DELETE`，不携带 payload。
+客户端执行本地删除时，如果删除对象存在依赖数据，应由客户端业务层负责删除以及生成 tombstone。例如删除 deck 时，依赖该 deck 的 card 和 note 也应删除， 对应数据的 tombstone 也会跟着生成。
 
+同理，如果收到 deck 的删除，那么在此时本地客户端甚至在收到依赖该 deck 的 card 和 note 的 DELETE，就得删除本地对应的 card 和 note，并生成 tombstone，即使后面会重复收到这些依赖对象的 DELETE。
+
+即使后面可能会收到 DELETE 也选择在此时级联删除这些依赖对象的原因是防止，服务端将这些删除延后到下一个 batch 了，这样子中途网络中断就会丢失后续的删除，所以提前删除和生成 tombstone 是更好的选择。
+
+
+#### 服务端删除策略
+
+服务端删除采用逻辑删除。服务端收到客户端 DELETE 变更时，不物理删除同步实体，而是写入删除标记（delete = true）与该 batch 的 `assigned_usn`。
 
 ### PULLING 状态
 
@@ -355,7 +428,7 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 
 1. 服务端收到 PullRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否仍在 PULLING 状态。
 2. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`；不一致时返回 ConnectRPC `FailedPrecondition`。
-3. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，按 usn 升序选择下一批待发送变更。
+3. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，从 `sync_units` 按 `usn ASC` 升序选择下一批待发送变更。
 4. 服务端为每条 `SyncChange` 写入该实体变更对应的 usn，计算并写入 `batch_max_usn = max(changes.usn)`，并设置 `last_batch` 表示该 batch 是否已经覆盖本轮 Pull 的上界。
 5. 服务端先将 `SyncLock.expected_batch_seq` 递增 1，确认更新成功后，再返回 PullResponse。
 6. 如果当前 batch 是本轮 Pull 的最后一个 batch，服务端将 SyncLock 状态从 PULLING 改为 AWAITING_CLIENT_ACTION 状态（服务器特有的）。

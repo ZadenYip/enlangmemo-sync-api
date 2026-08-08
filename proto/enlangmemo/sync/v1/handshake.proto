@@ -21,6 +21,9 @@ message HandshakeRequest {
   int32 db_schema_version = 6;
   // 客户端发起握手时的本地时间戳
   int64 client_now = 7 [(buf.validate.field).int64.gte = 0];
+
+  // 客户端 collection.last_sync_time，上一次完整同步成功完成的服务端时间
+  int64 client_last_sync_time = 8 [(buf.validate.field).int64.gte = 0];
 }
 
 message HandshakeResponse {
@@ -54,4 +57,7 @@ enum HandshakeStatus {
 
   // 客户端本地时间与服务端时间偏差过大
   HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE = 7;
+
+  // 客户端数据落后过久，服务端已清理必要删除标记，客户端需要重置本地数据后重新同步
+  HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD = 8;
 }
