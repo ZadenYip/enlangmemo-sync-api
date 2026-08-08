@@ -1,6 +1,6 @@
 {
   "name": "@enlangmemo/sync-api",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Generated TypeScript SDK for EnLangMemo sync API.",
   "type": "module",
   "main": "./dist/index.js",
