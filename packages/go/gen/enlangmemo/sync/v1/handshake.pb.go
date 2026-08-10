@@ -39,7 +39,7 @@ const (
 	// 客户端 protocol_version 高于服务端当前支持版本
 	HandshakeStatus_HANDSHAKE_STATUS_SERVER_TOO_OLD HandshakeStatus = 6
 	// 客户端本地时间与服务端时间偏差过大
-	HandshakeStatus_HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE HandshakeStatus = 7
+	HandshakeStatus_HANDSHAKE_STATUS_TIME_SKEW_TOO_LARGE HandshakeStatus = 7
 	// 客户端数据落后过久，服务端已清理必要删除标记，客户端需要重置本地数据后重新同步
 	HandshakeStatus_HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD HandshakeStatus = 8
 )
@@ -54,19 +54,19 @@ var (
 		4: "HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT",
 		5: "HANDSHAKE_STATUS_CLIENT_TOO_OLD",
 		6: "HANDSHAKE_STATUS_SERVER_TOO_OLD",
-		7: "HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE",
+		7: "HANDSHAKE_STATUS_TIME_SKEW_TOO_LARGE",
 		8: "HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD",
 	}
 	HandshakeStatus_value = map[string]int32{
-		"HANDSHAKE_STATUS_UNSPECIFIED":                0,
-		"HANDSHAKE_STATUS_NO_REMOTE_CHANGES":          1,
-		"HANDSHAKE_STATUS_NEED_PULL":                  2,
-		"HANDSHAKE_STATUS_UPLOAD_ALL":                 3,
-		"HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT":     4,
-		"HANDSHAKE_STATUS_CLIENT_TOO_OLD":             5,
-		"HANDSHAKE_STATUS_SERVER_TOO_OLD":             6,
-		"HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE": 7,
-		"HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD":        8,
+		"HANDSHAKE_STATUS_UNSPECIFIED":            0,
+		"HANDSHAKE_STATUS_NO_REMOTE_CHANGES":      1,
+		"HANDSHAKE_STATUS_NEED_PULL":              2,
+		"HANDSHAKE_STATUS_UPLOAD_ALL":             3,
+		"HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT": 4,
+		"HANDSHAKE_STATUS_CLIENT_TOO_OLD":         5,
+		"HANDSHAKE_STATUS_SERVER_TOO_OLD":         6,
+		"HANDSHAKE_STATUS_TIME_SKEW_TOO_LARGE":    7,
+		"HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD":    8,
 	}
 )
 
@@ -288,7 +288,7 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01 H\x00R\tsessionId\x88\x01\x01\x12<\n" +
 	"\x16server_sync_cursor_usn\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13serverSyncCursorUsnB\r\n" +
-	"\v_session_id*\xee\x02\n" +
+	"\v_session_id*\xe7\x02\n" +
 	"\x0fHandshakeStatus\x12 \n" +
 	"\x1cHANDSHAKE_STATUS_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"HANDSHAKE_STATUS_NO_REMOTE_CHANGES\x10\x01\x12\x1e\n" +
@@ -296,8 +296,8 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\x1bHANDSHAKE_STATUS_UPLOAD_ALL\x10\x03\x12+\n" +
 	"'HANDSHAKE_STATUS_LOCKED_BY_OTHER_CLIENT\x10\x04\x12#\n" +
 	"\x1fHANDSHAKE_STATUS_CLIENT_TOO_OLD\x10\x05\x12#\n" +
-	"\x1fHANDSHAKE_STATUS_SERVER_TOO_OLD\x10\x06\x12/\n" +
-	"+HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE\x10\a\x12(\n" +
+	"\x1fHANDSHAKE_STATUS_SERVER_TOO_OLD\x10\x06\x12(\n" +
+	"$HANDSHAKE_STATUS_TIME_SKEW_TOO_LARGE\x10\a\x12(\n" +
 	"$HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD\x10\bB\xe5\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\x0eHandshakeProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 

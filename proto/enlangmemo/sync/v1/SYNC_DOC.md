@@ -139,7 +139,7 @@ enum HandshakeStatus {
   HANDSHAKE_STATUS_SERVER_TOO_OLD = 6;
 
   // 客户端本地时间与服务端时间偏差过大
-  HANDSHAKE_STATUS_CLIENT_TIME_SKEW_TOO_LARGE = 7;
+  HANDSHAKE_STATUS_TIME_SKEW_TOO_LARGE = 7;
 
   // 客户端数据落后过久，服务端已正式删除被 delete 标记的数据，客户端需要重置本地数据后重新同步
   HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD = 8;

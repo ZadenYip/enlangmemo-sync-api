@@ -602,7 +602,7 @@ type NotePayload struct {
 	NoteTypeId   string                 `protobuf:"bytes,2,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
 	CreatedAt    int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt    int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	SenseId      *int64                 `protobuf:"varint,5,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
+	SenseId      *int32                 `protobuf:"varint,5,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
 	SortField    *string                `protobuf:"bytes,6,opt,name=sort_field,json=sortField,proto3,oneof" json:"sort_field,omitempty"`
 	SearchFields *string                `protobuf:"bytes,7,opt,name=search_fields,json=searchFields,proto3,oneof" json:"search_fields,omitempty"`
 	// SQLite notes.fields 的 JSON 字符串
@@ -669,7 +669,7 @@ func (x *NotePayload) GetUpdatedAt() int64 {
 	return 0
 }
 
-func (x *NotePayload) GetSenseId() int64 {
+func (x *NotePayload) GetSenseId() int32 {
 	if x != nil && x.SenseId != nil {
 		return *x.SenseId
 	}
@@ -704,7 +704,7 @@ type ProcessingNotePayload struct {
 	NoteTypeId string                 `protobuf:"bytes,2,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
 	CreatedAt  int64                  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt  int64                  `protobuf:"varint,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	SenseId    *int64                 `protobuf:"varint,5,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
+	SenseId    *int32                 `protobuf:"varint,5,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
 	// SQLite processing_notes.fields 的 JSON 字符串
 	FieldsJson    string `protobuf:"bytes,6,opt,name=fields_json,json=fieldsJson,proto3" json:"fields_json,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -769,7 +769,7 @@ func (x *ProcessingNotePayload) GetUpdatedAt() int64 {
 	return 0
 }
 
-func (x *ProcessingNotePayload) GetSenseId() int64 {
+func (x *ProcessingNotePayload) GetSenseId() int32 {
 	if x != nil && x.SenseId != nil {
 		return *x.SenseId
 	}
@@ -1083,10 +1083,10 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12(\n" +
 	"\vconfig_json\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
-	"configJson\"\xd4\x02\n" +
+	"configJson\"\xd6\x02\n" +
 	"\vDeckPayload\x12\x18\n" +
-	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x02id\x12\x1b\n" +
-	"\x04name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04name\x12&\n" +
+	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x02id\x12\x1d\n" +
+	"\x04name\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18 R\x04name\x12&\n" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12)\n" +
 	"\x11new_cards_per_day\x18\x04 \x01(\x05R\x0enewCardsPerDay\x123\n" +
@@ -1110,7 +1110,7 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"created_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
 	"\n" +
 	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12'\n" +
-	"\bsense_id\x18\x05 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x00R\asenseId\x88\x01\x01\x12\"\n" +
+	"\bsense_id\x18\x05 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00H\x00R\asenseId\x88\x01\x01\x12\"\n" +
 	"\n" +
 	"sort_field\x18\x06 \x01(\tH\x01R\tsortField\x88\x01\x01\x12(\n" +
 	"\rsearch_fields\x18\a \x01(\tH\x02R\fsearchFields\x88\x01\x01\x12(\n" +
@@ -1127,7 +1127,7 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"created_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
 	"\n" +
 	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12'\n" +
-	"\bsense_id\x18\x05 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x00R\asenseId\x88\x01\x01\x12(\n" +
+	"\bsense_id\x18\x05 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00H\x00R\asenseId\x88\x01\x01\x12(\n" +
 	"\vfields_json\x18\x06 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"fieldsJsonB\v\n" +
 	"\t_sense_id\"\xfc\x03\n" +
