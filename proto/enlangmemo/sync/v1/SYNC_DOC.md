@@ -248,14 +248,15 @@ v1/entities.proto 定义同步数据的 payload。payload 基本与当前 SQLite
 
 `dic_note_map` 属于客户端本地配置，这个属于本地客户端配置摘录词的映射到哪个模板用的功能，因为还没确定正式版所以不参与同步。
 
-collection 的 payload 不包含客户端 SQLite 表下面这两个字段：
+collection 的 payload 不包含客户端 SQLite 表下面这个字段：
+
 ```DBDiagram
 // 全局同步状态
 last_sync_time integer [not null, default: 0]
 sync_cursor_usn integer [not null, default: 0]
 ```
 
-`last_sync_time` 是客户端本地辅助字段，展示给用户上次同步时间所以暂时不参与同步。
+`last_sync_time` 是客户端本地辅助字段，展示给用户上次同步时间，只有在 FinishSync 成功返回后才返回给客户端，而服务端则是在 PUSH 完成后更新。
 
 客户端只在 FinishSync 成功返回后写入 `FinishSyncResponse.server_finished_at`。
 
