@@ -144,8 +144,10 @@ type SyncChange struct {
 	// 实体类型
 	EntityType EntityType `protobuf:"varint,2,opt,name=entity_type,json=entityType,proto3,enum=enlangmemo.sync.v1.EntityType" json:"entity_type,omitempty"`
 	// 变更操作类型
-	Op  ChangeOp `protobuf:"varint,3,opt,name=op,proto3,enum=enlangmemo.sync.v1.ChangeOp" json:"op,omitempty"`
-	Usn int64    `protobuf:"varint,4,opt,name=usn,proto3" json:"usn,omitempty"`
+	Op ChangeOp `protobuf:"varint,3,opt,name=op,proto3,enum=enlangmemo.sync.v1.ChangeOp" json:"op,omitempty"`
+	// deleted_at 仅在 op 为 DELETE 时才会有值，表示实体删除的时间戳
+	DeletedAt *int64 `protobuf:"varint,4,opt,name=deleted_at,json=deletedAt,proto3,oneof" json:"deleted_at,omitempty"`
+	Usn       int64  `protobuf:"varint,5,opt,name=usn,proto3" json:"usn,omitempty"`
 	// op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
 	//
 	// Types that are valid to be assigned to Payload:
@@ -211,6 +213,13 @@ func (x *SyncChange) GetOp() ChangeOp {
 		return x.Op
 	}
 	return ChangeOp_CHANGE_OP_UNSPECIFIED
+}
+
+func (x *SyncChange) GetDeletedAt() int64 {
+	if x != nil && x.DeletedAt != nil {
+		return *x.DeletedAt
+	}
+	return 0
 }
 
 func (x *SyncChange) GetUsn() int64 {
@@ -295,36 +304,31 @@ type isSyncChange_Payload interface {
 }
 
 type SyncChange_Collection struct {
-	// 这里是故意 Collection(16) 与 ReviewLog(10) 序号进行了调换
-	//
-	// protobuf 序号 16 需要 2 字节编码，0 ~ 15 只要 1 字节
-	// 把 16 给 Collection 比 ReviewLog 更省，
-	// 因为 ReviewLog 可能会有很多条，Collection 只有一条。
-	Collection *CollectionPayload `protobuf:"bytes,16,opt,name=collection,proto3,oneof"`
+	Collection *CollectionPayload `protobuf:"bytes,6,opt,name=collection,proto3,oneof"`
 }
 
 type SyncChange_Deck struct {
-	Deck *DeckPayload `protobuf:"bytes,11,opt,name=deck,proto3,oneof"`
+	Deck *DeckPayload `protobuf:"bytes,7,opt,name=deck,proto3,oneof"`
 }
 
 type SyncChange_NoteType struct {
-	NoteType *NoteTypePayload `protobuf:"bytes,12,opt,name=note_type,json=noteType,proto3,oneof"`
+	NoteType *NoteTypePayload `protobuf:"bytes,8,opt,name=note_type,json=noteType,proto3,oneof"`
 }
 
 type SyncChange_ProcessingNote struct {
-	ProcessingNote *ProcessingNotePayload `protobuf:"bytes,13,opt,name=processing_note,json=processingNote,proto3,oneof"`
+	ProcessingNote *ProcessingNotePayload `protobuf:"bytes,9,opt,name=processing_note,json=processingNote,proto3,oneof"`
 }
 
 type SyncChange_Note struct {
-	Note *NotePayload `protobuf:"bytes,14,opt,name=note,proto3,oneof"`
+	Note *NotePayload `protobuf:"bytes,10,opt,name=note,proto3,oneof"`
 }
 
 type SyncChange_Card struct {
-	Card *CardPayload `protobuf:"bytes,15,opt,name=card,proto3,oneof"`
+	Card *CardPayload `protobuf:"bytes,11,opt,name=card,proto3,oneof"`
 }
 
 type SyncChange_ReviewLog struct {
-	ReviewLog *ReviewLogPayload `protobuf:"bytes,10,opt,name=review_log,json=reviewLog,proto3,oneof"`
+	ReviewLog *ReviewLogPayload `protobuf:"bytes,12,opt,name=review_log,json=reviewLog,proto3,oneof"`
 }
 
 func (*SyncChange_Collection) isSyncChange_Payload() {}
@@ -1049,61 +1053,64 @@ var File_enlangmemo_sync_v1_entities_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
-	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xa0\x05\n" +
+	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xdc\x05\n" +
 	"\n" +
 	"SyncChange\x12%\n" +
 	"\tentity_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bentityId\x12?\n" +
 	"\ventity_type\x18\x02 \x01(\x0e2\x1e.enlangmemo.sync.v1.EntityTypeR\n" +
 	"entityType\x12,\n" +
-	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12\"\n" +
-	"\x03usn\x18\x04 \x01(\x03B\x10\xbaH\r\"\v(\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01R\x03usn\x12G\n" +
+	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12+\n" +
 	"\n" +
-	"collection\x18\x10 \x01(\v2%.enlangmemo.sync.v1.CollectionPayloadH\x00R\n" +
+	"deleted_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x01R\tdeletedAt\x88\x01\x01\x12\"\n" +
+	"\x03usn\x18\x05 \x01(\x03B\x10\xbaH\r\"\v(\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01R\x03usn\x12G\n" +
+	"\n" +
+	"collection\x18\x06 \x01(\v2%.enlangmemo.sync.v1.CollectionPayloadH\x00R\n" +
 	"collection\x125\n" +
-	"\x04deck\x18\v \x01(\v2\x1f.enlangmemo.sync.v1.DeckPayloadH\x00R\x04deck\x12B\n" +
-	"\tnote_type\x18\f \x01(\v2#.enlangmemo.sync.v1.NoteTypePayloadH\x00R\bnoteType\x12T\n" +
-	"\x0fprocessing_note\x18\r \x01(\v2).enlangmemo.sync.v1.ProcessingNotePayloadH\x00R\x0eprocessingNote\x125\n" +
-	"\x04note\x18\x0e \x01(\v2\x1f.enlangmemo.sync.v1.NotePayloadH\x00R\x04note\x125\n" +
-	"\x04card\x18\x0f \x01(\v2\x1f.enlangmemo.sync.v1.CardPayloadH\x00R\x04card\x12E\n" +
+	"\x04deck\x18\a \x01(\v2\x1f.enlangmemo.sync.v1.DeckPayloadH\x00R\x04deck\x12B\n" +
+	"\tnote_type\x18\b \x01(\v2#.enlangmemo.sync.v1.NoteTypePayloadH\x00R\bnoteType\x12T\n" +
+	"\x0fprocessing_note\x18\t \x01(\v2).enlangmemo.sync.v1.ProcessingNotePayloadH\x00R\x0eprocessingNote\x125\n" +
+	"\x04note\x18\n" +
+	" \x01(\v2\x1f.enlangmemo.sync.v1.NotePayloadH\x00R\x04note\x125\n" +
+	"\x04card\x18\v \x01(\v2\x1f.enlangmemo.sync.v1.CardPayloadH\x00R\x04card\x12E\n" +
 	"\n" +
-	"review_log\x18\n" +
-	" \x01(\v2$.enlangmemo.sync.v1.ReviewLogPayloadH\x00R\treviewLogB\t\n" +
-	"\apayload\"\xca\x01\n" +
+	"review_log\x18\f \x01(\v2$.enlangmemo.sync.v1.ReviewLogPayloadH\x00R\treviewLogB\t\n" +
+	"\apayloadB\r\n" +
+	"\v_deleted_at\"\xca\x01\n" +
 	"\x11CollectionPayload\x12;\n" +
 	"\x15sqlite_schema_version\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x13sqliteSchemaVersion\x12&\n" +
 	"\n" +
-	"created_at\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tcreatedAt\x12&\n" +
+	"created_at\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
 	"\n" +
-	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tupdatedAt\x12(\n" +
+	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12(\n" +
 	"\vconfig_json\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"configJson\"\xd4\x02\n" +
 	"\vDeckPayload\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x02id\x12\x1b\n" +
 	"\x04name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04name\x12&\n" +
 	"\n" +
-	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tupdatedAt\x12)\n" +
+	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12)\n" +
 	"\x11new_cards_per_day\x18\x04 \x01(\x05R\x0enewCardsPerDay\x123\n" +
 	"\x11new_learned_today\x18\x05 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x0fnewLearnedToday\x12,\n" +
 	"\rlearned_today\x18\x06 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\flearnedToday\x12.\n" +
 	"\x0ereviewed_today\x18\a \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\rreviewedToday\x12(\n" +
 	"\vconfig_json\x18\b \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
-	"configJson\"\xde\x01\n" +
+	"configJson\"\xd5\x01\n" +
 	"\x0fNoteTypePayload\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x02id\x12\x1b\n" +
-	"\x04name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04name\x125\n" +
-	"\x12preset_template_id\x18\x03 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x10presetTemplateId\x12&\n" +
+	"\x04name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04name\x12,\n" +
+	"\x12preset_template_id\x18\x03 \x01(\x05R\x10presetTemplateId\x12&\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tupdatedAt\x125\n" +
+	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x125\n" +
 	"\x12note_template_json\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x10noteTemplateJson\"\xf2\x02\n" +
 	"\vNotePayload\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x02id\x12*\n" +
 	"\fnote_type_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\n" +
 	"noteTypeId\x12&\n" +
 	"\n" +
-	"created_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tcreatedAt\x12&\n" +
+	"created_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tupdatedAt\x12'\n" +
-	"\bsense_id\x18\x05 \x01(\x03B\a\xbaH\x04\"\x02(\x00H\x00R\asenseId\x88\x01\x01\x12\"\n" +
+	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12'\n" +
+	"\bsense_id\x18\x05 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x00R\asenseId\x88\x01\x01\x12\"\n" +
 	"\n" +
 	"sort_field\x18\x06 \x01(\tH\x01R\tsortField\x88\x01\x01\x12(\n" +
 	"\rsearch_fields\x18\a \x01(\tH\x02R\fsearchFields\x88\x01\x01\x12(\n" +
@@ -1117,10 +1124,10 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\fnote_type_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\n" +
 	"noteTypeId\x12&\n" +
 	"\n" +
-	"created_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tcreatedAt\x12&\n" +
+	"created_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tupdatedAt\x12'\n" +
-	"\bsense_id\x18\x05 \x01(\x03B\a\xbaH\x04\"\x02(\x00H\x00R\asenseId\x88\x01\x01\x12(\n" +
+	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12'\n" +
+	"\bsense_id\x18\x05 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x00R\asenseId\x88\x01\x01\x12(\n" +
 	"\vfields_json\x18\x06 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"fieldsJsonB\v\n" +
 	"\t_sense_id\"\xfc\x03\n" +
@@ -1129,7 +1136,7 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\anote_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x06noteId\x12!\n" +
 	"\adeck_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x06deckId\x12&\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tupdatedAt\x12\x1e\n" +
+	"updated_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12\x1e\n" +
 	"\n" +
 	"difficulty\x18\x05 \x01(\x01R\n" +
 	"difficulty\x12\x1c\n" +

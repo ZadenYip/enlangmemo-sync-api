@@ -32,23 +32,20 @@ message SyncChange {
 
   // 变更操作类型
   ChangeOp op = 3;
+  // deleted_at 仅在 op 为 DELETE 时才会有值，表示实体删除的时间戳
+  optional int64 deleted_at = 4 [(buf.validate.field).int64.gt = 0];
 
-  int64 usn = 4 [(buf.validate.field).int64.gte = -1];
+  int64 usn = 5 [(buf.validate.field).int64.gte = -1];
 
   // op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
   oneof payload {
-    // 这里是故意 Collection(16) 与 ReviewLog(10) 序号进行了调换
-    //
-    // protobuf 序号 16 需要 2 字节编码，0 ~ 15 只要 1 字节
-    // 把 16 给 Collection 比 ReviewLog 更省，
-    // 因为 ReviewLog 可能会有很多条，Collection 只有一条。
-    CollectionPayload collection = 16;
-    DeckPayload deck = 11;
-    NoteTypePayload note_type = 12;
-    ProcessingNotePayload processing_note = 13;
-    NotePayload note = 14;
-    CardPayload card = 15;
-    ReviewLogPayload review_log = 10;
+    CollectionPayload collection = 6;
+    DeckPayload deck = 7;
+    NoteTypePayload note_type = 8;
+    ProcessingNotePayload processing_note = 9;
+    NotePayload note = 10;
+    CardPayload card = 11;
+    ReviewLogPayload review_log = 12;
   }
 }
 

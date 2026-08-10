@@ -389,7 +389,7 @@ message PullResponse {
 
 `ChangeOp = UPSERT` 时必须携带 `payload`
 
-`ChangeOp = DELETE` 时不携带 payload，客户端根据 `entity_id` 和 `entity_type` 按删除同步策略处理本地实体和 tombstone。
+`ChangeOp = DELETE` 时不携带 payload，但必须携带 `deleted_at`，客户端根据 `entity_id`、`entity_type` 和 `deleted_at` 按删除同步策略处理本地实体和 tombstone。
 
 
 #### Pull 本地未同步变更处理
@@ -513,7 +513,7 @@ message PushResponse {
    - `changes` 非空
    - PushRequest 中每条 `SyncChange.usn` 必须为 `-1`
    - 当 `ChangeOp = UPSERT` 时，确认 payload 与 `entity_type` 匹配
-   - 当 `ChangeOp = DELETE` 时，payload 为空。
+   - 当 `ChangeOp = DELETE` 时，payload 为空，且 `deleted_at` 必须存在。
    - 校验失败返回 ConnectRPC `InvalidArgument`
 5. 服务端开启数据库事务，为当前 batch 分配一个新的 usn，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按软删除语义处理并写入该 usn。
 6. 服务端先将 `SyncLock.expected_batch_seq` 递增 1；如果 `request.last_batch = true`，同时将 SyncLock 状态改为 AWAITING_FINISH。
