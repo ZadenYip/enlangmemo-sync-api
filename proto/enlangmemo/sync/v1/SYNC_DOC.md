@@ -85,6 +85,14 @@ message HandshakeRequest {
 
 `has_local_changes` 表示客户端握手时是否存在待上传的本地变更，包括本地实体 `usn = -1` 的 UPSERT，以及 tombstones 中待上传的 DELETE。服务端用其决定 `NO_REMOTE_CHANGES` 下握手后的初始状态。
 
+### Collection 身份校验
+
+每个用户在服务端只有一个 collection。HandshakeRequest 中的 `collection_id` 表示客户端本地唯一 collection 身份，服务端必须在判断 `client_sync_cursor_usn` 前先校验该身份。
+
+如果用户服务端还没有 collection，则服务端可以将本次请求的 `collection_id` 绑定为该用户唯一 collection。如果用户服务端已经存在 collection，则 `request.collection_id` 必须等于服务端记录的 `collection_id`。
+
+如果 `collection_id` 不一致，本次握手不进入 HandshakeStatus，服务端直接返回 ConnectRPC `FailedPrecondition`，表示请求格式和用户认证都有效，但当前本地 collection 身份与该账号已绑定的云端 collection 不匹配，不能继续同步，也没法触发 `UPLOAD_ALL`。
+
 ### SyncLock
 SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用。
 
@@ -118,7 +126,7 @@ message HandshakeResponse {
   HandshakeStatus status = 1;
 
   // 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
-  // NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 返回，其他状态不返回
+  // 只有需要继续同步会话时才返回，NO_REMOTE_CHANGES 且 has_local_changes = false 时不返回
   optional string session_id = 2 [(buf.validate.field).string.len = 32];
 
   int64 server_sync_cursor_usn = 3 [(buf.validate.field).int64.gte = 0];
@@ -154,7 +162,7 @@ enum HandshakeStatus {
 
 session_id 由服务端在允许继续当前同步会话时生成，用于标识本次同步会话。
 
-NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 下会返回 session_id，其他状态下不返回 session_id。
+`NEED_PULL`、`UPLOAD_ALL` 以及 `NO_REMOTE_CHANGES + has_local_changes = true` 下会返回 session_id。`NO_REMOTE_CHANGES + has_local_changes = false` 表示本次只是空同步检查，服务端不创建 SyncLock。
 
 字段存在时必须是 32 位字符串，后续 Pull / Push / FinishSync 都需要携带 session_id。
 
@@ -162,7 +170,7 @@ NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 下会返回 session_id，其他状�
 #### NO_REMOTE_CHANGES
 NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服务器相对客户端同步游标无新增数据。服务端根据 `has_local_changes` 设置握手后的初始状态：
 如果为 true，则进入 PUSHING，`expected_batch_seq = 1`
-如果为 false，则进入 AWAITING_FINISH。
+如果为 false，则不创建 SyncLock、不返回 `session_id`，客户端直接结束本次同步检查，且不更新 `last_sync_time`。
 
 
 #### NEED_PULL
@@ -223,6 +231,7 @@ client_sync_cursor_usn > server_sync_cursor_usn，这种情况下可能是由于
 | access token 缺失、过期、无效 | `Unauthenticated` | 全局认证失败，通常在 interceptor 中处理，业务 handler 可以不进入 |
 | 用户无权访问 collection | `PermissionDenied` | 资源授权失败，不属于握手业务状态 |
 | Protobuf 字段或 buf.validate 校验失败 | `InvalidArgument` | 请求格式非法，例如 UUID 长度不对或 `client_sync_cursor_usn < 0` |
+| 用户已有服务端 collection，但请求中的 collection_id 与服务端记录不一致 | `FailedPrecondition` | 本地 collection 身份与账号已绑定的云端 collection 不匹配，不能继续同步 |
 | 全局限流、配额耗尽 | `ResourceExhausted` | 等价于 too many requests，不属于握手业务状态 |
 | 服务维护、依赖暂时不可用 | `Unavailable` | 可以提示稍后重试 |
 | 客户端 deadline 超时 | `DeadlineExceeded` 或客户端本地超时 | 客户端没有拿到可信 HandshakeResponse |
@@ -547,9 +556,9 @@ FINISHING 表示同步数据传输已经完成，客户端正在通知服务端�
 
 客户端进入 FINISHING 有三种情况：
 
-1. HandshakeResponse 返回 `NO_REMOTE_CHANGES`，并且 `has_local_changes = false`。
-2. PULLING 完成后，客户端确认本地没有待上传变更。
-3. PUSHING 完成后，客户端已经成功处理最后一个 PushResponse。
+1. PULLING 完成后，客户端确认本地没有待上传变更。
+2. PUSHING 完成后，客户端已经成功处理最后一个 PushResponse。
+3. UPLOAD_ALL 完成后，客户端已经成功处理最后一个全量上传 batch 的响应。
 
 
 #### FinishSyncRequest

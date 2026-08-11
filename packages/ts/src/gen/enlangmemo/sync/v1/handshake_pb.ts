@@ -99,7 +99,7 @@ export type HandshakeResponse = Message<"enlangmemo.sync.v1.HandshakeResponse"> 
 
   /**
    * 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
-   * NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 返回，其他状态不返回
+   * 只有需要继续同步会话时才返回，NO_REMOTE_CHANGES 且 has_local_changes = false 时不返回
    *
    * @generated from field: optional string session_id = 2;
    */

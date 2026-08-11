@@ -218,7 +218,7 @@ type HandshakeResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Status HandshakeStatus        `protobuf:"varint,1,opt,name=status,proto3,enum=enlangmemo.sync.v1.HandshakeStatus" json:"status,omitempty"`
 	// 服务端随机生成的 16 字节 session_id（转为字符串后长度为 32）
-	// NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 返回，其他状态不返回
+	// 只有需要继续同步会话时才返回，NO_REMOTE_CHANGES 且 has_local_changes = false 时不返回
 	SessionId           *string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3,oneof" json:"session_id,omitempty"`
 	ServerSyncCursorUsn int64   `protobuf:"varint,3,opt,name=server_sync_cursor_usn,json=serverSyncCursorUsn,proto3" json:"server_sync_cursor_usn,omitempty"`
 	unknownFields       protoimpl.UnknownFields
