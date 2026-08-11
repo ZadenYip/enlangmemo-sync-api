@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package enlangmemo.sync.v1;
+
+import "buf/validate/validate.proto";
+import "enlangmemo/sync/v1/entities.proto";
+
+message UploadAllPrepareRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+
+message UploadAllPrepareResponse {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+
+message UploadAllPushRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+
+  // 当前请求的 batch 序号，从 1 开始
+  // 服务端校验 batch_seq == SyncLock.expected_batch_seq
+  int32 batch_seq = 2 [(buf.validate.field).int32.gte = 1];
+
+  // 客户端完整快照中的一批已确认变更，每条 SyncChange.usn 必须 > 0
+  repeated SyncChange changes = 3 [(buf.validate.field).repeated.min_items = 1];
+
+  // 是否为本轮 UploadAllPush 的最后一个 batch
+  bool last_batch = 4;
+}
+
+message UploadAllPushResponse {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+
+  // 当前返回的 batch 序号，等于 request.batch_seq
+  int32 batch_seq = 2;
+}

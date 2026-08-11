@@ -39,8 +39,16 @@ const (
 	SyncServicePullProcedure = "/enlangmemo.sync.v1.SyncService/Pull"
 	// SyncServicePushProcedure is the fully-qualified name of the SyncService's Push RPC.
 	SyncServicePushProcedure = "/enlangmemo.sync.v1.SyncService/Push"
+	// SyncServiceUploadAllPrepareProcedure is the fully-qualified name of the SyncService's
+	// UploadAllPrepare RPC.
+	SyncServiceUploadAllPrepareProcedure = "/enlangmemo.sync.v1.SyncService/UploadAllPrepare"
+	// SyncServiceUploadAllPushProcedure is the fully-qualified name of the SyncService's UploadAllPush
+	// RPC.
+	SyncServiceUploadAllPushProcedure = "/enlangmemo.sync.v1.SyncService/UploadAllPush"
 	// SyncServiceFinishSyncProcedure is the fully-qualified name of the SyncService's FinishSync RPC.
 	SyncServiceFinishSyncProcedure = "/enlangmemo.sync.v1.SyncService/FinishSync"
+	// SyncServiceCancelSyncProcedure is the fully-qualified name of the SyncService's CancelSync RPC.
+	SyncServiceCancelSyncProcedure = "/enlangmemo.sync.v1.SyncService/CancelSync"
 )
 
 // SyncServiceClient is a client for the enlangmemo.sync.v1.SyncService service.
@@ -48,7 +56,10 @@ type SyncServiceClient interface {
 	Handshake(context.Context, *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error)
 	Pull(context.Context, *connect.Request[v1.PullRequest]) (*connect.Response[v1.PullResponse], error)
 	Push(context.Context, *connect.Request[v1.PushRequest]) (*connect.Response[v1.PushResponse], error)
+	UploadAllPrepare(context.Context, *connect.Request[v1.UploadAllPrepareRequest]) (*connect.Response[v1.UploadAllPrepareResponse], error)
+	UploadAllPush(context.Context, *connect.Request[v1.UploadAllPushRequest]) (*connect.Response[v1.UploadAllPushResponse], error)
 	FinishSync(context.Context, *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error)
+	CancelSync(context.Context, *connect.Request[v1.CancelSyncRequest]) (*connect.Response[v1.CancelSyncResponse], error)
 }
 
 // NewSyncServiceClient constructs a client for the enlangmemo.sync.v1.SyncService service. By
@@ -80,10 +91,28 @@ func NewSyncServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(syncServiceMethods.ByName("Push")),
 			connect.WithClientOptions(opts...),
 		),
+		uploadAllPrepare: connect.NewClient[v1.UploadAllPrepareRequest, v1.UploadAllPrepareResponse](
+			httpClient,
+			baseURL+SyncServiceUploadAllPrepareProcedure,
+			connect.WithSchema(syncServiceMethods.ByName("UploadAllPrepare")),
+			connect.WithClientOptions(opts...),
+		),
+		uploadAllPush: connect.NewClient[v1.UploadAllPushRequest, v1.UploadAllPushResponse](
+			httpClient,
+			baseURL+SyncServiceUploadAllPushProcedure,
+			connect.WithSchema(syncServiceMethods.ByName("UploadAllPush")),
+			connect.WithClientOptions(opts...),
+		),
 		finishSync: connect.NewClient[v1.FinishSyncRequest, v1.FinishSyncResponse](
 			httpClient,
 			baseURL+SyncServiceFinishSyncProcedure,
 			connect.WithSchema(syncServiceMethods.ByName("FinishSync")),
+			connect.WithClientOptions(opts...),
+		),
+		cancelSync: connect.NewClient[v1.CancelSyncRequest, v1.CancelSyncResponse](
+			httpClient,
+			baseURL+SyncServiceCancelSyncProcedure,
+			connect.WithSchema(syncServiceMethods.ByName("CancelSync")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -91,10 +120,13 @@ func NewSyncServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 
 // syncServiceClient implements SyncServiceClient.
 type syncServiceClient struct {
-	handshake  *connect.Client[v1.HandshakeRequest, v1.HandshakeResponse]
-	pull       *connect.Client[v1.PullRequest, v1.PullResponse]
-	push       *connect.Client[v1.PushRequest, v1.PushResponse]
-	finishSync *connect.Client[v1.FinishSyncRequest, v1.FinishSyncResponse]
+	handshake        *connect.Client[v1.HandshakeRequest, v1.HandshakeResponse]
+	pull             *connect.Client[v1.PullRequest, v1.PullResponse]
+	push             *connect.Client[v1.PushRequest, v1.PushResponse]
+	uploadAllPrepare *connect.Client[v1.UploadAllPrepareRequest, v1.UploadAllPrepareResponse]
+	uploadAllPush    *connect.Client[v1.UploadAllPushRequest, v1.UploadAllPushResponse]
+	finishSync       *connect.Client[v1.FinishSyncRequest, v1.FinishSyncResponse]
+	cancelSync       *connect.Client[v1.CancelSyncRequest, v1.CancelSyncResponse]
 }
 
 // Handshake calls enlangmemo.sync.v1.SyncService.Handshake.
@@ -112,9 +144,24 @@ func (c *syncServiceClient) Push(ctx context.Context, req *connect.Request[v1.Pu
 	return c.push.CallUnary(ctx, req)
 }
 
+// UploadAllPrepare calls enlangmemo.sync.v1.SyncService.UploadAllPrepare.
+func (c *syncServiceClient) UploadAllPrepare(ctx context.Context, req *connect.Request[v1.UploadAllPrepareRequest]) (*connect.Response[v1.UploadAllPrepareResponse], error) {
+	return c.uploadAllPrepare.CallUnary(ctx, req)
+}
+
+// UploadAllPush calls enlangmemo.sync.v1.SyncService.UploadAllPush.
+func (c *syncServiceClient) UploadAllPush(ctx context.Context, req *connect.Request[v1.UploadAllPushRequest]) (*connect.Response[v1.UploadAllPushResponse], error) {
+	return c.uploadAllPush.CallUnary(ctx, req)
+}
+
 // FinishSync calls enlangmemo.sync.v1.SyncService.FinishSync.
 func (c *syncServiceClient) FinishSync(ctx context.Context, req *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error) {
 	return c.finishSync.CallUnary(ctx, req)
+}
+
+// CancelSync calls enlangmemo.sync.v1.SyncService.CancelSync.
+func (c *syncServiceClient) CancelSync(ctx context.Context, req *connect.Request[v1.CancelSyncRequest]) (*connect.Response[v1.CancelSyncResponse], error) {
+	return c.cancelSync.CallUnary(ctx, req)
 }
 
 // SyncServiceHandler is an implementation of the enlangmemo.sync.v1.SyncService service.
@@ -122,7 +169,10 @@ type SyncServiceHandler interface {
 	Handshake(context.Context, *connect.Request[v1.HandshakeRequest]) (*connect.Response[v1.HandshakeResponse], error)
 	Pull(context.Context, *connect.Request[v1.PullRequest]) (*connect.Response[v1.PullResponse], error)
 	Push(context.Context, *connect.Request[v1.PushRequest]) (*connect.Response[v1.PushResponse], error)
+	UploadAllPrepare(context.Context, *connect.Request[v1.UploadAllPrepareRequest]) (*connect.Response[v1.UploadAllPrepareResponse], error)
+	UploadAllPush(context.Context, *connect.Request[v1.UploadAllPushRequest]) (*connect.Response[v1.UploadAllPushResponse], error)
 	FinishSync(context.Context, *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error)
+	CancelSync(context.Context, *connect.Request[v1.CancelSyncRequest]) (*connect.Response[v1.CancelSyncResponse], error)
 }
 
 // NewSyncServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -150,10 +200,28 @@ func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(syncServiceMethods.ByName("Push")),
 		connect.WithHandlerOptions(opts...),
 	)
+	syncServiceUploadAllPrepareHandler := connect.NewUnaryHandler(
+		SyncServiceUploadAllPrepareProcedure,
+		svc.UploadAllPrepare,
+		connect.WithSchema(syncServiceMethods.ByName("UploadAllPrepare")),
+		connect.WithHandlerOptions(opts...),
+	)
+	syncServiceUploadAllPushHandler := connect.NewUnaryHandler(
+		SyncServiceUploadAllPushProcedure,
+		svc.UploadAllPush,
+		connect.WithSchema(syncServiceMethods.ByName("UploadAllPush")),
+		connect.WithHandlerOptions(opts...),
+	)
 	syncServiceFinishSyncHandler := connect.NewUnaryHandler(
 		SyncServiceFinishSyncProcedure,
 		svc.FinishSync,
 		connect.WithSchema(syncServiceMethods.ByName("FinishSync")),
+		connect.WithHandlerOptions(opts...),
+	)
+	syncServiceCancelSyncHandler := connect.NewUnaryHandler(
+		SyncServiceCancelSyncProcedure,
+		svc.CancelSync,
+		connect.WithSchema(syncServiceMethods.ByName("CancelSync")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/enlangmemo.sync.v1.SyncService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -164,8 +232,14 @@ func NewSyncServiceHandler(svc SyncServiceHandler, opts ...connect.HandlerOption
 			syncServicePullHandler.ServeHTTP(w, r)
 		case SyncServicePushProcedure:
 			syncServicePushHandler.ServeHTTP(w, r)
+		case SyncServiceUploadAllPrepareProcedure:
+			syncServiceUploadAllPrepareHandler.ServeHTTP(w, r)
+		case SyncServiceUploadAllPushProcedure:
+			syncServiceUploadAllPushHandler.ServeHTTP(w, r)
 		case SyncServiceFinishSyncProcedure:
 			syncServiceFinishSyncHandler.ServeHTTP(w, r)
+		case SyncServiceCancelSyncProcedure:
+			syncServiceCancelSyncHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -187,6 +261,18 @@ func (UnimplementedSyncServiceHandler) Push(context.Context, *connect.Request[v1
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.Push is not implemented"))
 }
 
+func (UnimplementedSyncServiceHandler) UploadAllPrepare(context.Context, *connect.Request[v1.UploadAllPrepareRequest]) (*connect.Response[v1.UploadAllPrepareResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.UploadAllPrepare is not implemented"))
+}
+
+func (UnimplementedSyncServiceHandler) UploadAllPush(context.Context, *connect.Request[v1.UploadAllPushRequest]) (*connect.Response[v1.UploadAllPushResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.UploadAllPush is not implemented"))
+}
+
 func (UnimplementedSyncServiceHandler) FinishSync(context.Context, *connect.Request[v1.FinishSyncRequest]) (*connect.Response[v1.FinishSyncResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.FinishSync is not implemented"))
+}
+
+func (UnimplementedSyncServiceHandler) CancelSync(context.Context, *connect.Request[v1.CancelSyncRequest]) (*connect.Response[v1.CancelSyncResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("enlangmemo.sync.v1.SyncService.CancelSync is not implemented"))
 }

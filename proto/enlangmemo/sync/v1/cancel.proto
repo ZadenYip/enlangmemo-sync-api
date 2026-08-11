@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package enlangmemo.sync.v1;
+
+import "buf/validate/validate.proto";
+
+message CancelSyncRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+
+message CancelSyncResponse {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}

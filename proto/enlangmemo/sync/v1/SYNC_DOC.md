@@ -89,7 +89,9 @@ message HandshakeRequest {
 
 每个用户在服务端只有一个 collection。HandshakeRequest 中的 `collection_id` 表示客户端本地唯一 collection 身份，服务端必须在判断 `client_sync_cursor_usn` 前先校验该身份。
 
-如果用户服务端还没有 collection，则服务端可以将本次请求的 `collection_id` 绑定为该用户唯一 collection。如果用户服务端已经存在 collection，则 `request.collection_id` 必须等于服务端记录的 `collection_id`。
+注意：即使集合被标记为已删除（比如 UPLOAD_ALL 干的），即使这样，服务端仍然能校验客户端的 `collection_id` 是否属于当前账号。
+
+如果用户还没有 collection 记录，则服务端可以将本次请求的 `collection_id` 绑定为该用户唯一 collection。如果用户已经有绑定记录，则 `request.collection_id` 必须等于服务端记录的 `collection_id`。
 
 如果 `collection_id` 不一致，本次握手不进入 HandshakeStatus，服务端直接返回 ConnectRPC `FailedPrecondition`，表示请求格式和用户认证都有效，但当前本地 collection 身份与该账号已绑定的云端 collection 不匹配，不能继续同步，也没法触发 `UPLOAD_ALL`。
 
@@ -107,14 +109,18 @@ SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的�
 {
     "user_id": xxx, // 利用 userID 锁住用户其他设备的同步操作
     "state": xxx, // 处于同步的什么状态（阶段）
-    // 是当前 state 内期望的下一个 batch 序号；进入 PULLING、PUSHING 或 AWAITING_PUSH_OR_FINISH 时重置为 1。
+    // 是当前 state 内期望的下一个 batch 序号；进入 PULLING、PUSHING、UPLOADING_ALL 或 AWAITING_PUSH_OR_FINISH 时重置为 1。
     "expected_batch_seq": xxx,
+    // 当前 session 已处理到的 USN 上界 / 下一次处理起点，语义与 collection.sync_cursor_usn 保持一致。
+    "sync_cursor_usn": xxx,
     "session_id": xxx,
     "client_sync_cursor_usn_at_handshake": xxx,
     "server_sync_cursor_usn_at_handshake": xxx,
     "device_id": xxx
 }
 ```
+
+`sync_cursor_usn` 是当前 session 内部使用的同步游标，语义与 `collection.sync_cursor_usn` 一致，表示已处理到的 USN 上界 / 下一次处理起点：PULLING 中表示下一批 Pull 的起点，PUSHING 中表示服务端下一次要分配的 usn，UPLOADING_ALL 中表示已恢复客户端快照的 usn 上界。
 
 
 ### HandshakeResponse
@@ -169,7 +175,7 @@ session_id 由服务端在允许继续当前同步会话时生成，用于标识
 
 #### NO_REMOTE_CHANGES
 NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服务器相对客户端同步游标无新增数据。服务端根据 `has_local_changes` 设置握手后的初始状态：
-如果为 true，则进入 PUSHING，`expected_batch_seq = 1`
+如果为 true，则进入 PUSHING，`expected_batch_seq = 1`，`sync_cursor_usn = server_sync_cursor_usn_at_handshake`。
 如果为 false，则不创建 SyncLock、不返回 `session_id`，客户端直接结束本次同步检查，且不更新 `last_sync_time`。
 
 
@@ -177,7 +183,7 @@ NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服�
 
 client_sync_cursor_usn < server_sync_cursor_usn，服务器在 [client_sync_cursor_usn, server_sync_cursor_usn) 有客户端未拉取的数据。
 
-NEED_PULL 下服务端进入 PULLING，`expected_batch_seq = 1`。Pull 完成后服务端统一进入 AWAITING_PUSH_OR_FINISH，`expected_batch_seq = 1`，由客户端决定继续 Push 还是直接 FinishSync。
+NEED_PULL 下服务端进入 PULLING，`expected_batch_seq = 1`，`sync_cursor_usn = client_sync_cursor_usn_at_handshake`。Pull 完成后服务端统一进入 AWAITING_PUSH_OR_FINISH，`expected_batch_seq = 1`，由客户端决定继续 Push 还是直接 FinishSync。
 
 
 #### UPLOAD_ALL
@@ -186,7 +192,67 @@ NEED_PULL 下服务端进入 PULLING，`expected_batch_seq = 1`。Pull 完成后
 client_sync_cursor_usn > server_sync_cursor_usn，这种情况下可能是由于服务器回滚、恢复旧备份或云端数据被重置。
 该状态表示客户端已经确认过的同步游标（cursor_usn）超过服务端的，普通的 Pull 没法处理。客户端应进入 UPLOAD_ALL，将本地 collection 当前数据全量上传到服务端，用于恢复服务端缺失的数据。
 
-客户端在进入 UPLOAD_ALL 前会提示用户确认是否继续上传本地数据覆盖服务端。
+Handshake 返回 `UPLOAD_ALL` 时，服务端创建 SyncLock，返回 `session_id`，并将 SyncLock 状态设置为 AWAITING_UPLOAD_ALL_CONFIRM，`expected_batch_seq = 1`。此时服务端还没有删除或覆盖正式数据，只是在等待客户端用户确认。
+
+客户端收到 `UPLOAD_ALL` 后，需要提示用户确认：服务器数据可能丢失，需要使用本机数据恢复服务器。
+
+- 用户确认：客户端先发送 UploadAllPrepareRequest。
+- 用户取消：客户端发送 CancelSyncRequest，服务端校验 `session_id` 后释放 SyncLock，并在 CancelSyncResponse 中回传同一个 `session_id`，客户端需要校验响应中的 `session_id` 与请求一致。
+
+服务端在 AWAITING_UPLOAD_ALL_CONFIRM 状态只接受 UploadAllPrepareRequest 或 CancelSyncRequest。
+
+```proto
+message UploadAllPrepareRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+
+message UploadAllPrepareResponse {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+
+message UploadAllPushRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+
+  // 当前请求的 batch 序号，从 1 开始
+  // 服务端校验 batch_seq == SyncLock.expected_batch_seq
+  int32 batch_seq = 2 [(buf.validate.field).int32.gte = 1];
+
+  // 客户端完整快照中的一批已确认变更，每条 SyncChange.usn 必须 > 0
+  repeated SyncChange changes = 3 [(buf.validate.field).repeated.min_items = 1];
+
+  // 是否为本轮 UploadAllPush 的最后一个 batch
+  bool last_batch = 4;
+}
+
+message UploadAllPushResponse {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+
+  // 当前返回的 batch 序号，等于 request.batch_seq
+  int32 batch_seq = 2;
+}
+
+message CancelSyncRequest {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+
+message CancelSyncResponse {
+  string session_id = 1 [(buf.validate.field).string.len = 32];
+}
+```
+
+UploadAllPrepareRequest 成功后，服务端在一个独立事务中执行恢复准备：标记该用户当前 collection 下的旧服务端同步数据为已删除，更新对应 `sync_units` 删除标记，并将服务端 collection 的同步游标重置为 0，使后续中断后再次握手仍会进入 `UPLOAD_ALL`。Prepare 成功后，服务端将 SyncLock 状态切换为 UPLOADING_ALL，`expected_batch_seq = 1`，`sync_cursor_usn = 0`，并在 UploadAllPrepareResponse 中回传同一个 `session_id`，客户端需要校验响应中的 `session_id` 与请求一致。
+
+进入 UPLOADING_ALL 后，客户端先分 batch 上传所有 `usn > 0` 的已确认本地数据。UPLOAD_ALL 的数据 batch 使用 UploadAllPushRequest / UploadAllPushResponse，而不是普通的 PushRequest。
+
+UPLOAD_ALL 时客户端已经确认过的本地数据以客户端当前 `SyncChange.usn` 为准，服务端必须按该 usn 恢复数据和 `sync_units`。UploadAllPushRequest 中每条 `SyncChange.usn` 必须 `> 0`；如果存在 `usn = -1` 的本地未确认变更，不能放入 UploadAllPushRequest，必须等 UploadAllPush 完成后再按普通 Push 逻辑上传。
+
+UPLOADING_ALL 状态下，服务端只接受 UploadAllPushRequest，并校验 `request.batch_seq == SyncLock.expected_batch_seq`。每个 UploadAllPush batch 对应一个服务端数据库事务；batch 成功后服务端计算 `batch_max_usn = max(changes.usn)`，并更新 `sync_cursor_usn = max(sync_cursor_usn, batch_max_usn + 1)`。
+
+如果 `last_batch = false`，服务端递增 `expected_batch_seq`，继续保持 UPLOADING_ALL。如果 `last_batch = true`，服务端校验 `sync_cursor_usn == client_sync_cursor_usn_at_handshake`；校验通过后，将服务端 collection.sync_cursor_usn 写为 `sync_cursor_usn`，状态进入 AWAITING_FINISH。
+
+UploadAllPush 完成后，客户端发送 FinishSyncRequest 结束本次 UPLOAD_ALL 会话。如果客户端还有 `usn = -1` 的本地未确认变更，由客户端在 FinishSync 成功后重新发起一轮普通同步，并通过普通 Push 上传。
+
+如果 UploadAllPrepare 已成功但后续上传中断，后续同步仍会因为服务端同步游标为 0 而重新进入 `UPLOAD_ALL`，直到全量上传完成并 FinishSync 成功释放 SyncLock。
 
 这里采取全量同步的考虑原因见下：
 
@@ -449,7 +515,7 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 2. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`；不一致时返回 ConnectRPC `FailedPrecondition`。
 3. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，从 `sync_units` 按 `usn ASC` 升序选择下一批待发送变更。
 4. 服务端为每条 `SyncChange` 写入该实体变更对应的 usn，计算并写入 `batch_max_usn = max(changes.usn)`，并设置 `last_batch` 表示该 batch 是否已经覆盖本轮 Pull 的上界。
-5. 服务端返回 PullResponse 前先更新 SyncLock：如果 `last_batch = false`，将 `expected_batch_seq` 递增 1；如果 `last_batch = true`，将状态从 PULLING 改为 AWAITING_PUSH_OR_FINISH，并将 `expected_batch_seq` 重置为 1。
+5. 服务端返回 PullResponse 前先更新 SyncLock：将 `sync_cursor_usn` 更新为 `batch_max_usn + 1`。如果 `last_batch = false`，将 `expected_batch_seq` 递增 1；如果 `last_batch = true`，校验 `sync_cursor_usn == server_sync_cursor_usn_at_handshake`，并将状态从 PULLING 改为 AWAITING_PUSH_OR_FINISH，将 `expected_batch_seq` 重置为 1。
 6. 服务端确认 SyncLock 更新成功后，再返回 PullResponse。
 
 
@@ -467,7 +533,7 @@ PUSHING 表示客户端正在把本地 `usn = -1` 的未同步变更上传到服
 进入 PUSHING 有两种情况：
 
 1. HandshakeResponse 返回 `NO_REMOTE_CHANGES`，且 `has_local_changes = true`，服务端直接进入 PUSHING，`expected_batch_seq = 1`。
-2. PULLING 完成后，服务端进入 AWAITING_PUSH_OR_FINISH；如果客户端本地仍存在待上传变更，则客户端发送第一个 PushRequest，服务端从 AWAITING_PUSH_OR_FINISH 切换到 PUSHING。
+2. PULLING 完成后，服务端进入 AWAITING_PUSH_OR_FINISH；如果客户端本地仍存在待上传变更，则客户端发送第一个 PushRequest，服务端从 AWAITING_PUSH_OR_FINISH 切换到 PUSHING，并使用当前 `sync_cursor_usn` 作为第一个 Push batch 的 `assigned_usn`。
 
 Push 的同步颗粒度也是 batch。一个 Push batch 对应服务端一次数据库事务，服务端为该 batch 分配一个新的 usn，并将 batch 内所有变更写为同一个 usn。客户端上传时本地未同步变更的 `SyncChange.usn` 为 -1，该值表示待上传
 
@@ -534,8 +600,8 @@ message PushResponse {
    - 当 `ChangeOp = UPSERT` 时，确认 payload 与 `entity_type` 匹配
    - 当 `ChangeOp = DELETE` 时，payload 为空，且 `deleted_at` 必须存在。
    - 校验失败返回 ConnectRPC `InvalidArgument`
-6. 服务端开启数据库事务，为当前 batch 分配一个新的 usn，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按软删除语义处理并写入该 usn。
-7. 服务端返回 PushResponse 前先更新 SyncLock：如果 `request.last_batch = false`，将状态置为 PUSHING，并将 `expected_batch_seq` 递增 1；如果 `request.last_batch = true`，将状态改为 AWAITING_FINISH。
+6. 服务端开启数据库事务，使用 SyncLock.sync_cursor_usn 作为当前 batch 的 `assigned_usn`，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按软删除语义处理并写入该 usn。
+7. 服务端返回 PushResponse 前先更新 SyncLock：将 `sync_cursor_usn` 递增 1。如果 `request.last_batch = false`，将状态置为 PUSHING，并将 `expected_batch_seq` 递增 1；如果 `request.last_batch = true`，将服务端 collection.sync_cursor_usn 写为 `sync_cursor_usn`，并将状态改为 AWAITING_FINISH。
 8. 服务端确认数据库事务与 SyncLock 更新都成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
 
 

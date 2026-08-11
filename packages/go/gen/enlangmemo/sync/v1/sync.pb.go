@@ -24,39 +24,55 @@ var File_enlangmemo_sync_v1_sync_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_sync_proto_rawDesc = "" +
 	"\n" +
-	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\"enlangmemo/sync/v1/handshake.proto\x1a\x1fenlangmemo/sync/v1/finish.proto\x1a\x1denlangmemo/sync/v1/pull.proto\x1a\x1denlangmemo/sync/v1/push.proto2\xda\x02\n" +
+	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\x1fenlangmemo/sync/v1/cancel.proto\x1a\"enlangmemo/sync/v1/handshake.proto\x1a\x1fenlangmemo/sync/v1/finish.proto\x1a\x1denlangmemo/sync/v1/pull.proto\x1a\x1denlangmemo/sync/v1/push.proto\x1a#enlangmemo/sync/v1/upload_all.proto2\x8c\x05\n" +
 	"\vSyncService\x12X\n" +
 	"\tHandshake\x12$.enlangmemo.sync.v1.HandshakeRequest\x1a%.enlangmemo.sync.v1.HandshakeResponse\x12I\n" +
 	"\x04Pull\x12\x1f.enlangmemo.sync.v1.PullRequest\x1a .enlangmemo.sync.v1.PullResponse\x12I\n" +
-	"\x04Push\x12\x1f.enlangmemo.sync.v1.PushRequest\x1a .enlangmemo.sync.v1.PushResponse\x12[\n" +
+	"\x04Push\x12\x1f.enlangmemo.sync.v1.PushRequest\x1a .enlangmemo.sync.v1.PushResponse\x12m\n" +
+	"\x10UploadAllPrepare\x12+.enlangmemo.sync.v1.UploadAllPrepareRequest\x1a,.enlangmemo.sync.v1.UploadAllPrepareResponse\x12d\n" +
+	"\rUploadAllPush\x12(.enlangmemo.sync.v1.UploadAllPushRequest\x1a).enlangmemo.sync.v1.UploadAllPushResponse\x12[\n" +
 	"\n" +
-	"FinishSync\x12%.enlangmemo.sync.v1.FinishSyncRequest\x1a&.enlangmemo.sync.v1.FinishSyncResponseB\xe0\x01\n" +
+	"FinishSync\x12%.enlangmemo.sync.v1.FinishSyncRequest\x1a&.enlangmemo.sync.v1.FinishSyncResponse\x12[\n" +
+	"\n" +
+	"CancelSync\x12%.enlangmemo.sync.v1.CancelSyncRequest\x1a&.enlangmemo.sync.v1.CancelSyncResponseB\xe0\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\tSyncProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var file_enlangmemo_sync_v1_sync_proto_goTypes = []any{
-	(*HandshakeRequest)(nil),   // 0: enlangmemo.sync.v1.HandshakeRequest
-	(*PullRequest)(nil),        // 1: enlangmemo.sync.v1.PullRequest
-	(*PushRequest)(nil),        // 2: enlangmemo.sync.v1.PushRequest
-	(*FinishSyncRequest)(nil),  // 3: enlangmemo.sync.v1.FinishSyncRequest
-	(*HandshakeResponse)(nil),  // 4: enlangmemo.sync.v1.HandshakeResponse
-	(*PullResponse)(nil),       // 5: enlangmemo.sync.v1.PullResponse
-	(*PushResponse)(nil),       // 6: enlangmemo.sync.v1.PushResponse
-	(*FinishSyncResponse)(nil), // 7: enlangmemo.sync.v1.FinishSyncResponse
+	(*HandshakeRequest)(nil),         // 0: enlangmemo.sync.v1.HandshakeRequest
+	(*PullRequest)(nil),              // 1: enlangmemo.sync.v1.PullRequest
+	(*PushRequest)(nil),              // 2: enlangmemo.sync.v1.PushRequest
+	(*UploadAllPrepareRequest)(nil),  // 3: enlangmemo.sync.v1.UploadAllPrepareRequest
+	(*UploadAllPushRequest)(nil),     // 4: enlangmemo.sync.v1.UploadAllPushRequest
+	(*FinishSyncRequest)(nil),        // 5: enlangmemo.sync.v1.FinishSyncRequest
+	(*CancelSyncRequest)(nil),        // 6: enlangmemo.sync.v1.CancelSyncRequest
+	(*HandshakeResponse)(nil),        // 7: enlangmemo.sync.v1.HandshakeResponse
+	(*PullResponse)(nil),             // 8: enlangmemo.sync.v1.PullResponse
+	(*PushResponse)(nil),             // 9: enlangmemo.sync.v1.PushResponse
+	(*UploadAllPrepareResponse)(nil), // 10: enlangmemo.sync.v1.UploadAllPrepareResponse
+	(*UploadAllPushResponse)(nil),    // 11: enlangmemo.sync.v1.UploadAllPushResponse
+	(*FinishSyncResponse)(nil),       // 12: enlangmemo.sync.v1.FinishSyncResponse
+	(*CancelSyncResponse)(nil),       // 13: enlangmemo.sync.v1.CancelSyncResponse
 }
 var file_enlangmemo_sync_v1_sync_proto_depIdxs = []int32{
-	0, // 0: enlangmemo.sync.v1.SyncService.Handshake:input_type -> enlangmemo.sync.v1.HandshakeRequest
-	1, // 1: enlangmemo.sync.v1.SyncService.Pull:input_type -> enlangmemo.sync.v1.PullRequest
-	2, // 2: enlangmemo.sync.v1.SyncService.Push:input_type -> enlangmemo.sync.v1.PushRequest
-	3, // 3: enlangmemo.sync.v1.SyncService.FinishSync:input_type -> enlangmemo.sync.v1.FinishSyncRequest
-	4, // 4: enlangmemo.sync.v1.SyncService.Handshake:output_type -> enlangmemo.sync.v1.HandshakeResponse
-	5, // 5: enlangmemo.sync.v1.SyncService.Pull:output_type -> enlangmemo.sync.v1.PullResponse
-	6, // 6: enlangmemo.sync.v1.SyncService.Push:output_type -> enlangmemo.sync.v1.PushResponse
-	7, // 7: enlangmemo.sync.v1.SyncService.FinishSync:output_type -> enlangmemo.sync.v1.FinishSyncResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: enlangmemo.sync.v1.SyncService.Handshake:input_type -> enlangmemo.sync.v1.HandshakeRequest
+	1,  // 1: enlangmemo.sync.v1.SyncService.Pull:input_type -> enlangmemo.sync.v1.PullRequest
+	2,  // 2: enlangmemo.sync.v1.SyncService.Push:input_type -> enlangmemo.sync.v1.PushRequest
+	3,  // 3: enlangmemo.sync.v1.SyncService.UploadAllPrepare:input_type -> enlangmemo.sync.v1.UploadAllPrepareRequest
+	4,  // 4: enlangmemo.sync.v1.SyncService.UploadAllPush:input_type -> enlangmemo.sync.v1.UploadAllPushRequest
+	5,  // 5: enlangmemo.sync.v1.SyncService.FinishSync:input_type -> enlangmemo.sync.v1.FinishSyncRequest
+	6,  // 6: enlangmemo.sync.v1.SyncService.CancelSync:input_type -> enlangmemo.sync.v1.CancelSyncRequest
+	7,  // 7: enlangmemo.sync.v1.SyncService.Handshake:output_type -> enlangmemo.sync.v1.HandshakeResponse
+	8,  // 8: enlangmemo.sync.v1.SyncService.Pull:output_type -> enlangmemo.sync.v1.PullResponse
+	9,  // 9: enlangmemo.sync.v1.SyncService.Push:output_type -> enlangmemo.sync.v1.PushResponse
+	10, // 10: enlangmemo.sync.v1.SyncService.UploadAllPrepare:output_type -> enlangmemo.sync.v1.UploadAllPrepareResponse
+	11, // 11: enlangmemo.sync.v1.SyncService.UploadAllPush:output_type -> enlangmemo.sync.v1.UploadAllPushResponse
+	12, // 12: enlangmemo.sync.v1.SyncService.FinishSync:output_type -> enlangmemo.sync.v1.FinishSyncResponse
+	13, // 13: enlangmemo.sync.v1.SyncService.CancelSync:output_type -> enlangmemo.sync.v1.CancelSyncResponse
+	7,  // [7:14] is the sub-list for method output_type
+	0,  // [0:7] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_enlangmemo_sync_v1_sync_proto_init() }
@@ -64,10 +80,12 @@ func file_enlangmemo_sync_v1_sync_proto_init() {
 	if File_enlangmemo_sync_v1_sync_proto != nil {
 		return
 	}
+	file_enlangmemo_sync_v1_cancel_proto_init()
 	file_enlangmemo_sync_v1_handshake_proto_init()
 	file_enlangmemo_sync_v1_finish_proto_init()
 	file_enlangmemo_sync_v1_pull_proto_init()
 	file_enlangmemo_sync_v1_push_proto_init()
+	file_enlangmemo_sync_v1_upload_all_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
