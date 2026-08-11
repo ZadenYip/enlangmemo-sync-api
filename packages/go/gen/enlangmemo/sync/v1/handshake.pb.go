@@ -115,8 +115,10 @@ type HandshakeRequest struct {
 	ClientNow int64 `protobuf:"varint,7,opt,name=client_now,json=clientNow,proto3" json:"client_now,omitempty"`
 	// 客户端 collection.last_sync_time，上一次完整同步成功完成的服务端时间
 	ClientLastSyncTime int64 `protobuf:"varint,8,opt,name=client_last_sync_time,json=clientLastSyncTime,proto3" json:"client_last_sync_time,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// 客户端当前是否存在待上传的本地变更，包括 usn = -1 的 UPSERT 和 tombstone 删除记录
+	HasLocalChanges bool `protobuf:"varint,9,opt,name=has_local_changes,json=hasLocalChanges,proto3" json:"has_local_changes,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *HandshakeRequest) Reset() {
@@ -205,6 +207,13 @@ func (x *HandshakeRequest) GetClientLastSyncTime() int64 {
 	return 0
 }
 
+func (x *HandshakeRequest) GetHasLocalChanges() bool {
+	if x != nil {
+		return x.HasLocalChanges
+	}
+	return false
+}
+
 type HandshakeResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Status HandshakeStatus        `protobuf:"varint,1,opt,name=status,proto3,enum=enlangmemo.sync.v1.HandshakeStatus" json:"status,omitempty"`
@@ -271,7 +280,7 @@ var File_enlangmemo_sync_v1_handshake_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
-	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\x8b\x03\n" +
+	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xb7\x03\n" +
 	"\x10HandshakeRequest\x12%\n" +
 	"\tdevice_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bdeviceId\x12(\n" +
 	"\vdevice_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18 R\n" +
@@ -282,7 +291,8 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\x11db_schema_version\x18\x06 \x01(\x05R\x0fdbSchemaVersion\x12&\n" +
 	"\n" +
 	"client_now\x18\a \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tclientNow\x12:\n" +
-	"\x15client_last_sync_time\x18\b \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x12clientLastSyncTime\"\xcb\x01\n" +
+	"\x15client_last_sync_time\x18\b \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x12clientLastSyncTime\x12*\n" +
+	"\x11has_local_changes\x18\t \x01(\bR\x0fhasLocalChanges\"\xcb\x01\n" +
 	"\x11HandshakeResponse\x12;\n" +
 	"\x06status\x18\x01 \x01(\x0e2#.enlangmemo.sync.v1.HandshakeStatusR\x06status\x12,\n" +
 	"\n" +

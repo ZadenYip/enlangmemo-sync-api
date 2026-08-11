@@ -27,8 +27,8 @@ unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN
 
 1. 双方握手
 2. 根据握手状态客户端决定下一步：
-  - NO_REMOTE_CHANGES：远端无新增。客户端若有本地 usn=-1，则 PUSH；否则结束。
-  - NEED_PULL：远端有新增。客户端先 Pull；Pull 完成后若本地仍有 usn=-1，则 PUSH，否则结束。
+  - NO_REMOTE_CHANGES：远端无新增。客户端若有本地待上传变更，则 PUSH，否则结束。
+  - NEED_PULL：远端有新增。客户端先 Pull，Pull 完成后客户端根据本地剩余待上传变更决定 PUSH 或结束。
   - UPLOAD_ALL：客户端同步游标大于服务端同步游标，属于极端情况下服务端数据丢失/回退；客户端全量上传本地数据恢复服务端，完成后进入 FINISHING。
 3. 开始批量传输数据
 4. 数据传输完毕挥手
@@ -71,6 +71,9 @@ message HandshakeRequest {
 
   // 客户端 collection.last_sync_time，上一次完整同步成功完成的服务端时间
   int64 client_last_sync_time = 8 [(buf.validate.field).int64.gte = 0];
+
+  // 客户端当前是否存在待上传的本地变更，包括 usn = -1 的 UPSERT 和 tombstone 删除记录
+  bool has_local_changes = 9;
 }
 ```
 
@@ -79,6 +82,8 @@ message HandshakeRequest {
 `client_now` 表示客户端发起握手时的本地时间戳。服务端用其对比自身时间，若偏差过大则返回 `CLIENT_TIME_SKEW_TOO_LARGE`，提示用户校准系统时间再同步。
 
 `client_last_sync_time` 表示客户端本地记录的上一次完整同步成功时间，该值来自上次 `FinishSyncResponse.server_finished_at`，因此是服务端分配的可信时间。服务端用它判断客户端是否落后过久。如果服务端运维正式删除某个时间之前的实体（原本是用 delete 标记逻辑删除的），而客户端最后同步时间如果比这个时间点早，则握手会返回 `CLIENT_DATA_TOO_OLD`。
+
+`has_local_changes` 表示客户端握手时是否存在待上传的本地变更，包括本地实体 `usn = -1` 的 UPSERT，以及 tombstones 中待上传的 DELETE。服务端用其决定 `NO_REMOTE_CHANGES` 下握手后的初始状态。
 
 ### SyncLock
 SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用。
@@ -94,7 +99,7 @@ SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的�
 {
     "user_id": xxx, // 利用 userID 锁住用户其他设备的同步操作
     "state": xxx, // 处于同步的什么状态（阶段）
-    // 是当前 state 内期望的下一个 batch 序号；进入 PULL 或 PUSH 状态时重置为 1。
+    // 是当前 state 内期望的下一个 batch 序号；进入 PULLING、PUSHING 或 AWAITING_PUSH_OR_FINISH 时重置为 1。
     "expected_batch_seq": xxx,
     "session_id": xxx,
     "client_sync_cursor_usn_at_handshake": xxx,
@@ -155,12 +160,16 @@ NO_REMOTE_CHANGES / NEED_PULL / UPLOAD_ALL 下会返回 session_id，其他状�
 
 
 #### NO_REMOTE_CHANGES
-NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服务器相对客户端同步游标无新增数据。客户端下一步是否进入 PUSH 取决于本地是否存在 usn = -1。
+NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服务器相对客户端同步游标无新增数据。服务端根据 `has_local_changes` 设置握手后的初始状态：
+如果为 true，则进入 PUSHING，`expected_batch_seq = 1`
+如果为 false，则进入 AWAITING_FINISH。
 
 
 #### NEED_PULL
 
 client_sync_cursor_usn < server_sync_cursor_usn，服务器在 [client_sync_cursor_usn, server_sync_cursor_usn) 有客户端未拉取的数据。
+
+NEED_PULL 下服务端进入 PULLING，`expected_batch_seq = 1`。Pull 完成后服务端统一进入 AWAITING_PUSH_OR_FINISH，`expected_batch_seq = 1`，由客户端决定继续 Push 还是直接 FinishSync。
 
 
 #### UPLOAD_ALL
@@ -422,7 +431,7 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 6. 事务提交后，如果 `last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PullRequest。
 7. 如果 `last_batch = true`，表示本轮 Pull 范围内的远端增量已全部落库。
 客户端此时的 `collection.sync_cursor_usn` 应等于本次会话的 `server_sync_cursor_usn`。
-8. Pull 完成后，如果本地仍存在 `usn = -1` 的未同步数据，客户端进入 PUSHING；否则进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
+8. Pull 完成后，服务端已进入 AWAITING_PUSH_OR_FINISH。如果客户端本地仍存在待上传变更，则发送 PushRequest。否则，进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
 
 
 #### 服务端处理规则
@@ -431,8 +440,8 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 2. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`；不一致时返回 ConnectRPC `FailedPrecondition`。
 3. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，从 `sync_units` 按 `usn ASC` 升序选择下一批待发送变更。
 4. 服务端为每条 `SyncChange` 写入该实体变更对应的 usn，计算并写入 `batch_max_usn = max(changes.usn)`，并设置 `last_batch` 表示该 batch 是否已经覆盖本轮 Pull 的上界。
-5. 服务端先将 `SyncLock.expected_batch_seq` 递增 1，确认更新成功后，再返回 PullResponse。
-6. 如果当前 batch 是本轮 Pull 的最后一个 batch，服务端将 SyncLock 状态从 PULLING 改为 AWAITING_CLIENT_ACTION 状态（服务器特有的）。
+5. 服务端返回 PullResponse 前先更新 SyncLock：如果 `last_batch = false`，将 `expected_batch_seq` 递增 1；如果 `last_batch = true`，将状态从 PULLING 改为 AWAITING_PUSH_OR_FINISH，并将 `expected_batch_seq` 重置为 1。
+6. 服务端确认 SyncLock 更新成功后，再返回 PullResponse。
 
 
 #### 中断与超时
@@ -448,8 +457,8 @@ PUSHING 表示客户端正在把本地 `usn = -1` 的未同步变更上传到服
 
 进入 PUSHING 有两种情况：
 
-1. HandshakeResponse 返回 `NO_REMOTE_CHANGES` 后，服务端进入 AWAITING_CLIENT_ACTION；如果客户端本地存在 `usn = -1` 的未同步数据，则客户端发送第一个 PushRequest 进入 PUSHING。
-2. PULLING 完成后，客户端本地仍存在 `usn = -1` 的未同步数据；客户端向服务端发送第一个 PushRequest，服务端从 AWAITING_CLIENT_ACTION 切换到 PUSHING。
+1. HandshakeResponse 返回 `NO_REMOTE_CHANGES`，且 `has_local_changes = true`，服务端直接进入 PUSHING，`expected_batch_seq = 1`。
+2. PULLING 完成后，服务端进入 AWAITING_PUSH_OR_FINISH；如果客户端本地仍存在待上传变更，则客户端发送第一个 PushRequest，服务端从 AWAITING_PUSH_OR_FINISH 切换到 PUSHING。
 
 Push 的同步颗粒度也是 batch。一个 Push batch 对应服务端一次数据库事务，服务端为该 batch 分配一个新的 usn，并将 batch 内所有变更写为同一个 usn。客户端上传时本地未同步变更的 `SyncChange.usn` 为 -1，该值表示待上传
 
@@ -507,17 +516,18 @@ message PushResponse {
 #### 服务端处理规则
 
 1. 服务端收到 PushRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否处于允许 Push 的状态。
-2. 如果当前状态是 AWAITING_CLIENT_ACTION，并且 `request.batch_seq = 1`，服务端将 SyncLock 状态切换为 PUSHING。
-3. 如果当前状态是 PUSHING，服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`，不匹配时返回 ConnectRPC `FailedPrecondition`。
-4. 服务端校验：
+2. 允许 Push 的状态包括 PUSHING 和 AWAITING_PUSH_OR_FINISH。
+3. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`，不匹配时返回 ConnectRPC `FailedPrecondition`。
+4. 如果当前状态是 AWAITING_PUSH_OR_FINISH，并且 batch_seq 校验通过，表示客户端选择继续 Push。服务端在本 batch 成功应用后将状态切换为 PUSHING，若本 batch 同时也是最后一个 Push batch，则直接切换为 AWAITING_FINISH。
+5. 服务端校验：
    - `changes` 非空
    - PushRequest 中每条 `SyncChange.usn` 必须为 `-1`
    - 当 `ChangeOp = UPSERT` 时，确认 payload 与 `entity_type` 匹配
    - 当 `ChangeOp = DELETE` 时，payload 为空，且 `deleted_at` 必须存在。
    - 校验失败返回 ConnectRPC `InvalidArgument`
-5. 服务端开启数据库事务，为当前 batch 分配一个新的 usn，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按软删除语义处理并写入该 usn。
-6. 服务端先将 `SyncLock.expected_batch_seq` 递增 1；如果 `request.last_batch = true`，同时将 SyncLock 状态改为 AWAITING_FINISH。
-7. 服务端确认数据库事务与 SyncLock 更新都成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
+6. 服务端开启数据库事务，为当前 batch 分配一个新的 usn，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按软删除语义处理并写入该 usn。
+7. 服务端返回 PushResponse 前先更新 SyncLock：如果 `request.last_batch = false`，将状态置为 PUSHING，并将 `expected_batch_seq` 递增 1；如果 `request.last_batch = true`，将状态改为 AWAITING_FINISH。
+8. 服务端确认数据库事务与 SyncLock 更新都成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
 
 
 #### 中断与超时
@@ -537,8 +547,8 @@ FINISHING 表示同步数据传输已经完成，客户端正在通知服务端�
 
 客户端进入 FINISHING 有三种情况：
 
-1. HandshakeResponse 返回 `NO_REMOTE_CHANGES`，并且客户端本地没有 `usn = -1` 的未同步数据。
-2. PULLING 完成后，客户端本地没有 `usn = -1` 的未同步数据。
+1. HandshakeResponse 返回 `NO_REMOTE_CHANGES`，并且 `has_local_changes = false`。
+2. PULLING 完成后，客户端确认本地没有待上传变更。
 3. PUSHING 完成后，客户端已经成功处理最后一个 PushResponse。
 
 
@@ -577,7 +587,7 @@ FinishSyncResponse 成功返回即表示 FinishSync ACK：服务端已经接受�
 #### 服务端处理规则
 
 1. 服务端收到 FinishSyncRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否处于允许 Finish 的状态。
-2. 允许 Finish 的状态包括 AWAITING_CLIENT_ACTION 和 AWAITING_FINISH。
+2. 允许 Finish 的状态包括 AWAITING_PUSH_OR_FINISH 和 AWAITING_FINISH。
 3. 校验通过后，服务端释放当前 session / SyncLock。
 4. 服务端确认释放成功后，返回 FinishSyncResponse，并将当前服务端时间写入 `server_finished_at`。
 
