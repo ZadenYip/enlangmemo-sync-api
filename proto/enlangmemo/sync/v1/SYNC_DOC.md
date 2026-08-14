@@ -328,7 +328,7 @@ UUID 选择 string 类型，要求是使用连字符分隔的 36 个字符的格
 
 ### 数据 Payload 设计
 
-v1/entities.proto 定义同步数据的 payload。payload 基本与当前 SQLite 表结构一致，除了个别字段。
+v1/entities.proto 定义同步数据的 payload。payload 基本与当前 SQLite 表结构一致，但不包含实体 id，而实体 id 统一使用外层 `SyncChange.entity_id`。
 
 `dic_note_map` 属于客户端本地配置，这个属于本地客户端配置摘录词的映射到哪个模板用的功能，因为还没确定正式版所以不参与同步。
 
@@ -590,19 +590,20 @@ message PushResponse {
 
 #### 服务端处理规则
 
-1. 服务端收到 PushRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否处于允许 Push 的状态。
-2. 允许 Push 的状态包括 PUSHING 和 AWAITING_PUSH_OR_FINISH。
-3. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`，不匹配时返回 ConnectRPC `FailedPrecondition`。
-4. 如果当前状态是 AWAITING_PUSH_OR_FINISH，并且 batch_seq 校验通过，表示客户端选择继续 Push。服务端在本 batch 成功应用后将状态切换为 PUSHING，若本 batch 同时也是最后一个 Push batch，则直接切换为 AWAITING_FINISH。
-5. 服务端校验：
-   - `changes` 非空
+1. 服务端收到 PushRequest 后，Connect validate 先保证 `changes` 非空。
+2. 服务端校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否处于允许 Push 的状态。
+3. 允许 Push 的状态包括 PUSHING 和 AWAITING_PUSH_OR_FINISH。
+4. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`，不匹配时返回 ConnectRPC `FailedPrecondition`。
+5. 如果当前状态是 AWAITING_PUSH_OR_FINISH，并且 batch_seq 校验通过，表示客户端选择继续 Push。服务端在处理本次 batch 时先将状态切换为 PUSHING；若本 batch 同时也是最后一个 Push batch，则在数据库事务成功后再切换为 AWAITING_FINISH。
+6. 服务端通过 SyncLock 原子领取当前 batch：使用当前 `sync_cursor_usn` 作为 `assigned_usn`，随后将 SyncLock 中的 `sync_cursor_usn` 递增 1、`expected_batch_seq` 递增 1 并续期。
+7. 服务端开启数据库事务，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为 `assigned_usn`，`DELETE` 按软删除语义处理并写入 `assigned_usn`。此外，同一事务内顺便更新服务端 `collection.sync_cursor_usn = assigned_usn + 1`。应用变更时服务端校验：
+   - 每条 `SyncChange` 不得为空
    - PushRequest 中每条 `SyncChange.usn` 必须为 `-1`
    - 当 `ChangeOp = UPSERT` 时，确认 payload 与 `entity_type` 匹配
    - 当 `ChangeOp = DELETE` 时，payload 为空，且 `deleted_at` 必须存在。
-   - 校验失败返回 ConnectRPC `InvalidArgument`
-6. 服务端开启数据库事务，使用 SyncLock.sync_cursor_usn 作为当前 batch 的 `assigned_usn`，将 batch 内所有变更写入数据库；`UPSERT` 实体的 `usn` 写为该 usn，`DELETE` 按软删除语义处理并写入该 usn。
-7. 服务端返回 PushResponse 前先更新 SyncLock：将 `sync_cursor_usn` 递增 1。如果 `request.last_batch = false`，将状态置为 PUSHING，并将 `expected_batch_seq` 递增 1；如果 `request.last_batch = true`，将服务端 collection.sync_cursor_usn 写为 `sync_cursor_usn`，并将状态改为 AWAITING_FINISH。
-8. 服务端确认数据库事务与 SyncLock 更新都成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
+   - 校验失败返回 ConnectRPC `InvalidArgument`。由于 batch 已经进行过操作，客户端不得重试同一个 batch。
+8. 如果 `request.last_batch = true`，服务端在数据库事务成功后将 SyncLock 状态改为 AWAITING_FINISH；如果 `request.last_batch = false`，SyncLock 保持 PUSHING，等待下一个 batch。
+9. 服务端确认数据库事务成功，且必要的 SyncLock 状态更新成功后，返回 PushResponse，其中 `assigned_usn` 为本 batch 分配的 usn。
 
 
 #### 中断与超时
@@ -611,7 +612,7 @@ Push 同样不额外设计 ACK。客户端只有在收到 PushResponse，并成�
 
 `last_sync_time` 不在 Push batch 内更新。它表示一次完整同步成功完成的服务端时间，应该在 FinishSync 成功返回后由客户端使用 `server_finished_at` 统一更新。
 
-如果 PushRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端直接视为本次同步结束。
+如果 PushRequest 超时、网络中断、客户端崩溃、本地事务失败，或服务端领取 batch 后数据库事务失败，客户端直接视为本次同步结束。客户端不应该重试同一个 batch，应在下一次重新 Handshake 后继续同步。
 
 同步数据塞进数据库后，即使客户端没收到响应，也不会导致数据不一致。因为后续重新发起同步时，由于没收到响应本地的 usn 会落后服务端，会先 Pull 再 Push，保证数据一致。
 
@@ -674,8 +675,5 @@ FinishSyncResponse 成功返回即表示 FinishSync ACK：服务端已经接受�
 如果 FinishSyncRequest 超时、网络中断或客户端崩溃，客户端不能确认服务端是否已经释放 SyncLock。客户端直接视为本次同步结束，不更新 `last_sync_time`。
 
 如果服务端已经释放 SyncLock，但客户端没有收到 FinishSyncResponse，不过此时数据都已经同步完成，唯独 `last_sync_time` 没有更新，而这个字段仅用于客户端展示上次同步时间，不影响数据一致性。
-
-
-
 
 
