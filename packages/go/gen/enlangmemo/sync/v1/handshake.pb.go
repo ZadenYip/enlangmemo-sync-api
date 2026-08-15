@@ -221,8 +221,10 @@ type HandshakeResponse struct {
 	// 只有需要继续同步会话时才返回，NO_REMOTE_CHANGES 且 has_local_changes = false 时不返回
 	SessionId           *string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3,oneof" json:"session_id,omitempty"`
 	ServerSyncCursorUsn int64   `protobuf:"varint,3,opt,name=server_sync_cursor_usn,json=serverSyncCursorUsn,proto3" json:"server_sync_cursor_usn,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// 服务端 collection.last_sync_time，客户端收到握手响应后用它覆盖本地 collection.last_sync_time
+	ServerLastSyncTime int64 `protobuf:"varint,4,opt,name=server_last_sync_time,json=serverLastSyncTime,proto3" json:"server_last_sync_time,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *HandshakeResponse) Reset() {
@@ -276,6 +278,13 @@ func (x *HandshakeResponse) GetServerSyncCursorUsn() int64 {
 	return 0
 }
 
+func (x *HandshakeResponse) GetServerLastSyncTime() int64 {
+	if x != nil {
+		return x.ServerLastSyncTime
+	}
+	return 0
+}
+
 var File_enlangmemo_sync_v1_handshake_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
@@ -292,12 +301,13 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
 	"client_now\x18\a \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tclientNow\x12:\n" +
 	"\x15client_last_sync_time\x18\b \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x12clientLastSyncTime\x12*\n" +
-	"\x11has_local_changes\x18\t \x01(\bR\x0fhasLocalChanges\"\xcb\x01\n" +
+	"\x11has_local_changes\x18\t \x01(\bR\x0fhasLocalChanges\"\x87\x02\n" +
 	"\x11HandshakeResponse\x12;\n" +
 	"\x06status\x18\x01 \x01(\x0e2#.enlangmemo.sync.v1.HandshakeStatusR\x06status\x12,\n" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01 H\x00R\tsessionId\x88\x01\x01\x12<\n" +
-	"\x16server_sync_cursor_usn\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13serverSyncCursorUsnB\r\n" +
+	"\x16server_sync_cursor_usn\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13serverSyncCursorUsn\x12:\n" +
+	"\x15server_last_sync_time\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x12serverLastSyncTimeB\r\n" +
 	"\v_session_id*\xe7\x02\n" +
 	"\x0fHandshakeStatus\x12 \n" +
 	"\x1cHANDSHAKE_STATUS_UNSPECIFIED\x10\x00\x12&\n" +

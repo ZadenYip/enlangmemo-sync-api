@@ -136,6 +136,9 @@ message HandshakeResponse {
   optional string session_id = 2 [(buf.validate.field).string.len = 32];
 
   int64 server_sync_cursor_usn = 3 [(buf.validate.field).int64.gte = 0];
+
+  // 服务端 collection.last_sync_time，客户端收到握手响应后根据情况用它覆盖本地 collection.last_sync_time
+  int64 server_last_sync_time = 4 [(buf.validate.field).int64.gte = 0];
 }
 
 enum HandshakeStatus {
@@ -172,11 +175,13 @@ session_id 由服务端在允许继续当前同步会话时生成，用于标识
 
 字段存在时必须是 32 位字符串，后续 Pull / Push / FinishSync 都需要携带 session_id。
 
+`server_last_sync_time` 表示服务端记录的上一次完整同步成功完成时间。客户端收到可信 HandshakeResponse 后，对比本地的 USN 和服务器的 USN，如果相同则用该值覆盖本地 `collection.last_sync_time`，用于修正 FinishSyncResponse 丢失但实际已经完成同步的场景。
+
 
 #### NO_REMOTE_CHANGES
 NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服务器相对客户端同步游标无新增数据。服务端根据 `has_local_changes` 设置握手后的初始状态：
 如果为 true，则进入 PUSHING，`expected_batch_seq = 1`，`sync_cursor_usn = server_sync_cursor_usn_at_handshake`。
-如果为 false，则不创建 SyncLock、不返回 `session_id`，客户端直接结束本次同步检查，且不更新 `last_sync_time`。
+如果为 false，则不创建 SyncLock、不返回 `session_id`，客户端直接结束本次同步检查。
 
 
 #### NEED_PULL
@@ -340,9 +345,9 @@ last_sync_time integer [not null, default: 0]
 sync_cursor_usn integer [not null, default: 0]
 ```
 
-`last_sync_time` 是客户端本地辅助字段，展示给用户上次同步时间，只有在 FinishSync 成功返回后才返回给客户端，而服务端则是在 PUSH 完成后更新。
+`last_sync_time` 是客户端本地辅助字段，展示给用户上次同步时间。该值以服务端记录为准，只在 FinishSync 和 HandshakeResponse 时更新。
 
-客户端只在 FinishSync 成功返回后写入 `FinishSyncResponse.server_finished_at`。
+客户端只写入服务端返回的时间值，不能用本地当前时间更新 `last_sync_time`。
 
 `sync_cursor_usn` 是客户端已同步到的 usn 上界 / 下次增量 Pull 的起点，会在 Pull / Push batch 本地事务成功后推进。
 
@@ -674,6 +679,6 @@ FinishSyncResponse 成功返回即表示 FinishSync ACK：服务端已经接受�
 
 如果 FinishSyncRequest 超时、网络中断或客户端崩溃，客户端不能确认服务端是否已经释放 SyncLock。客户端直接视为本次同步结束，不更新 `last_sync_time`。
 
-如果服务端已经释放 SyncLock，但客户端没有收到 FinishSyncResponse，不过此时数据都已经同步完成，唯独 `last_sync_time` 没有更新，而这个字段仅用于客户端展示上次同步时间，不影响数据一致性。
+如果服务端已经释放 SyncLock，但客户端没有收到 FinishSyncResponse，不过此时数据都已经同步完成，唯独本地 `last_sync_time` 没有更新。下一次握手成功时，服务端通过 `HandshakeResponse.server_last_sync_time` 返回权威值，客户端用该值覆盖本地记录。
 
 
