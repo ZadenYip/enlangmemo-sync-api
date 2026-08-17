@@ -337,6 +337,8 @@ v1/entities.proto 定义同步数据的 payload。payload 基本与当前 SQLite
 
 `dic_note_map` 属于客户端本地配置，这个属于本地客户端配置摘录词的映射到哪个模板用的功能，因为还没确定正式版所以不参与同步。
 
+notes 表中的 `sort_field` 和 `search_fields` 属于客户端根据 `fields` 清洗后计算出的本地派生字段，不传给服务端，也不参与同步。
+
 collection 的 payload 不包含客户端 SQLite 表下面这个字段：
 
 ```DBDiagram
@@ -516,12 +518,11 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 
 #### 服务端处理规则
 
-1. 服务端收到 PullRequest 后，先校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否仍在 PULLING 状态。
-2. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`；不一致时返回 ConnectRPC `FailedPrecondition`。
-3. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，从 `sync_units` 按 `usn ASC` 升序选择下一批待发送变更。
-4. 服务端为每条 `SyncChange` 写入该实体变更对应的 usn，计算并写入 `batch_max_usn = max(changes.usn)`，并设置 `last_batch` 表示该 batch 是否已经覆盖本轮 Pull 的上界。
-5. 服务端返回 PullResponse 前先更新 SyncLock：将 `sync_cursor_usn` 更新为 `batch_max_usn + 1`。如果 `last_batch = false`，将 `expected_batch_seq` 递增 1；如果 `last_batch = true`，校验 `sync_cursor_usn == server_sync_cursor_usn_at_handshake`，并将状态从 PULLING 改为 AWAITING_PUSH_OR_FINISH，将 `expected_batch_seq` 重置为 1。
-6. 服务端确认 SyncLock 更新成功后，再返回 PullResponse。
+1. 服务端收到 PullRequest 后，先校验 `session_id` 是否存在、SyncLock 是否仍在 PULLING 状态、`request.batch_seq == SyncLock.expected_batch_seq`，如果校验失败返回 ConnectRPC `FailedPrecondition`。校验通过后先将 `expected_batch_seq` 递增 1 并续期，用于占住当前 batch 序号，以此过滤重复发送的包。
+2. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，从 `sync_units` 按 `usn ASC` 升序选择下一批待发送变更。
+3. 服务端为每条 `SyncChange` 写入该实体变更对应的 usn，计算并写入 `batch_max_usn = max(changes.usn)`，并设置 `last_batch` 表示该 batch 是否已经覆盖本轮 Pull 的上界。
+4. 服务端返回 PullResponse 前再更新 SyncLock：将 `sync_cursor_usn` 更新为 `batch_max_usn + 1`。如果 `last_batch = true`，校验 `sync_cursor_usn == server_sync_cursor_usn_at_handshake`，并将状态从 PULLING 改为 AWAITING_PUSH_OR_FINISH，将 `expected_batch_seq` 重置为 1。
+5. 服务端确认 SyncLock 更新成功后，再返回 PullResponse。
 
 
 #### 中断与超时

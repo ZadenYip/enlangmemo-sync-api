@@ -581,15 +581,13 @@ func (x *NoteTypePayload) GetNoteTemplateJson() string {
 
 // NotePayload 承载笔记数据的 UPSERT 负载
 type NotePayload struct {
-	state        protoimpl.MessageState `protogen:"open.v1"`
-	NoteTypeId   string                 `protobuf:"bytes,1,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
-	CreatedAt    int64                  `protobuf:"varint,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt    int64                  `protobuf:"varint,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	SenseId      *int32                 `protobuf:"varint,4,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
-	SortField    *string                `protobuf:"bytes,5,opt,name=sort_field,json=sortField,proto3,oneof" json:"sort_field,omitempty"`
-	SearchFields *string                `protobuf:"bytes,6,opt,name=search_fields,json=searchFields,proto3,oneof" json:"search_fields,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	NoteTypeId string                 `protobuf:"bytes,1,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
+	CreatedAt  int64                  `protobuf:"varint,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt  int64                  `protobuf:"varint,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	SenseId    *int32                 `protobuf:"varint,4,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
 	// SQLite notes.fields 的 JSON 字符串
-	FieldsJson    string `protobuf:"bytes,7,opt,name=fields_json,json=fieldsJson,proto3" json:"fields_json,omitempty"`
+	FieldsJson    string `protobuf:"bytes,5,opt,name=fields_json,json=fieldsJson,proto3" json:"fields_json,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -650,20 +648,6 @@ func (x *NotePayload) GetSenseId() int32 {
 		return *x.SenseId
 	}
 	return 0
-}
-
-func (x *NotePayload) GetSortField() string {
-	if x != nil && x.SortField != nil {
-		return *x.SortField
-	}
-	return ""
-}
-
-func (x *NotePayload) GetSearchFields() string {
-	if x != nil && x.SearchFields != nil {
-		return *x.SearchFields
-	}
-	return ""
 }
 
 func (x *NotePayload) GetFieldsJson() string {
@@ -1051,7 +1035,7 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\x12preset_template_id\x18\x02 \x01(\x05R\x10presetTemplateId\x12&\n" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x125\n" +
-	"\x12note_template_json\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x10noteTemplateJson\"\xd8\x02\n" +
+	"\x12note_template_json\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x10noteTemplateJson\"\xe9\x01\n" +
 	"\vNotePayload\x12*\n" +
 	"\fnote_type_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\n" +
 	"noteTypeId\x12&\n" +
@@ -1059,15 +1043,10 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"created_at\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12'\n" +
-	"\bsense_id\x18\x04 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00H\x00R\asenseId\x88\x01\x01\x12\"\n" +
-	"\n" +
-	"sort_field\x18\x05 \x01(\tH\x01R\tsortField\x88\x01\x01\x12(\n" +
-	"\rsearch_fields\x18\x06 \x01(\tH\x02R\fsearchFields\x88\x01\x01\x12(\n" +
-	"\vfields_json\x18\a \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
+	"\bsense_id\x18\x04 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00H\x00R\asenseId\x88\x01\x01\x12(\n" +
+	"\vfields_json\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"fieldsJsonB\v\n" +
-	"\t_sense_idB\r\n" +
-	"\v_sort_fieldB\x10\n" +
-	"\x0e_search_fields\"\xf3\x01\n" +
+	"\t_sense_id\"\xf3\x01\n" +
 	"\x15ProcessingNotePayload\x12*\n" +
 	"\fnote_type_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\n" +
 	"noteTypeId\x12&\n" +
