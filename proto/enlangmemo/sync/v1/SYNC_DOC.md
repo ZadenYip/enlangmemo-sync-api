@@ -111,8 +111,10 @@ SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的�
     "state": xxx, // 处于同步的什么状态（阶段）
     // 是当前 state 内期望的下一个 batch 序号；进入 PULLING、PUSHING、UPLOADING_ALL 或 AWAITING_PUSH_OR_FINISH 时重置为 1。
     "expected_batch_seq": xxx,
-    // 当前 session 已处理到的 USN 上界 / 下一次处理起点，语义与 collection.sync_cursor_usn 保持一致。
+    // 当前 session 内部使用的 USN 游标。PULLING 中表示当前实体类型内的拉取游标
     "sync_cursor_usn": xxx,
+    // PULLING 中尚未拉完的实体类型队列，字符串形式保存，例如 "1,2,4,6"
+    "pull_entity_queue": xxx,
     "session_id": xxx,
     "client_sync_cursor_usn_at_handshake": xxx,
     "server_sync_cursor_usn_at_handshake": xxx,
@@ -120,7 +122,9 @@ SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的�
 }
 ```
 
-`sync_cursor_usn` 是当前 session 内部使用的同步游标，语义与 `collection.sync_cursor_usn` 一致，表示已处理到的 USN 上界 / 下一次处理起点：PULLING 中表示下一批 Pull 的起点，PUSHING 中表示服务端下一次要分配的 usn，UPLOADING_ALL 中表示已恢复客户端快照的 usn 上界。
+`sync_cursor_usn` 是当前 session 内部使用的同步游标：PULLING 中表示当前实体类型内的拉取游标，PUSHING 中表示服务端下一次要分配的 usn，UPLOADING_ALL 中表示已恢复客户端快照的 usn 上界。
+
+`pull_entity_queue` 只在 PULLING 中使用，表示当前还没拉完的实体类型队列。第一个元素是当前正在拉取的实体类型；字段存储为字符串，由服务端应用层解析，不要求 Redis 存数组。
 
 
 ### HandshakeResponse
@@ -188,7 +192,7 @@ NO_REMOTE_CHANGES 表示 client_sync_cursor_usn == server_sync_cursor_usn，服�
 
 client_sync_cursor_usn < server_sync_cursor_usn，服务器在 [client_sync_cursor_usn, server_sync_cursor_usn) 有客户端未拉取的数据。
 
-NEED_PULL 下服务端进入 PULLING，`expected_batch_seq = 1`，`sync_cursor_usn = client_sync_cursor_usn_at_handshake`。Pull 完成后服务端统一进入 AWAITING_PUSH_OR_FINISH，`expected_batch_seq = 1`，由客户端决定继续 Push 还是直接 FinishSync。
+NEED_PULL 下服务端进入 PULLING，`expected_batch_seq = 1`，`sync_cursor_usn = client_sync_cursor_usn_at_handshake`，并初始化 `pull_entity_queue`。Pull 完成后服务端统一进入 AWAITING_PUSH_OR_FINISH，`expected_batch_seq = 1`，由客户端决定继续 Push 还是直接 FinishSync。
 
 
 #### UPLOAD_ALL
@@ -359,7 +363,7 @@ note_types 的字段结构约束由客户端业务层保证：不支持在同一
 
 ### 同步实体顺序
 
-Pull 和 Push 传输数据时，UPSERT 变更优先按下面顺序组织：
+Pull 按实体类型顺序拉取，Push 传输 UPSERT 变更时也“优先”按下面顺序组织：
 
 1. Collection
 2. Deck
@@ -374,7 +378,7 @@ DELETE 变更也按上面的优先级组织。不过具体的 DELETE 的应用�
 
 ### 服务端同步索引表
 
-服务端维护一张 `sync_units` 表用于记录每个同步实体当前最新的服务端同步状态，避免 Pull 时分别扫描多张业务表再合并 usn 顺序。`sync_units` 只作为同步索引和删除标记索引，同一实体再次 UPSERT / DELETE 时，要更新的是已有的记录。
+服务端维护一张 `sync_units` 表用于记录每个同步实体当前最新的服务端同步状态。`sync_units`，注意这个不是仅追加的表，同一实体再次 UPSERT / DELETE 时，会更新已有的记录。
 
 字段：
 
@@ -392,7 +396,7 @@ sync_units
 
 ```text
 PRIMARY KEY (user_id, entity_id)
-INDEX ix_sync_units_pull (user_id, usn)
+INDEX ix_sync_units_pull_entity (user_id ASC, entity_type ASC, usn ASC)
 INDEX ix_sync_units_delete_retention (op, updated_at)
 ```
 
@@ -436,10 +440,35 @@ PULLING 表示客户端正在从服务端拉取当前同步会话范围内的远
 
 进入 PULLING 的前提是 HandshakeResponse 返回 `NEED_PULL`，客户端持有本次同步会话的 `session_id`，并且服务端 SyncLock 中保存了本轮 Pull 的起点 `client_sync_cursor_usn_at_handshake` 与远端上界 `server_sync_cursor_usn_at_handshake`。
 
-Pull 的同步颗粒度是 batch。一个 batch 对应客户端本地的一次 SQLite 事务，batch 不一定只与单个 usn 绑定。客户端不指定 `batch_size`，服务端按 usn 升序返回变更。
-每条 `SyncChange` 自带该实体变更对应的服务端 usn。
+Pull 的同步颗粒度是 batch。服务端按固定实体类型顺序返回变更。每条 `SyncChange` 自带该实体变更对应的服务端 usn。
 
-注意：不会出现同步的变更 usn = a 时，后面批的变更又出现相同的 usn = a，一个 usn 值的数据会一次性拉完，而不会出现这个 usn = a 拉了一半，另一半放在下一个 batch 的情况。
+服务端按下面顺序逐类拉取：Collection -> Deck -> NoteType -> Note -> ProcessingNote -> Card -> ReviewLog。同一个 batch 默认控制在约 64KB；如果为了保证同一个 USN group 不被拆分，batch 可以溢出，但服务端应控制软上限约 128KB。网关 / ConnectRPC 层使用更高的硬上限兜底，例如 1MB。
+
+#### Pull 初始化
+
+服务端创建 / 进入 Pull session 时，根据本轮同步范围判断哪些实体类型有更新：`client_sync_cursor_usn_at_handshake <= usn < server_sync_cursor_usn_at_handshake`。
+
+服务端用一条 SQL 对 7 个固定 entity_type 分别判断是否存在更新。每个分支各自 `LIMIT 1`，避免某个实体类型有大量更新时扫出多余行，同时只产生一次数据库 RTT：
+
+```sql
+(SELECT entity_type FROM sync_units WHERE user_id = ? AND entity_type = 1 AND usn >= ? AND usn < ? LIMIT 1)
+UNION ALL
+(SELECT entity_type FROM sync_units WHERE user_id = ? AND entity_type = 2 AND usn >= ? AND usn < ? LIMIT 1)
+UNION ALL
+(SELECT entity_type FROM sync_units WHERE user_id = ? AND entity_type = 3 AND usn >= ? AND usn < ? LIMIT 1)
+UNION ALL
+(SELECT entity_type FROM sync_units WHERE user_id = ? AND entity_type = 4 AND usn >= ? AND usn < ? LIMIT 1)
+UNION ALL
+(SELECT entity_type FROM sync_units WHERE user_id = ? AND entity_type = 5 AND usn >= ? AND usn < ? LIMIT 1)
+UNION ALL
+(SELECT entity_type FROM sync_units WHERE user_id = ? AND entity_type = 6 AND usn >= ? AND usn < ? LIMIT 1)
+UNION ALL
+(SELECT entity_type FROM sync_units WHERE user_id = ? AND entity_type = 7 AND usn >= ? AND usn < ? LIMIT 1);
+```
+
+有更新的 entity_type 按固定顺序保存到 Redis session 临时字段，例如 `pull_entity_queue = "1,2,4,6"`。进入 PULLING 时，`sync_cursor_usn = client_sync_cursor_usn_at_handshake`，`expected_batch_seq = 1`。
+
+PULLING 中 `sync_cursor_usn` 复用为当前实体类型内的拉取游标；`pull_entity_queue` 的第一个元素是当前正在拉取的实体类型。切换到下一个 entity_type 时，服务端将 `sync_cursor_usn` 重置为 `client_sync_cursor_usn_at_handshake`；所有 entity_type 拉完后，服务端将 `sync_cursor_usn` 写为 `server_sync_cursor_usn_at_handshake`。
 
 #### PullRequest
 
@@ -474,7 +503,7 @@ message PullResponse {
 }
 ```
 
-`changes` 中每条 `SyncChange` 表示一个实体变更。这里的实体指的是卡片模板、卡片、复习记录等等，详细节见 SyncChange 的定义。PullResponse 中每条 `SyncChange.usn` 必须是服务端已确认的实体 usn，且应按 usn 升序返回。
+`changes` 中每条 `SyncChange` 表示一个实体变更。这里的实体指的是卡片模板、卡片、复习记录等等，详细节见 SyncChange 的定义。PullResponse 中每条 `SyncChange.usn` 必须是服务端已确认的实体 usn，同一实体类型内按 usn 升序返回。
 
 `batch_max_usn` 表示本 batch 内所有 `changes.usn` 的最大值，用于让客户端粗略地校验，避免某次迭代服务端有问题。正常情况下 `batch_max_usn == max(changes.usn)`。
 
@@ -485,9 +514,9 @@ message PullResponse {
 
 #### Pull 本地未同步变更处理
 
-Pull 阶段是否应用某条远端 `SyncChange` 由客户端决定。服务端只负责返回当前同步会话范围内的远端增量，不判断客户端数据是否冲突。
+Pull 阶段服务端只负责返回当前同步会话范围内的远端增量，不判断客户端数据是否冲突。客户端收到 PullResponse 后只暂存 `changes`，不要边收边应用到本地业务表。
 
-客户端应用远端变更前，必须检查同一 `entity_type` 和 `entity_id` 是否存在本地未同步变更。本地未同步变更包括：
+客户端确认 Pull 全部 batch 完成后，再在本地事务中按服务端返回顺序统一应用暂存的 `changes`。应用远端变更前，必须检查同一 `entity_type` 和 `entity_id` 是否存在本地未同步变更。本地未同步变更包括：
 
 1. 本地实体 `unit.usn = -1` 的 UPSERT。
 2. 本地 tombstone 中待上传的 DELETE。
@@ -505,31 +534,34 @@ LWW 比较客户端本地未同步变更的对象更新时间与远端 `SyncChan
 
 #### 客户端处理流程
 
-1. 客户端进入 PULLING 后，从 `batch_seq = 1` 开始发送 PullRequest
-2. 客户端收到 PullResponse 后，校验 `response.batch_seq == request.batch_seq`
-3. 客户端开启一个本地 SQLite 事务，按服务端返回顺序处理本 batch 的全部 `changes`。应用每条变更前，先按删除同步策略与本地未同步变更处理规则判断是否应用。
-4. 客户端计算本 batch 内最大 `change.usn`，并校验其等于 `response.batch_max_usn`；不一致时视为协议错误，本次同步失败。
-5. 同一个事务内，远端 UPSERT / DELETE 按删除同步策略落库；全部变更应用成功后，客户端必须在每个 batch 成功应用后将 `collection.sync_cursor_usn` 推进到 `response.batch_max_usn + 1`。
-6. 事务提交后，如果 `last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PullRequest。
-7. 如果 `last_batch = true`，表示本轮 Pull 范围内的远端增量已全部落库。
-客户端此时的 `collection.sync_cursor_usn` 应等于本次会话的 `server_sync_cursor_usn`。
+1. 客户端进入 PULLING 后，从 `batch_seq = 1` 开始发送 PullRequest。
+2. 客户端收到 PullResponse 后，校验 `response.batch_seq == request.batch_seq`。
+3. 客户端计算本 batch 内最大 `change.usn`，并校验其等于 `response.batch_max_usn`；不一致时视为协议错误，本次同步失败。
+4. 客户端暂存本 batch 的全部 `changes`，不要立即应用到本地业务表。
+5. 如果 `last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PullRequest。
+6. 如果 `last_batch = true`，表示本轮 Pull 范围内的远端增量已全部收到。客户端开启一个本地 SQLite 事务，按服务端返回顺序处理暂存的全部 `changes`。应用每条变更前，先按删除同步策略与本地未同步变更处理规则判断是否应用。
+7. 同一个事务内，远端 UPSERT / DELETE 按删除同步策略落库；全部变更应用成功后，客户端将 `collection.sync_cursor_usn` 推进到本次会话的 `server_sync_cursor_usn`。
 8. Pull 完成后，服务端已进入 AWAITING_PUSH_OR_FINISH。如果客户端本地仍存在待上传变更，则发送 PushRequest。否则，进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
 
 
 #### 服务端处理规则
 
-1. 服务端收到 PullRequest 后，先校验 `session_id` 是否存在、SyncLock 是否仍在 PULLING 状态、`request.batch_seq == SyncLock.expected_batch_seq`，如果校验失败返回 ConnectRPC `FailedPrecondition`。校验通过后先将 `expected_batch_seq` 递增 1 并续期，用于占住当前 batch 序号，以此过滤重复发送的包。
-2. 服务端在当前同步会话保存的 `[client_sync_cursor_usn_at_handshake, server_sync_cursor_usn_at_handshake)` 范围内，从 `sync_units` 按 `usn ASC` 升序选择下一批待发送变更。
-3. 服务端为每条 `SyncChange` 写入该实体变更对应的 usn，计算并写入 `batch_max_usn = max(changes.usn)`，并设置 `last_batch` 表示该 batch 是否已经覆盖本轮 Pull 的上界。
-4. 服务端返回 PullResponse 前再更新 SyncLock：将 `sync_cursor_usn` 更新为 `batch_max_usn + 1`。如果 `last_batch = true`，校验 `sync_cursor_usn == server_sync_cursor_usn_at_handshake`，并将状态从 PULLING 改为 AWAITING_PUSH_OR_FINISH，将 `expected_batch_seq` 重置为 1。
-5. 服务端确认 SyncLock 更新成功后，再返回 PullResponse。
+1. 服务端收到 PullRequest 后，先校验 `session_id` 是否存在、是否匹配当前用户 session、SyncLock 是否仍在 PULLING 状态、`request.batch_seq == SyncLock.expected_batch_seq`；如果校验失败返回 ConnectRPC `FailedPrecondition`。
+2. 校验通过后，服务端先将 `expected_batch_seq` 递增 1 并续期 session，用于占住当前 batch 序号，过滤重复请求。
+3. 服务端读取 `current_entity_type = pull_entity_queue[0]`、`cursor = sync_cursor_usn`、`upper = server_sync_cursor_usn_at_handshake`。
+4. 服务端从当前实体类型中拉取 `entity_type = current_entity_type`、`usn >= cursor`、`usn < upper` 的下一批变更，并按当前实体类型对应业务表批量查询 payload。
+5. 服务端组装 `SyncChange`，为每条变更写入该实体变更对应的 usn，计算并写入 `batch_max_usn = max(changes.usn)`。
+6. 如果当前 entity_type 未拉完，服务端更新 `sync_cursor_usn = next_pull_cursor_usn`，`last_batch = false`。
+7. 如果当前 entity_type 已拉完，但后续还有 entity_type，服务端更新 `pull_entity_queue = remaining_entity_types`、`sync_cursor_usn = client_sync_cursor_usn_at_handshake`，`last_batch = false`。
+8. 如果所有 entity_type 都拉完，服务端删除 `pull_entity_queue`，更新 `sync_cursor_usn = server_sync_cursor_usn_at_handshake`、`state = AWAITING_PUSH_OR_FINISH`、`expected_batch_seq = 1`，并设置 `last_batch = true`。
+9. 服务端确认 SyncLock 更新成功后，再返回 PullResponse。
 
 
 #### 中断与超时
 
-Pull 不额外设计 ACK。客户端只有在本地事务提交成功后，才继续请求下一个 batch。
+Pull 不额外设计 ACK。客户端只有在成功暂存当前 batch 后，才继续请求下一个 batch。
 
-如果 PullRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端不继续猜测当前 batch 状态，直接视为本次同步结束。
+如果 PullRequest 超时、网络中断、客户端崩溃或本地事务失败，客户端不继续猜测当前 batch 状态，直接视为本次同步结束，并丢弃本轮暂存的 Pull changes。下一次重新 Handshake / Pull。
 
 
 ### PUSHING
