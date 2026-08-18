@@ -23,7 +23,7 @@ message PushResponse {
   // 当前返回的 batch 序号，等于 request.batch_seq
   int32 batch_seq = 1;
 
-  // 服务端为本 Push batch 分配的 usn。
-  // 客户端用它更新本 batch 内已上传实体的 usn，并推进 collection.sync_cursor_usn = assigned_usn + 1。
-  int64 assigned_usn = 2 [(buf.validate.field).int64.gte = 0];
+  // 服务端为本 Push batch 内每个实体分配 usn 后返回的确认变更
+  // 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn
+  repeated SyncChange changes = 2 [(buf.validate.field).repeated.min_items = 1];
 }

@@ -20,6 +20,7 @@ enum ChangeOp {
   CHANGE_OP_UNSPECIFIED = 0;
   CHANGE_OP_UPSERT = 1;
   CHANGE_OP_DELETE = 2;
+  CHANGE_OP_ASSIGN_USN = 3;
 }
 
 // SyncChange 表示实体的同步变更
@@ -35,9 +36,9 @@ message SyncChange {
   // deleted_at 仅在 op 为 DELETE 时才会有值，表示实体删除的时间戳
   optional int64 deleted_at = 4 [(buf.validate.field).int64.gt = 0];
 
-  int64 usn = 5 [(buf.validate.field).int64.gte = -1];
+  optional int64 usn = 5 [(buf.validate.field).int64.gte = -1];
 
-  // op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
+  // op 为 UPSERT 时 payload 必须存在，为 DELETE / ASSIGN_USN 时则不需要 payload
   oneof payload {
     CollectionPayload collection = 6;
     DeckPayload deck = 7;

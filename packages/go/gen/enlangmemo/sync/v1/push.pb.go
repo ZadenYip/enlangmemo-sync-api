@@ -98,9 +98,9 @@ type PushResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 当前返回的 batch 序号，等于 request.batch_seq
 	BatchSeq int32 `protobuf:"varint,1,opt,name=batch_seq,json=batchSeq,proto3" json:"batch_seq,omitempty"`
-	// 服务端为本 Push batch 分配的 usn。
-	// 客户端用它更新本 batch 内已上传实体的 usn，并推进 collection.sync_cursor_usn = assigned_usn + 1。
-	AssignedUsn   int64 `protobuf:"varint,2,opt,name=assigned_usn,json=assignedUsn,proto3" json:"assigned_usn,omitempty"`
+	// 服务端为本 Push batch 内每个实体分配 usn 后返回的确认变更
+	// 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn
+	Changes       []*SyncChange `protobuf:"bytes,2,rep,name=changes,proto3" json:"changes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -142,11 +142,11 @@ func (x *PushResponse) GetBatchSeq() int32 {
 	return 0
 }
 
-func (x *PushResponse) GetAssignedUsn() int64 {
+func (x *PushResponse) GetChanges() []*SyncChange {
 	if x != nil {
-		return x.AssignedUsn
+		return x.Changes
 	}
-	return 0
+	return nil
 }
 
 var File_enlangmemo_sync_v1_push_proto protoreflect.FileDescriptor
@@ -160,10 +160,10 @@ const file_enlangmemo_sync_v1_push_proto_rawDesc = "" +
 	"\tbatch_seq\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\bbatchSeq\x12B\n" +
 	"\achanges\x18\x03 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeB\b\xbaH\x05\x92\x01\x02\b\x01R\achanges\x12\x1d\n" +
 	"\n" +
-	"last_batch\x18\x04 \x01(\bR\tlastBatch\"W\n" +
+	"last_batch\x18\x04 \x01(\bR\tlastBatch\"o\n" +
 	"\fPushResponse\x12\x1b\n" +
-	"\tbatch_seq\x18\x01 \x01(\x05R\bbatchSeq\x12*\n" +
-	"\fassigned_usn\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\vassignedUsnB\xe0\x01\n" +
+	"\tbatch_seq\x18\x01 \x01(\x05R\bbatchSeq\x12B\n" +
+	"\achanges\x18\x02 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeB\b\xbaH\x05\x92\x01\x02\b\x01R\achangesB\xe0\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\tPushProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var (
@@ -186,11 +186,12 @@ var file_enlangmemo_sync_v1_push_proto_goTypes = []any{
 }
 var file_enlangmemo_sync_v1_push_proto_depIdxs = []int32{
 	2, // 0: enlangmemo.sync.v1.PushRequest.changes:type_name -> enlangmemo.sync.v1.SyncChange
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: enlangmemo.sync.v1.PushResponse.changes:type_name -> enlangmemo.sync.v1.SyncChange
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_enlangmemo_sync_v1_push_proto_init() }

@@ -93,6 +93,7 @@ const (
 	ChangeOp_CHANGE_OP_UNSPECIFIED ChangeOp = 0
 	ChangeOp_CHANGE_OP_UPSERT      ChangeOp = 1
 	ChangeOp_CHANGE_OP_DELETE      ChangeOp = 2
+	ChangeOp_CHANGE_OP_ASSIGN_USN  ChangeOp = 3
 )
 
 // Enum value maps for ChangeOp.
@@ -101,11 +102,13 @@ var (
 		0: "CHANGE_OP_UNSPECIFIED",
 		1: "CHANGE_OP_UPSERT",
 		2: "CHANGE_OP_DELETE",
+		3: "CHANGE_OP_ASSIGN_USN",
 	}
 	ChangeOp_value = map[string]int32{
 		"CHANGE_OP_UNSPECIFIED": 0,
 		"CHANGE_OP_UPSERT":      1,
 		"CHANGE_OP_DELETE":      2,
+		"CHANGE_OP_ASSIGN_USN":  3,
 	}
 )
 
@@ -147,8 +150,8 @@ type SyncChange struct {
 	Op ChangeOp `protobuf:"varint,3,opt,name=op,proto3,enum=enlangmemo.sync.v1.ChangeOp" json:"op,omitempty"`
 	// deleted_at 仅在 op 为 DELETE 时才会有值，表示实体删除的时间戳
 	DeletedAt *int64 `protobuf:"varint,4,opt,name=deleted_at,json=deletedAt,proto3,oneof" json:"deleted_at,omitempty"`
-	Usn       int64  `protobuf:"varint,5,opt,name=usn,proto3" json:"usn,omitempty"`
-	// op 为 UPSERT 时 payload 必须存在，为 DELETE 时则不需要 payload
+	Usn       *int64 `protobuf:"varint,5,opt,name=usn,proto3,oneof" json:"usn,omitempty"`
+	// op 为 UPSERT 时 payload 必须存在，为 DELETE / ASSIGN_USN 时则不需要 payload
 	//
 	// Types that are valid to be assigned to Payload:
 	//
@@ -223,8 +226,8 @@ func (x *SyncChange) GetDeletedAt() int64 {
 }
 
 func (x *SyncChange) GetUsn() int64 {
-	if x != nil {
-		return x.Usn
+	if x != nil && x.Usn != nil {
+		return *x.Usn
 	}
 	return 0
 }
@@ -989,7 +992,7 @@ var File_enlangmemo_sync_v1_entities_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
-	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xdc\x05\n" +
+	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xe9\x05\n" +
 	"\n" +
 	"SyncChange\x12%\n" +
 	"\tentity_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bentityId\x12?\n" +
@@ -997,8 +1000,8 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"entityType\x12,\n" +
 	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12+\n" +
 	"\n" +
-	"deleted_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x01R\tdeletedAt\x88\x01\x01\x12\"\n" +
-	"\x03usn\x18\x05 \x01(\x03B\x10\xbaH\r\"\v(\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01R\x03usn\x12G\n" +
+	"deleted_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x01R\tdeletedAt\x88\x01\x01\x12'\n" +
+	"\x03usn\x18\x05 \x01(\x03B\x10\xbaH\r\"\v(\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01H\x02R\x03usn\x88\x01\x01\x12G\n" +
 	"\n" +
 	"collection\x18\x06 \x01(\v2%.enlangmemo.sync.v1.CollectionPayloadH\x00R\n" +
 	"collection\x125\n" +
@@ -1011,7 +1014,8 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
 	"review_log\x18\f \x01(\v2$.enlangmemo.sync.v1.ReviewLogPayloadH\x00R\treviewLogB\t\n" +
 	"\apayloadB\r\n" +
-	"\v_deleted_at\"\xca\x01\n" +
+	"\v_deleted_atB\x06\n" +
+	"\x04_usn\"\xca\x01\n" +
 	"\x11CollectionPayload\x12;\n" +
 	"\x15sqlite_schema_version\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x13sqliteSchemaVersion\x12&\n" +
 	"\n" +
@@ -1100,11 +1104,12 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\x10ENTITY_TYPE_NOTE\x10\x04\x12\x1f\n" +
 	"\x1bENTITY_TYPE_PROCESSING_NOTE\x10\x05\x12\x14\n" +
 	"\x10ENTITY_TYPE_CARD\x10\x06\x12\x1a\n" +
-	"\x16ENTITY_TYPE_REVIEW_LOG\x10\a*Q\n" +
+	"\x16ENTITY_TYPE_REVIEW_LOG\x10\a*k\n" +
 	"\bChangeOp\x12\x19\n" +
 	"\x15CHANGE_OP_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10CHANGE_OP_UPSERT\x10\x01\x12\x14\n" +
-	"\x10CHANGE_OP_DELETE\x10\x02B\xe4\x01\n" +
+	"\x10CHANGE_OP_DELETE\x10\x02\x12\x18\n" +
+	"\x14CHANGE_OP_ASSIGN_USN\x10\x03B\xe4\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\rEntitiesProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var (
