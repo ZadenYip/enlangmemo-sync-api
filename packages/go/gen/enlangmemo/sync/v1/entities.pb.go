@@ -150,7 +150,7 @@ type SyncChange struct {
 	Op ChangeOp `protobuf:"varint,3,opt,name=op,proto3,enum=enlangmemo.sync.v1.ChangeOp" json:"op,omitempty"`
 	// deleted_at 仅在 op 为 DELETE 时才会有值，表示实体删除的时间戳
 	DeletedAt *int64 `protobuf:"varint,4,opt,name=deleted_at,json=deletedAt,proto3,oneof" json:"deleted_at,omitempty"`
-	Usn       *int64 `protobuf:"varint,5,opt,name=usn,proto3,oneof" json:"usn,omitempty"`
+	Usn       int64  `protobuf:"varint,5,opt,name=usn,proto3" json:"usn,omitempty"`
 	// op 为 UPSERT 时 payload 必须存在，为 DELETE / ASSIGN_USN 时则不需要 payload
 	//
 	// Types that are valid to be assigned to Payload:
@@ -226,8 +226,8 @@ func (x *SyncChange) GetDeletedAt() int64 {
 }
 
 func (x *SyncChange) GetUsn() int64 {
-	if x != nil && x.Usn != nil {
-		return *x.Usn
+	if x != nil {
+		return x.Usn
 	}
 	return 0
 }
@@ -992,7 +992,7 @@ var File_enlangmemo_sync_v1_entities_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
-	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xe9\x05\n" +
+	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xdc\x05\n" +
 	"\n" +
 	"SyncChange\x12%\n" +
 	"\tentity_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bentityId\x12?\n" +
@@ -1000,8 +1000,8 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"entityType\x12,\n" +
 	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12+\n" +
 	"\n" +
-	"deleted_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x01R\tdeletedAt\x88\x01\x01\x12'\n" +
-	"\x03usn\x18\x05 \x01(\x03B\x10\xbaH\r\"\v(\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01H\x02R\x03usn\x88\x01\x01\x12G\n" +
+	"deleted_at\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x01R\tdeletedAt\x88\x01\x01\x12\"\n" +
+	"\x03usn\x18\x05 \x01(\x03B\x10\xbaH\r\"\v(\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01R\x03usn\x12G\n" +
 	"\n" +
 	"collection\x18\x06 \x01(\v2%.enlangmemo.sync.v1.CollectionPayloadH\x00R\n" +
 	"collection\x125\n" +
@@ -1014,8 +1014,7 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
 	"review_log\x18\f \x01(\v2$.enlangmemo.sync.v1.ReviewLogPayloadH\x00R\treviewLogB\t\n" +
 	"\apayloadB\r\n" +
-	"\v_deleted_atB\x06\n" +
-	"\x04_usn\"\xca\x01\n" +
+	"\v_deleted_at\"\xca\x01\n" +
 	"\x11CollectionPayload\x12;\n" +
 	"\x15sqlite_schema_version\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x13sqliteSchemaVersion\x12&\n" +
 	"\n" +

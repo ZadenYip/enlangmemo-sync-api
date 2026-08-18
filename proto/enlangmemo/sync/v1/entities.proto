@@ -36,7 +36,7 @@ message SyncChange {
   // deleted_at 仅在 op 为 DELETE 时才会有值，表示实体删除的时间戳
   optional int64 deleted_at = 4 [(buf.validate.field).int64.gt = 0];
 
-  optional int64 usn = 5 [(buf.validate.field).int64.gte = -1];
+  int64 usn = 5 [(buf.validate.field).int64.gte = -1];
 
   // op 为 UPSERT 时 payload 必须存在，为 DELETE / ASSIGN_USN 时则不需要 payload
   oneof payload {
