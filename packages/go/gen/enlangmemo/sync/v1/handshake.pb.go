@@ -100,11 +100,11 @@ func (HandshakeStatus) EnumDescriptor() ([]byte, []int) {
 type HandshakeRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
-	DeviceId string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	DeviceId []byte `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	// 设备展示名
 	DeviceName string `protobuf:"bytes,2,opt,name=device_name,json=deviceName,proto3" json:"device_name,omitempty"`
 	// 集合 UUIDv7
-	CollectionId string `protobuf:"bytes,3,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"`
+	CollectionId []byte `protobuf:"bytes,3,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"`
 	// 客户端 collection.sync_cursor_usn，已同步到的 USN 上界 / 下次增量 Pull 起点
 	ClientSyncCursorUsn int64 `protobuf:"varint,4,opt,name=client_sync_cursor_usn,json=clientSyncCursorUsn,proto3" json:"client_sync_cursor_usn,omitempty"`
 	// 同步协议版本
@@ -151,11 +151,11 @@ func (*HandshakeRequest) Descriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_handshake_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *HandshakeRequest) GetDeviceId() string {
+func (x *HandshakeRequest) GetDeviceId() []byte {
 	if x != nil {
 		return x.DeviceId
 	}
-	return ""
+	return nil
 }
 
 func (x *HandshakeRequest) GetDeviceName() string {
@@ -165,11 +165,11 @@ func (x *HandshakeRequest) GetDeviceName() string {
 	return ""
 }
 
-func (x *HandshakeRequest) GetCollectionId() string {
+func (x *HandshakeRequest) GetCollectionId() []byte {
 	if x != nil {
 		return x.CollectionId
 	}
-	return ""
+	return nil
 }
 
 func (x *HandshakeRequest) GetClientSyncCursorUsn() int64 {
@@ -289,12 +289,12 @@ var File_enlangmemo_sync_v1_handshake_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
-	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xb7\x03\n" +
-	"\x10HandshakeRequest\x12%\n" +
-	"\tdevice_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bdeviceId\x12(\n" +
+	"\"enlangmemo/sync/v1/handshake.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xb5\x03\n" +
+	"\x10HandshakeRequest\x12$\n" +
+	"\tdevice_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\bdeviceId\x12(\n" +
 	"\vdevice_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18 R\n" +
-	"deviceName\x12-\n" +
-	"\rcollection_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\fcollectionId\x12<\n" +
+	"deviceName\x12,\n" +
+	"\rcollection_id\x18\x03 \x01(\fB\a\xbaH\x04z\x02h\x10R\fcollectionId\x12<\n" +
 	"\x16client_sync_cursor_usn\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13clientSyncCursorUsn\x12)\n" +
 	"\x10protocol_version\x18\x05 \x01(\x05R\x0fprotocolVersion\x12*\n" +
 	"\x11db_schema_version\x18\x06 \x01(\x05R\x0fdbSchemaVersion\x12&\n" +

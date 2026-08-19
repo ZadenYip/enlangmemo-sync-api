@@ -142,8 +142,8 @@ func (ChangeOp) EnumDescriptor() ([]byte, []int) {
 // SyncChange 表示实体的同步变更
 type SyncChange struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// UUID
-	EntityId string `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	// UUID, 16 bytes.
+	EntityId []byte `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
 	// 实体类型
 	EntityType EntityType `protobuf:"varint,2,opt,name=entity_type,json=entityType,proto3,enum=enlangmemo.sync.v1.EntityType" json:"entity_type,omitempty"`
 	// 变更操作类型
@@ -197,11 +197,11 @@ func (*SyncChange) Descriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *SyncChange) GetEntityId() string {
+func (x *SyncChange) GetEntityId() []byte {
 	if x != nil {
 		return x.EntityId
 	}
-	return ""
+	return nil
 }
 
 func (x *SyncChange) GetEntityType() EntityType {
@@ -585,7 +585,7 @@ func (x *NoteTypePayload) GetNoteTemplateJson() string {
 // NotePayload 承载笔记数据的 UPSERT 负载
 type NotePayload struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	NoteTypeId string                 `protobuf:"bytes,1,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
+	NoteTypeId []byte                 `protobuf:"bytes,1,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
 	CreatedAt  int64                  `protobuf:"varint,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt  int64                  `protobuf:"varint,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	SenseId    *int32                 `protobuf:"varint,4,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
@@ -625,11 +625,11 @@ func (*NotePayload) Descriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *NotePayload) GetNoteTypeId() string {
+func (x *NotePayload) GetNoteTypeId() []byte {
 	if x != nil {
 		return x.NoteTypeId
 	}
-	return ""
+	return nil
 }
 
 func (x *NotePayload) GetCreatedAt() int64 {
@@ -663,7 +663,7 @@ func (x *NotePayload) GetFieldsJson() string {
 // ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载
 type ProcessingNotePayload struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	NoteTypeId string                 `protobuf:"bytes,1,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
+	NoteTypeId []byte                 `protobuf:"bytes,1,opt,name=note_type_id,json=noteTypeId,proto3" json:"note_type_id,omitempty"`
 	CreatedAt  int64                  `protobuf:"varint,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt  int64                  `protobuf:"varint,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	SenseId    *int32                 `protobuf:"varint,4,opt,name=sense_id,json=senseId,proto3,oneof" json:"sense_id,omitempty"`
@@ -703,11 +703,11 @@ func (*ProcessingNotePayload) Descriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ProcessingNotePayload) GetNoteTypeId() string {
+func (x *ProcessingNotePayload) GetNoteTypeId() []byte {
 	if x != nil {
 		return x.NoteTypeId
 	}
-	return ""
+	return nil
 }
 
 func (x *ProcessingNotePayload) GetCreatedAt() int64 {
@@ -741,8 +741,8 @@ func (x *ProcessingNotePayload) GetFieldsJson() string {
 // CardPayload 承载卡片数据的 UPSERT 负载
 type CardPayload struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	NoteId        string                 `protobuf:"bytes,1,opt,name=note_id,json=noteId,proto3" json:"note_id,omitempty"`
-	DeckId        string                 `protobuf:"bytes,2,opt,name=deck_id,json=deckId,proto3" json:"deck_id,omitempty"`
+	NoteId        []byte                 `protobuf:"bytes,1,opt,name=note_id,json=noteId,proto3" json:"note_id,omitempty"`
+	DeckId        []byte                 `protobuf:"bytes,2,opt,name=deck_id,json=deckId,proto3" json:"deck_id,omitempty"`
 	UpdatedAt     int64                  `protobuf:"varint,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	Difficulty    float64                `protobuf:"fixed64,4,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	Stability     float64                `protobuf:"fixed64,5,opt,name=stability,proto3" json:"stability,omitempty"`
@@ -788,18 +788,18 @@ func (*CardPayload) Descriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CardPayload) GetNoteId() string {
+func (x *CardPayload) GetNoteId() []byte {
 	if x != nil {
 		return x.NoteId
 	}
-	return ""
+	return nil
 }
 
-func (x *CardPayload) GetDeckId() string {
+func (x *CardPayload) GetDeckId() []byte {
 	if x != nil {
 		return x.DeckId
 	}
-	return ""
+	return nil
 }
 
 func (x *CardPayload) GetUpdatedAt() int64 {
@@ -882,7 +882,7 @@ func (x *CardPayload) GetQueue() int32 {
 // ReviewLogPayload 承载复习记录数据的 UPSERT 负载
 type ReviewLogPayload struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CardId        string                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	CardId        []byte                 `protobuf:"bytes,1,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
 	ReviewTime    int64                  `protobuf:"varint,2,opt,name=review_time,json=reviewTime,proto3" json:"review_time,omitempty"`
 	ScheduledDays int32                  `protobuf:"varint,3,opt,name=scheduled_days,json=scheduledDays,proto3" json:"scheduled_days,omitempty"`
 	Rating        int32                  `protobuf:"varint,4,opt,name=rating,proto3" json:"rating,omitempty"`
@@ -890,7 +890,7 @@ type ReviewLogPayload struct {
 	Stability     float64                `protobuf:"fixed64,6,opt,name=stability,proto3" json:"stability,omitempty"`
 	LearningSteps int32                  `protobuf:"varint,7,opt,name=learning_steps,json=learningSteps,proto3" json:"learning_steps,omitempty"`
 	State         int32                  `protobuf:"varint,8,opt,name=state,proto3" json:"state,omitempty"`
-	Duration      int64                  `protobuf:"varint,9,opt,name=duration,proto3" json:"duration,omitempty"`
+	Duration      int32                  `protobuf:"varint,9,opt,name=duration,proto3" json:"duration,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -925,11 +925,11 @@ func (*ReviewLogPayload) Descriptor() ([]byte, []int) {
 	return file_enlangmemo_sync_v1_entities_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *ReviewLogPayload) GetCardId() string {
+func (x *ReviewLogPayload) GetCardId() []byte {
 	if x != nil {
 		return x.CardId
 	}
-	return ""
+	return nil
 }
 
 func (x *ReviewLogPayload) GetReviewTime() int64 {
@@ -981,7 +981,7 @@ func (x *ReviewLogPayload) GetState() int32 {
 	return 0
 }
 
-func (x *ReviewLogPayload) GetDuration() int64 {
+func (x *ReviewLogPayload) GetDuration() int32 {
 	if x != nil {
 		return x.Duration
 	}
@@ -992,10 +992,10 @@ var File_enlangmemo_sync_v1_entities_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
-	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xdc\x05\n" +
+	"!enlangmemo/sync/v1/entities.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\"\xdb\x05\n" +
 	"\n" +
-	"SyncChange\x12%\n" +
-	"\tentity_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\bentityId\x12?\n" +
+	"SyncChange\x12$\n" +
+	"\tentity_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\bentityId\x12?\n" +
 	"\ventity_type\x18\x02 \x01(\x0e2\x1e.enlangmemo.sync.v1.EntityTypeR\n" +
 	"entityType\x12,\n" +
 	"\x02op\x18\x03 \x01(\x0e2\x1c.enlangmemo.sync.v1.ChangeOpR\x02op\x12+\n" +
@@ -1038,9 +1038,9 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\x12preset_template_id\x18\x02 \x01(\x05R\x10presetTemplateId\x12&\n" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x125\n" +
-	"\x12note_template_json\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x10noteTemplateJson\"\xe9\x01\n" +
-	"\vNotePayload\x12*\n" +
-	"\fnote_type_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\n" +
+	"\x12note_template_json\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x10noteTemplateJson\"\xe8\x01\n" +
+	"\vNotePayload\x12)\n" +
+	"\fnote_type_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\n" +
 	"noteTypeId\x12&\n" +
 	"\n" +
 	"created_at\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
@@ -1049,9 +1049,9 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\bsense_id\x18\x04 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00H\x00R\asenseId\x88\x01\x01\x12(\n" +
 	"\vfields_json\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"fieldsJsonB\v\n" +
-	"\t_sense_id\"\xf3\x01\n" +
-	"\x15ProcessingNotePayload\x12*\n" +
-	"\fnote_type_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\n" +
+	"\t_sense_id\"\xf2\x01\n" +
+	"\x15ProcessingNotePayload\x12)\n" +
+	"\fnote_type_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\n" +
 	"noteTypeId\x12&\n" +
 	"\n" +
 	"created_at\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
@@ -1060,10 +1060,10 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\bsense_id\x18\x04 \x01(\x05B\a\xbaH\x04\x1a\x02 \x00H\x00R\asenseId\x88\x01\x01\x12(\n" +
 	"\vfields_json\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"fieldsJsonB\v\n" +
-	"\t_sense_id\"\xe2\x03\n" +
-	"\vCardPayload\x12!\n" +
-	"\anote_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x06noteId\x12!\n" +
-	"\adeck_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x06deckId\x12&\n" +
+	"\t_sense_id\"\xe0\x03\n" +
+	"\vCardPayload\x12 \n" +
+	"\anote_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06noteId\x12 \n" +
+	"\adeck_id\x18\x02 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06deckId\x12&\n" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x12\x1e\n" +
 	"\n" +
@@ -1080,9 +1080,9 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\vrepetitions\x18\v \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\vrepetitions\x12\x14\n" +
 	"\x05state\x18\f \x01(\x05R\x05state\x12\x14\n" +
 	"\x05queue\x18\r \x01(\x05R\x05queueB\x0e\n" +
-	"\f_last_review\"\xd2\x02\n" +
-	"\x10ReviewLogPayload\x12!\n" +
-	"\acard_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01$R\x06cardId\x12(\n" +
+	"\f_last_review\"\xd1\x02\n" +
+	"\x10ReviewLogPayload\x12 \n" +
+	"\acard_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06cardId\x12(\n" +
 	"\vreview_time\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\n" +
 	"reviewTime\x12%\n" +
 	"\x0escheduled_days\x18\x03 \x01(\x05R\rscheduledDays\x12!\n" +
@@ -1093,7 +1093,7 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\tstability\x18\x06 \x01(\x01R\tstability\x12.\n" +
 	"\x0elearning_steps\x18\a \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\rlearningSteps\x12\x14\n" +
 	"\x05state\x18\b \x01(\x05R\x05state\x12#\n" +
-	"\bduration\x18\t \x01(\x03B\a\xbaH\x04\"\x02(\x00R\bduration*\xdf\x01\n" +
+	"\bduration\x18\t \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\bduration*\xdf\x01\n" +
 	"\n" +
 	"EntityType\x12\x1b\n" +
 	"\x17ENTITY_TYPE_UNSPECIFIED\x10\x00\x12\x1a\n" +

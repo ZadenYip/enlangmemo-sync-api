@@ -52,11 +52,11 @@ HandshakeRequest 是发起握手该携带的数据
 ```proto
 message HandshakeRequest {
   // 本地标识的设备 UUIDv7，用于区分同一用户的不同设备
-  string device_id = 1 [(buf.validate.field).string.len = 36];
+  bytes device_id = 1 [(buf.validate.field).bytes.len = 16];
   // 设备展示名
   string device_name = 2 [(buf.validate.field).string.max_len = 32];
   // 集合 UUIDv7
-  string collection_id = 3 [(buf.validate.field).string.len = 36];
+  bytes collection_id = 3 [(buf.validate.field).bytes.len = 16];
 
   // 客户端 collection.sync_cursor_usn，已同步到的 USN 上界 / 下次增量 Pull 起点
   int64 client_sync_cursor_usn = 4 [(buf.validate.field).int64.gte = 0];
@@ -332,7 +332,7 @@ UploadAllPush 完成后，客户端发送 FinishSyncRequest 结束本次 UPLOAD_
 
 ### 注意事项
 
-UUID 选择 string 类型，要求是使用连字符分隔的 36 个字符的格式。之所以不用 bytes 类型是因为可能存在大端序/小端序问题，避免不同语言不同库下表现不一致。
+UUID 选择 bytes 类型，要求固定为 16 字节，大小端序问题由客户端和服务端端处理。
 
 
 ### 数据 Payload 设计

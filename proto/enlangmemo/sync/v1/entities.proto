@@ -25,8 +25,8 @@ enum ChangeOp {
 
 // SyncChange 表示实体的同步变更
 message SyncChange {
-  // UUID
-  string entity_id = 1 [(buf.validate.field).string.len = 36];
+  // UUID, 16 bytes.
+  bytes entity_id = 1 [(buf.validate.field).bytes.len = 16];
 
   // 实体类型
   EntityType entity_type = 2;
@@ -89,7 +89,7 @@ message NoteTypePayload {
 
 // NotePayload 承载笔记数据的 UPSERT 负载
 message NotePayload {
-  string note_type_id = 1 [(buf.validate.field).string.len = 36];
+  bytes note_type_id = 1 [(buf.validate.field).bytes.len = 16];
   int64 created_at = 2 [(buf.validate.field).int64.gt = 0];
   int64 updated_at = 3 [(buf.validate.field).int64.gt = 0];
   optional int32 sense_id = 4 [(buf.validate.field).int32.gt = 0];
@@ -100,7 +100,7 @@ message NotePayload {
 
 // ProcessingNotePayload 承载待加工笔记数据的 UPSERT 负载
 message ProcessingNotePayload {
-  string note_type_id = 1 [(buf.validate.field).string.len = 36];
+  bytes note_type_id = 1 [(buf.validate.field).bytes.len = 16];
   int64 created_at = 2 [(buf.validate.field).int64.gt = 0];
   int64 updated_at = 3 [(buf.validate.field).int64.gt = 0];
   optional int32 sense_id = 4 [(buf.validate.field).int32.gt = 0];
@@ -111,8 +111,8 @@ message ProcessingNotePayload {
 
 // CardPayload 承载卡片数据的 UPSERT 负载
 message CardPayload {
-  string note_id = 1 [(buf.validate.field).string.len = 36];
-  string deck_id = 2 [(buf.validate.field).string.len = 36];
+  bytes note_id = 1 [(buf.validate.field).bytes.len = 16];
+  bytes deck_id = 2 [(buf.validate.field).bytes.len = 16];
   int64 updated_at = 3 [(buf.validate.field).int64.gt = 0];
 
   double difficulty = 4;
@@ -131,7 +131,7 @@ message CardPayload {
 
 // ReviewLogPayload 承载复习记录数据的 UPSERT 负载
 message ReviewLogPayload {
-  string card_id = 1 [(buf.validate.field).string.len = 36];
+  bytes card_id = 1 [(buf.validate.field).bytes.len = 16];
 
   int64 review_time = 2 [(buf.validate.field).int64.gte = 0];
   int32 scheduled_days = 3;
@@ -145,5 +145,5 @@ message ReviewLogPayload {
 
   int32 learning_steps = 7 [(buf.validate.field).int32.gte = 0];
   int32 state = 8;
-  int64 duration = 9 [(buf.validate.field).int64.gte = 0];
+  int32 duration = 9 [(buf.validate.field).int32.gte = 0];
 }
