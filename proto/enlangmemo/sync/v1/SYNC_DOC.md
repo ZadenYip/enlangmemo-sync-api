@@ -304,7 +304,7 @@ UploadAllPush 完成后，客户端发送 FinishSyncRequest 结束本次 UPLOAD_
 
 该状态表示客户端请求中的 `collection_id` 与服务端当前账号已绑定的 `collection_id` 不一致。服务端不创建后续同步会话；如果握手过程中已占用 SyncLock，返回前必须释放。
 
-客户端收到该状态后，不进入 Pull / Push / `UPLOAD_ALL`，而是用服务端账号绑定的 collection 身份纠正本地 collection_id，再重新发起同步.
+客户端收到该状态后，不进入任何同步状态，而是用服务端账号绑定的 collection 身份纠正本地 collection_id，再重新发起同步.
 
 
 #### ConnectRPC 全局错误
