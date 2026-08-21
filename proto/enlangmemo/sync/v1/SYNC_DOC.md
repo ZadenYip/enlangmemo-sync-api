@@ -93,7 +93,7 @@ message HandshakeRequest {
 
 如果用户还没有 collection 记录，则服务端可以将本次请求的 `collection_id` 绑定为该用户唯一 collection。如果用户已经有绑定记录，则 `request.collection_id` 必须等于服务端记录的 `collection_id`。
 
-如果 `collection_id` 不一致，本次握手不进入 HandshakeStatus，服务端直接返回 ConnectRPC `FailedPrecondition`，表示请求格式和用户认证都有效，但当前本地 collection 身份与该账号已绑定的云端 collection 不匹配，不能继续同步，也没法触发 `UPLOAD_ALL`。
+如果 `collection_id` 不一致，服务端释放本次握手占用的会话 / SyncLock，并返回 `HandshakeResponse.status = HANDSHAKE_STATUS_COLLECTION_ID_MISMATCH`。该状态表示请当前本地 collection 身份与该账号已绑定的云端 collection 不匹配，服务端不会继续后续状态转移的操作，由客户端在本地纠正 collection_id 后重新发起同步。
 
 ### SyncLock
 SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用。
@@ -169,6 +169,9 @@ enum HandshakeStatus {
 
   // 客户端数据落后过久，服务端已正式删除被 delete 标记的数据，客户端需要重置本地数据后重新同步
   HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD = 8;
+
+  // 客户端 collection_id 与服务端当前账号绑定的 collection_id 不一致，客户端需要修正本地 ID 后重试
+  HANDSHAKE_STATUS_COLLECTION_ID_MISMATCH = 9;
 }
 
 ```
@@ -297,6 +300,13 @@ UploadAllPush 完成后，客户端发送 FinishSyncRequest 结束本次 UPLOAD_
 客户端收到该状态后，提示用户当前本地数据已经落后太久，需要先清空本地 collection 数据。用户点击重置后，客户端清理本地同步数据，清理完后再重新发起同步。重置完成前不允许正常同步。
 
 
+#### COLLECTION_ID_MISMATCH
+
+该状态表示客户端请求中的 `collection_id` 与服务端当前账号已绑定的 `collection_id` 不一致。服务端不创建后续同步会话；如果握手过程中已占用 SyncLock，返回前必须释放。
+
+客户端收到该状态后，不进入 Pull / Push / `UPLOAD_ALL`，而是用服务端账号绑定的 collection 身份纠正本地 collection_id，再重新发起同步.
+
+
 #### ConnectRPC 全局错误
 
 以下情况不进入 HandshakeStatus，而是由 Go 服务端返回 ConnectRPC error，客户端在 catch 分支读取 error code：
@@ -306,7 +316,6 @@ UploadAllPush 完成后，客户端发送 FinishSyncRequest 结束本次 UPLOAD_
 | access token 缺失、过期、无效 | `Unauthenticated` | 全局认证失败，通常在 interceptor 中处理，业务 handler 可以不进入 |
 | 用户无权访问 collection | `PermissionDenied` | 资源授权失败，不属于握手业务状态 |
 | Protobuf 字段或 buf.validate 校验失败 | `InvalidArgument` | 请求格式非法，例如 UUID 长度不对或 `client_sync_cursor_usn < 0` |
-| 用户已有服务端 collection，但请求中的 collection_id 与服务端记录不一致 | `FailedPrecondition` | 本地 collection 身份与账号已绑定的云端 collection 不匹配，不能继续同步 |
 | 全局限流、配额耗尽 | `ResourceExhausted` | 等价于 too many requests，不属于握手业务状态 |
 | 服务维护、依赖暂时不可用 | `Unavailable` | 可以提示稍后重试 |
 | 客户端 deadline 超时 | `DeadlineExceeded` 或客户端本地超时 | 客户端没有拿到可信 HandshakeResponse |

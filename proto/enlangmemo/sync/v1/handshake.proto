@@ -66,4 +66,7 @@ enum HandshakeStatus {
 
   // 客户端数据落后过久，服务端已清理必要删除标记，客户端需要重置本地数据后重新同步
   HANDSHAKE_STATUS_CLIENT_DATA_TOO_OLD = 8;
+
+  // 客户端 collection_id 与服务端当前账号绑定的 collection_id 不一致，客户端需要修正本地 ID 后重试
+  HANDSHAKE_STATUS_COLLECTION_ID_MISMATCH = 9;
 }
