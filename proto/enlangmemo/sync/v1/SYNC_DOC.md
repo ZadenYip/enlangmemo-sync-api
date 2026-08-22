@@ -93,7 +93,7 @@ message HandshakeRequest {
 
 如果用户还没有 collection 记录，则服务端可以将本次请求的 `collection_id` 绑定为该用户唯一 collection。如果用户已经有绑定记录，则 `request.collection_id` 必须等于服务端记录的 `collection_id`。
 
-如果 `collection_id` 不一致，服务端释放本次握手占用的会话 / SyncLock，并返回 `HandshakeResponse.status = HANDSHAKE_STATUS_COLLECTION_ID_MISMATCH`。该状态表示请当前本地 collection 身份与该账号已绑定的云端 collection 不匹配，服务端不会继续后续状态转移的操作，由客户端在本地纠正 collection_id 后重新发起同步。
+如果 `collection_id` 不一致，服务端会返回 `HandshakeResponse.status = HANDSHAKE_STATUS_COLLECTION_ID_MISMATCH` 以及账号绑定的实际 `collection_id`。以此表示当前本地 collection 身份与该账号已绑定的云端 collection 不匹配，客户端应该用响应中的 `collection_id` 纠正本地 collection_id 后重新发起同步。
 
 ### SyncLock
 SyncLock 为 Redis 用户级服务端分布式锁，也起到维护 session 的作用。
@@ -141,8 +141,11 @@ message HandshakeResponse {
 
   int64 server_sync_cursor_usn = 3 [(buf.validate.field).int64.gte = 0];
 
-  // 服务端 collection.last_sync_time，客户端收到握手响应后根据情况用它覆盖本地 collection.last_sync_time
+  // 服务端 collection.last_sync_time，客户端收到握手响应后用它覆盖本地 collection.last_sync_time
   int64 server_last_sync_time = 4 [(buf.validate.field).int64.gte = 0];
+
+  // 服务端当前账号绑定的 collection_id，客户端可用其纠正本地 collection_id
+  optional bytes collection_id = 5 [(buf.validate.field).bytes.len = 16];
 }
 
 enum HandshakeStatus {
@@ -183,6 +186,8 @@ session_id 由服务端在允许继续当前同步会话时生成，用于标识
 字段存在时必须是 32 位字符串，后续 Pull / Push / FinishSync 都需要携带 session_id。
 
 `server_last_sync_time` 表示服务端记录的上一次完整同步成功完成时间。客户端收到可信 HandshakeResponse 后，对比本地的 USN 和服务器的 USN，如果相同则用该值覆盖本地 `collection.last_sync_time`，用于修正 FinishSyncResponse 丢失但实际已经完成同步的场景。
+
+`collection_id` 表示服务端当前账号绑定的 collection 身份。通常客户端请求中的 `collection_id` 已经与服务端一致；当握手返回 `COLLECTION_ID_MISMATCH` 时，客户端使用响应中的 `collection_id` 修正本地 collection_id，然后重新发起同步。
 
 
 #### NO_REMOTE_CHANGES
@@ -304,7 +309,7 @@ UploadAllPush 完成后，客户端发送 FinishSyncRequest 结束本次 UPLOAD_
 
 该状态表示客户端请求中的 `collection_id` 与服务端当前账号已绑定的 `collection_id` 不一致。服务端不创建后续同步会话；如果握手过程中已占用 SyncLock，返回前必须释放。
 
-客户端收到该状态后，不进入任何同步状态，而是用服务端账号绑定的 collection 身份纠正本地 collection_id，再重新发起同步.
+客户端收到该状态后，不进入任何同步状态，而是用 `HandshakeResponse.collection_id` 纠正本地 collection_id，再重新发起同步。
 
 
 #### ConnectRPC 全局错误

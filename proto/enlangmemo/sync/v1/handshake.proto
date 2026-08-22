@@ -40,6 +40,8 @@ message HandshakeResponse {
 
   // 服务端 collection.last_sync_time，客户端收到握手响应后用它覆盖本地 collection.last_sync_time
   int64 server_last_sync_time = 4 [(buf.validate.field).int64.gte = 0];
+
+  optional bytes collection_id = 5 [(buf.validate.field).bytes.len = 16];
 }
 
 enum HandshakeStatus {

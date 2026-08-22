@@ -226,7 +226,8 @@ type HandshakeResponse struct {
 	SessionId           *string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3,oneof" json:"session_id,omitempty"`
 	ServerSyncCursorUsn int64   `protobuf:"varint,3,opt,name=server_sync_cursor_usn,json=serverSyncCursorUsn,proto3" json:"server_sync_cursor_usn,omitempty"`
 	// 服务端 collection.last_sync_time，客户端收到握手响应后用它覆盖本地 collection.last_sync_time
-	ServerLastSyncTime int64 `protobuf:"varint,4,opt,name=server_last_sync_time,json=serverLastSyncTime,proto3" json:"server_last_sync_time,omitempty"`
+	ServerLastSyncTime int64  `protobuf:"varint,4,opt,name=server_last_sync_time,json=serverLastSyncTime,proto3" json:"server_last_sync_time,omitempty"`
+	CollectionId       []byte `protobuf:"bytes,5,opt,name=collection_id,json=collectionId,proto3,oneof" json:"collection_id,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -289,6 +290,13 @@ func (x *HandshakeResponse) GetServerLastSyncTime() int64 {
 	return 0
 }
 
+func (x *HandshakeResponse) GetCollectionId() []byte {
+	if x != nil {
+		return x.CollectionId
+	}
+	return nil
+}
+
 var File_enlangmemo_sync_v1_handshake_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
@@ -305,14 +313,16 @@ const file_enlangmemo_sync_v1_handshake_proto_rawDesc = "" +
 	"\n" +
 	"client_now\x18\a \x01(\x03B\a\xbaH\x04\"\x02(\x00R\tclientNow\x12:\n" +
 	"\x15client_last_sync_time\x18\b \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x12clientLastSyncTime\x12*\n" +
-	"\x11has_local_changes\x18\t \x01(\bR\x0fhasLocalChanges\"\x87\x02\n" +
+	"\x11has_local_changes\x18\t \x01(\bR\x0fhasLocalChanges\"\xcc\x02\n" +
 	"\x11HandshakeResponse\x12;\n" +
 	"\x06status\x18\x01 \x01(\x0e2#.enlangmemo.sync.v1.HandshakeStatusR\x06status\x12,\n" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x98\x01 H\x00R\tsessionId\x88\x01\x01\x12<\n" +
 	"\x16server_sync_cursor_usn\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x13serverSyncCursorUsn\x12:\n" +
-	"\x15server_last_sync_time\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x12serverLastSyncTimeB\r\n" +
-	"\v_session_id*\x94\x03\n" +
+	"\x15server_last_sync_time\x18\x04 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x12serverLastSyncTime\x121\n" +
+	"\rcollection_id\x18\x05 \x01(\fB\a\xbaH\x04z\x02h\x10H\x01R\fcollectionId\x88\x01\x01B\r\n" +
+	"\v_session_idB\x10\n" +
+	"\x0e_collection_id*\x94\x03\n" +
 	"\x0fHandshakeStatus\x12 \n" +
 	"\x1cHANDSHAKE_STATUS_UNSPECIFIED\x10\x00\x12&\n" +
 	"\"HANDSHAKE_STATUS_NO_REMOTE_CHANGES\x10\x01\x12\x1e\n" +
