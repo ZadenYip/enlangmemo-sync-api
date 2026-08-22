@@ -1,6 +1,6 @@
 {
   "name": "@enlangmemo/sync-api",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Generated TypeScript SDK for EnLangMemo sync API.",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,7 +9,9 @@
     "type": "git",
     "url": "https://github.com/ZadenYip/enlangmemo-sync-api"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -33,10 +35,7 @@
   "author": "HyFren",
   "license": "Apache-2.0",
   "dependencies": {
-    "@bufbuild/protobuf": "^2.13.0",
-    "@connectrpc/connect": "^2.1.2",
-    "@connectrpc/validate": "^0.2.0",
-    "@connectrpc/connect-node": "^2.1.2"
+    "@bufbuild/protobuf": "^2.13.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2"
