@@ -747,7 +747,7 @@ type CardPayload struct {
 	Difficulty    float64                `protobuf:"fixed64,4,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	Stability     float64                `protobuf:"fixed64,5,opt,name=stability,proto3" json:"stability,omitempty"`
 	ScheduledDays int32                  `protobuf:"varint,6,opt,name=scheduled_days,json=scheduledDays,proto3" json:"scheduled_days,omitempty"`
-	Due           int64                  `protobuf:"varint,7,opt,name=due,proto3" json:"due,omitempty"`
+	Due           int32                  `protobuf:"varint,7,opt,name=due,proto3" json:"due,omitempty"`
 	LastReview    *int64                 `protobuf:"varint,8,opt,name=last_review,json=lastReview,proto3,oneof" json:"last_review,omitempty"`
 	Lapses        int32                  `protobuf:"varint,9,opt,name=lapses,proto3" json:"lapses,omitempty"`
 	LearningSteps int32                  `protobuf:"varint,10,opt,name=learning_steps,json=learningSteps,proto3" json:"learning_steps,omitempty"`
@@ -830,7 +830,7 @@ func (x *CardPayload) GetScheduledDays() int32 {
 	return 0
 }
 
-func (x *CardPayload) GetDue() int64 {
+func (x *CardPayload) GetDue() int32 {
 	if x != nil {
 		return x.Due
 	}
@@ -1071,7 +1071,7 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"difficulty\x12\x1c\n" +
 	"\tstability\x18\x05 \x01(\x01R\tstability\x12%\n" +
 	"\x0escheduled_days\x18\x06 \x01(\x05R\rscheduledDays\x12\x19\n" +
-	"\x03due\x18\a \x01(\x03B\a\xbaH\x04\"\x02(\x00R\x03due\x12-\n" +
+	"\x03due\x18\a \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x03due\x12-\n" +
 	"\vlast_review\x18\b \x01(\x03B\a\xbaH\x04\"\x02(\x00H\x00R\n" +
 	"lastReview\x88\x01\x01\x12\x1f\n" +
 	"\x06lapses\x18\t \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x06lapses\x12.\n" +
