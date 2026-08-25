@@ -119,7 +119,8 @@ message CardPayload {
   double stability = 5;
   int32 scheduled_days = 6;
 
-  int32 due = 7 [(buf.validate.field).int32.gte = 0];
+  // 卡片没进入毕业阶段时为毫秒时间截，所以得是 int64，防止 int32 溢出
+  int64 due = 7 [(buf.validate.field).int64.gte = 0];
 
   optional int64 last_review = 8 [(buf.validate.field).int64.gte = 0];
   int32 lapses = 9 [(buf.validate.field).int32.gte = 0];
