@@ -602,15 +602,18 @@ message PushRequest {
   // 服务端校验 batch_seq == SyncLock.expected_batch_seq
   int32 batch_seq = 2 [(buf.validate.field).int32.gte = 1];
 
-  // 客户端本地未同步的一批变更，每条 SyncChange.usn 必须为 -1
-  repeated SyncChange changes = 3 [(buf.validate.field).repeated.min_items = 1];
+  // 客户端本地未同步到服务器的变更，每条 SyncChange.usn 为 -1
+  // finish_push = true 时必须空，为 false 的时候则非空
+  repeated SyncChange changes = 3;
 
-  // 是否为本轮 Push 的最后一个 batch
-  bool last_batch = 4;
+  // 是否结束 Push 阶段
+  bool finish_push = 4;
 }
 ```
 
 PushRequest 中每条 `SyncChange.usn` 必须为 `-1`。`usn = -1` 表示客户端本地待上传状态，服务端要为每个实体变更分别分配新的 usn 并写入数据库。
+
+`finish_push` 表示本轮 Push 是否结束。`finish_push = true` 时 `changes` 必须为空，`finish_push = false` 时则非空。
 
 
 #### PushResponse
@@ -621,14 +624,17 @@ message PushResponse {
   int32 batch_seq = 1;
 
   // 服务端为本 Push batch 内每个实体分配 usn 后返回的确认变更
-  // 每条 SyncChange 不携带 payload，但必须携带 entity_id、entity_type、op 和 usn。
-  repeated SyncChange changes = 2 [(buf.validate.field).repeated.min_items = 1];
+  // 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn。
+  // finish_push batch 响应则返回空 changes
+  repeated SyncChange changes = 2;
 }
 ```
 
-PushResponse 中的 `changes` 是服务端对 PushRequest 中每条变更的确认结果，不携带 payload，但必须携带 `entity_id`、`entity_type`、`op` 和服务端分配的 `usn`。`op`=`CHANGE_OP_ASSIGN_USN` 表示该响应是回传服务端分配的 usn。
+PushResponse 中的 `changes` 是服务端对 PushRequest 中每条变更的确认结果，不携带 payload，但必须携带 `entity_id`、`entity_type`、`op` 和服务端分配的 `usn`。`op`=`CHANGE_OP_ASSIGN_USN` 表示该响应是回传服务端分配的 usn。空的 `finish_push` batch 返回空 `changes`。
 
-客户端收到 PushResponse 后，根据返回的 `entity_id` 和 `entity_type` 更新本 batch 内已上传实体的本地 `usn`，并将 `collection.sync_cursor_usn` 推进到 `max(response.changes.usn) + 1`。如果本 batch 包含 Collection 变更，collection 表自身的 `usn` 也写为对应返回项的 `usn`。
+客户端收到带有 changes 的 PushResponse 后，根据返回的 `entity_id` 和 `entity_type` 更新本 batch 内已上传实体的本地 `usn`，并将 `collection.sync_cursor_usn` 推进到 `max(response.changes.usn) + 1`。如果本 batch 包含 Collection 变更，collection 表自身的 `usn` 也写为对应返回项的 `usn`。
+
+客户端收到 `finish_push = true` 的 PushResponse 后，进入 FINISHING 状态，发送 FinishSyncRequest 释放 session。
 
 
 #### 客户端处理流程
@@ -637,28 +643,28 @@ PushResponse 中的 `changes` 是服务端对 PushRequest 中每条变更的确�
 2. 客户端从本地 `usn = -1` 的待上传数据中组装当前 batch，按实体依赖顺序放入 `changes`。
 3. 发送 PushRequest 后等待 PushResponse
 4. 收到 PushResponse 后，校验 `response.batch_seq == request.batch_seq`。
-5. 客户端开启一个本地 SQLite 事务，根据 `response.changes` 将本 batch 内已上传实体的 `usn` 更新为服务端返回的对应 usn，并将 `collection.sync_cursor_usn` 推进到 `max(response.changes.usn) + 1`。
-6. 事务提交后，如果本次 `request.last_batch = false`，客户端发送下一个 `batch_seq + 1` 的 PushRequest。
-7. 如果本次 `request.last_batch = true`，客户端进入 FINISHING，调用 FinishSync 释放 session / SyncLock。
+5. 如果 `response.changes` 非空，客户端开启一个本地 SQLite 事务，根据 `response.changes` 将本 batch 内已上传实体的 `usn` 更新为服务端返回的对应 usn，并将 `collection.sync_cursor_usn` 推进到 `max(response.changes.usn) + 1`。
+6. 事务提交后，客户端重新查询本地是否仍有 `usn = -1` 的待上传变更；如果有，发送下一个 `batch_seq + 1` 的 PushRequest。
+7. 如果没有，发送 `changes` 为空且 `finish_push = true` 的 PushRequest，在收到 PushResponse 后进入 FINISHING，向服务器发送 FinishSync 释放 session。
 
 
 #### 服务端处理规则
 
-1. 服务端收到 PushRequest 后，Connect validate 先保证 `changes` 非空。
+1. 服务端收到 PushRequest 后，先校验`finish_push`：`finish_push = true` 时 `changes` 必须空，`finish_push = false` 时则非空。
 2. 服务端校验 `session_id` 是否存在、是否属于当前用户、SyncLock 是否处于允许 Push 的状态。
 3. 允许 Push 的状态包括 PUSHING 和 AWAITING_PUSH_OR_FINISH。
 4. 服务端校验 `request.batch_seq == SyncLock.expected_batch_seq`，不匹配时返回 ConnectRPC `FailedPrecondition`。
-5. 如果当前状态是 AWAITING_PUSH_OR_FINISH，并且 batch_seq 校验通过，表示客户端选择继续 Push。服务端在处理本次 batch 时先将状态切换为 PUSHING；若本 batch 同时也是最后一个 Push batch，则在数据库事务成功后再切换为 AWAITING_FINISH。
-6. 服务端通过 SyncLock 原子领取当前 batch：根据 `changes` 数量从当前 `sync_cursor_usn` 开始预留一段连续 usn，随后将 SyncLock 中的 `sync_cursor_usn` 推进到预留区间上界的下一个 usn、`expected_batch_seq` 递增 1 并续期。
-7. 服务端开启数据库事务，将 batch 内所有变更写入数据库，每条 `UPSERT` 实体写入服务端为该实体分配的 usn，`DELETE` 按软删除语义处理并写入该实体对应的 usn。此外，同一事务内顺便更新服务端 `collection.sync_cursor_usn = max(assigned entity usn) + 1`。应用变更时服务端校验：
+5. 如果当前状态是 AWAITING_PUSH_OR_FINISH，并且 batch_seq 校验通过，表示客户端选择继续 Push。服务端在处理非空 batch 时先将状态切换为 PUSHING。
+6. 对非空 batch，服务端通过 SyncLock 原子领取当前 batch：根据 `changes` 数量从当前 `sync_cursor_usn` 开始预留一段连续 usn，随后将 SyncLock 中的 `sync_cursor_usn` 推进到预留区间上界的下一个 usn、`expected_batch_seq` 递增 1 并续期。
+7. 如果 `changes` 非空，服务端开启数据库事务，将 batch 内所有变更写入数据库，每条 `UPSERT` 实体写入服务端为该实体分配的 usn，`DELETE` 按软删除语义处理并写入该实体对应的 usn。此外，同一事务内顺便更新服务端 `collection.sync_cursor_usn = max(assigned entity usn) + 1`。应用变更时服务端校验：
    - 每条 `SyncChange` 不得为空
    - PushRequest 中每条 `SyncChange.usn` 必须为 `-1`
    - 当 `ChangeOp = UPSERT` 时，确认 payload 与 `entity_type` 匹配
    - 当 `ChangeOp = DELETE` 时，payload 为空，且 `deleted_at` 必须存在。
    - 校验失败返回 ConnectRPC `InvalidArgument`。由于 batch 已经进行过操作，客户端不得重试同一个 batch。
 8. 服务端为 batch 内每条请求变更组装一条响应 `SyncChange`：`entity_id` 和 `entity_type` 与请求一致，`op = CHANGE_OP_ASSIGN_USN`，`usn` 为该实体分配的服务端 usn，且不携带 payload。
-9. 如果 `request.last_batch = true`，服务端在数据库事务成功后将 SyncLock 状态改为 AWAITING_FINISH；如果 `request.last_batch = false`，SyncLock 保持 PUSHING，等待下一个 batch。
-10. 服务端确认数据库事务成功，且必要的 SyncLock 状态更新成功后，返回 PushResponse，其中 `changes` 为本 batch 每个实体的 usn 分配结果。
+9. 如果 `request.finish_push = true`，服务端将 SyncLock 状态改为 AWAITING_FINISH，如果 `request.finish_push = false`，SyncLock 保持 PUSHING，等待下一个 batch。
+10. 服务端确认数据库事务成功，且必要的 SyncLock 状态更新成功后，返回 PushResponse，其中 `changes` 为本 batch 每个实体的 usn 分配结果，空的 `finish_push` batch 返回空 `changes`。
 
 
 #### 中断与超时

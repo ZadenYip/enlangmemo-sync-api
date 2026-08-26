@@ -29,9 +29,10 @@ type PushRequest struct {
 	// 服务端校验 batch_seq == SyncLock.expected_batch_seq
 	BatchSeq int32 `protobuf:"varint,2,opt,name=batch_seq,json=batchSeq,proto3" json:"batch_seq,omitempty"`
 	// 客户端本地未同步到服务器的变更，每条 SyncChange.usn 为 -1
+	// finish_push = true 时必须空，为 false 的时候则非空
 	Changes []*SyncChange `protobuf:"bytes,3,rep,name=changes,proto3" json:"changes,omitempty"`
-	// 是否为本轮同步的最后一个 batch
-	LastBatch     bool `protobuf:"varint,4,opt,name=last_batch,json=lastBatch,proto3" json:"last_batch,omitempty"`
+	// 是否结束 Push 阶段
+	FinishPush    bool `protobuf:"varint,4,opt,name=finish_push,json=finishPush,proto3" json:"finish_push,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -87,9 +88,9 @@ func (x *PushRequest) GetChanges() []*SyncChange {
 	return nil
 }
 
-func (x *PushRequest) GetLastBatch() bool {
+func (x *PushRequest) GetFinishPush() bool {
 	if x != nil {
-		return x.LastBatch
+		return x.FinishPush
 	}
 	return false
 }
@@ -99,7 +100,8 @@ type PushResponse struct {
 	// 当前返回的 batch 序号，等于 request.batch_seq
 	BatchSeq int32 `protobuf:"varint,1,opt,name=batch_seq,json=batchSeq,proto3" json:"batch_seq,omitempty"`
 	// 服务端为本 Push batch 内每个实体分配 usn 后返回的确认变更
-	// 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn
+	// 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn。
+	// finish_push batch 响应则返回空 changes
 	Changes       []*SyncChange `protobuf:"bytes,2,rep,name=changes,proto3" json:"changes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -153,17 +155,17 @@ var File_enlangmemo_sync_v1_push_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_push_proto_rawDesc = "" +
 	"\n" +
-	"\x1denlangmemo/sync/v1/push.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\x1a!enlangmemo/sync/v1/entities.proto\"\xbf\x01\n" +
+	"\x1denlangmemo/sync/v1/push.proto\x12\x12enlangmemo.sync.v1\x1a\x1bbuf/validate/validate.proto\x1a!enlangmemo/sync/v1/entities.proto\"\xb7\x01\n" +
 	"\vPushRequest\x12'\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01 R\tsessionId\x12$\n" +
-	"\tbatch_seq\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\bbatchSeq\x12B\n" +
-	"\achanges\x18\x03 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeB\b\xbaH\x05\x92\x01\x02\b\x01R\achanges\x12\x1d\n" +
-	"\n" +
-	"last_batch\x18\x04 \x01(\bR\tlastBatch\"o\n" +
+	"\tbatch_seq\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\bbatchSeq\x128\n" +
+	"\achanges\x18\x03 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeR\achanges\x12\x1f\n" +
+	"\vfinish_push\x18\x04 \x01(\bR\n" +
+	"finishPush\"e\n" +
 	"\fPushResponse\x12\x1b\n" +
-	"\tbatch_seq\x18\x01 \x01(\x05R\bbatchSeq\x12B\n" +
-	"\achanges\x18\x02 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeB\b\xbaH\x05\x92\x01\x02\b\x01R\achangesB\xe0\x01\n" +
+	"\tbatch_seq\x18\x01 \x01(\x05R\bbatchSeq\x128\n" +
+	"\achanges\x18\x02 \x03(\v2\x1e.enlangmemo.sync.v1.SyncChangeR\achangesB\xe0\x01\n" +
 	"\x16com.enlangmemo.sync.v1B\tPushProtoP\x01ZQgithub.com/zadenyip/enlangmemo-sync-api/packages/go/gen/enlangmemo/sync/v1;syncv1\xa2\x02\x03ESX\xaa\x02\x12Enlangmemo.Sync.V1\xca\x02\x12Enlangmemo\\Sync\\V1\xe2\x02\x1eEnlangmemo\\Sync\\V1\\GPBMetadata\xea\x02\x14Enlangmemo::Sync::V1b\x06proto3"
 
 var (

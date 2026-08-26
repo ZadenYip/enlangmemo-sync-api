@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file enlangmemo/sync/v1/push.proto.
  */
 export const file_enlangmemo_sync_v1_push: GenFile = /*@__PURE__*/
-  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVzaC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIpYBCgtQdXNoUmVxdWVzdBIcCgpzZXNzaW9uX2lkGAEgASgJQgi6SAVyA5gBIBIaCgliYXRjaF9zZXEYAiABKAVCB7pIBBoCKAESOQoHY2hhbmdlcxgDIAMoCzIeLmVubGFuZ21lbW8uc3luYy52MS5TeW5jQ2hhbmdlQgi6SAWSAQIIARISCgpsYXN0X2JhdGNoGAQgASgIIlwKDFB1c2hSZXNwb25zZRIRCgliYXRjaF9zZXEYASABKAUSOQoHY2hhbmdlcxgCIAMoCzIeLmVubGFuZ21lbW8uc3luYy52MS5TeW5jQ2hhbmdlQgi6SAWSAQIIAULgAQoWY29tLmVubGFuZ21lbW8uc3luYy52MUIJUHVzaFByb3RvUAFaUWdpdGh1Yi5jb20vemFkZW55aXAvZW5sYW5nbWVtby1zeW5jLWFwaS9wYWNrYWdlcy9nby9nZW4vZW5sYW5nbWVtby9zeW5jL3YxO3N5bmN2MaICA0VTWKoCEkVubGFuZ21lbW8uU3luYy5WMcoCEkVubGFuZ21lbW9cU3luY1xWMeICHkVubGFuZ21lbW9cU3luY1xWMVxHUEJNZXRhZGF0YeoCFEVubGFuZ21lbW86OlN5bmM6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
+  fileDesc("Ch1lbmxhbmdtZW1vL3N5bmMvdjEvcHVzaC5wcm90bxISZW5sYW5nbWVtby5zeW5jLnYxIo0BCgtQdXNoUmVxdWVzdBIcCgpzZXNzaW9uX2lkGAEgASgJQgi6SAVyA5gBIBIaCgliYXRjaF9zZXEYAiABKAVCB7pIBBoCKAESLwoHY2hhbmdlcxgDIAMoCzIeLmVubGFuZ21lbW8uc3luYy52MS5TeW5jQ2hhbmdlEhMKC2ZpbmlzaF9wdXNoGAQgASgIIlIKDFB1c2hSZXNwb25zZRIRCgliYXRjaF9zZXEYASABKAUSLwoHY2hhbmdlcxgCIAMoCzIeLmVubGFuZ21lbW8uc3luYy52MS5TeW5jQ2hhbmdlQuABChZjb20uZW5sYW5nbWVtby5zeW5jLnYxQglQdXNoUHJvdG9QAVpRZ2l0aHViLmNvbS96YWRlbnlpcC9lbmxhbmdtZW1vLXN5bmMtYXBpL3BhY2thZ2VzL2dvL2dlbi9lbmxhbmdtZW1vL3N5bmMvdjE7c3luY3YxogIDRVNYqgISRW5sYW5nbWVtby5TeW5jLlYxygISRW5sYW5nbWVtb1xTeW5jXFYx4gIeRW5sYW5nbWVtb1xTeW5jXFYxXEdQQk1ldGFkYXRh6gIURW5sYW5nbWVtbzo6U3luYzo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_enlangmemo_sync_v1_entities]);
 
 /**
  * @generated from message enlangmemo.sync.v1.PushRequest
@@ -34,17 +34,18 @@ export type PushRequest = Message<"enlangmemo.sync.v1.PushRequest"> & {
 
   /**
    * 客户端本地未同步到服务器的变更，每条 SyncChange.usn 为 -1
+   * finish_push = true 时必须空，为 false 的时候则非空
    *
    * @generated from field: repeated enlangmemo.sync.v1.SyncChange changes = 3;
    */
   changes: SyncChange[];
 
   /**
-   * 是否为本轮同步的最后一个 batch
+   * 是否结束 Push 阶段
    *
-   * @generated from field: bool last_batch = 4;
+   * @generated from field: bool finish_push = 4;
    */
-  lastBatch: boolean;
+  finishPush: boolean;
 };
 
 /**
@@ -67,7 +68,8 @@ export type PushResponse = Message<"enlangmemo.sync.v1.PushResponse"> & {
 
   /**
    * 服务端为本 Push batch 内每个实体分配 usn 后返回的确认变更
-   * 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn
+   * 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn。
+   * finish_push batch 响应则返回空 changes
    *
    * @generated from field: repeated enlangmemo.sync.v1.SyncChange changes = 2;
    */

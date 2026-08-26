@@ -13,10 +13,11 @@ message PushRequest {
   int32 batch_seq = 2 [(buf.validate.field).int32.gte = 1];
 
   // 客户端本地未同步到服务器的变更，每条 SyncChange.usn 为 -1
-  repeated SyncChange changes = 3 [(buf.validate.field).repeated.min_items = 1];
+  // finish_push = true 时必须空，为 false 的时候则非空
+  repeated SyncChange changes = 3;
 
-  // 是否为本轮同步的最后一个 batch
-  bool last_batch = 4;
+  // 是否结束 Push 阶段
+  bool finish_push = 4;
 }
 
 message PushResponse {
@@ -24,6 +25,7 @@ message PushResponse {
   int32 batch_seq = 1;
 
   // 服务端为本 Push batch 内每个实体分配 usn 后返回的确认变更
-  // 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn
-  repeated SyncChange changes = 2 [(buf.validate.field).repeated.min_items = 1];
+  // 每条 SyncChange 不携带 payload，但必携带 entity_id、entity_type、op 和 usn。
+  // finish_push batch 响应则返回空 changes
+  repeated SyncChange changes = 2;
 }
