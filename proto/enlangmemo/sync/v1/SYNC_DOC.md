@@ -382,8 +382,8 @@ Pull 按实体类型顺序拉取，Push 传输 UPSERT 变更时也“优先”�
 1. Collection
 2. Deck
 3. NoteType
-4. Note
-5. ProcessingNote
+4. ProcessingNote
+5. Note
 6. Card
 7. ReviewLog
 
@@ -432,16 +432,27 @@ INDEX ix_sync_units_delete_retention (op, updated_at)
 因此 tombstones 需要  `entity_type`、`entity_id`、`deleted_at`，用来表示删除的是哪个表哪个实体的数据，以及时间。
 
 #### 客户端删除策略
-PULLING 远端变更前，客户端必须先检查同一 `entity_type` 和 `entity_id` 是否存在本地 tombstone。
-- 如果本地有对应的 tombstone 记录，说明本地已经存在删除意图，客户端可以直接确认该删除并清理 tombstone，不需要再查询正式表删除数据。
-- 如果本地没有对应的 tombstone 记录，客户端需要另外从正式表查找并删除对应实体
-- 收到远端 UPSERT 时，而数据在本地已经选择了删除，那么 UPSERT 会被忽略。
+Pull 完成后，客户端在同一个本地 SQLite 事务内按服务端返回顺序应用远端变更。删除采用幂等处理：同一个实体即使已经被本地提前级联删除，后续再收到远端 DELETE 则查找对应的 tombstone，如果找到则删除 tombstone 对应记录。
 
-客户端执行本地删除时，如果删除对象存在依赖数据，应由客户端业务层负责删除以及生成 tombstone。例如删除 deck 时，依赖该 deck 的 card 和 note 也应删除， 对应数据的 tombstone 也会跟着生成。
+客户端收到远端 DELETE 时：
 
-同理，如果收到 deck 的删除，那么在此时本地客户端甚至在收到依赖该 deck 的 card 和 note 的 DELETE，就得删除本地对应的 card 和 note，并生成 tombstone，即使后面会重复收到这些依赖对象的 DELETE。
+1. 如果正式业务表中存在该实体，则删除该实体，并按客户端业务依赖规则级联删除依赖实体，级联删除的实体先写入 tombstones，如果后续 pull 有远端 DELETE，tombsontes 会被处理，否则会在后续 Push DELETE 补齐。
+2. 如果正式业务表中不存在该实体，则检查 tombstones 中是否存在同一 `entity_type` 和 `entity_id`。
+如果 tombstone 存在，说明本地已经提前产生过删除意图，而当前远端 DELETE 表示服务端确认该实体删除，客户端可以清理该 tombstone，但如果正式实体表和 tombstone 都不存在，则可以忽略该 DELETE，因为客户端和服务端都没该实体。
 
-即使后面可能会收到 DELETE 也选择在此时级联删除这些依赖对象的原因是防止，服务端将这些删除延后到下一个 batch 了，这样子中途网络中断就会丢失后续的删除，所以提前删除和生成 tombstone 是更好的选择。
+客户端收到远端 UPSERT 时：
+
+先查询正式实体表，如果不存在，则产生 tombstone，后续 Push DELETE 补齐服务端残留的子实体。
+如果该 UPSERT 存在正式实体表中，则更新该实体。
+
+级联删除关系由客户端应用层处理负责，当前包括：
+
+1. 删除 note_type 时，删除依赖该 note_type 的 processing_note。
+2. 删除 note_type 时，删除依赖该 note_type 的 note，并继续删除该 note 对应的 card。
+3. 删除 deck 时，删除该 deck 下的 card，并反向删除该 card 依赖的 note。当前业务约束为一个 note 只对应一个 card，因此可以直接删除 note。
+4. 删除 note 时，删除该 note 对应的 card。
+
+之所以在收到父级 DELETE 时提前级联删除并生成 tombstone，是为了处理 push batch 被大小限制分割的情况：服务端可能已经收到父级 DELETE，但依赖子实体 DELETE 尚未收到或尚未返回给客户端。客户端在 pull 时主动把这些残留没标记删除的实体转成 tombstone，并在 pull 后继续 Push，可以让服务端临时不一致状态最终收敛。
 
 
 #### 服务端删除策略
@@ -456,7 +467,7 @@ PULLING 表示客户端正在从服务端拉取当前同步会话范围内的远
 
 Pull 的同步颗粒度是 batch。服务端按固定实体类型顺序返回变更。每条 `SyncChange` 自带该实体变更对应的服务端 usn。
 
-服务端按下面顺序逐类拉取：Collection -> Deck -> NoteType -> Note -> ProcessingNote -> Card -> ReviewLog。同一个 batch 默认控制在约 64KB；如果为了保证同一个 USN group 不被拆分，batch 可以溢出，但服务端应控制软上限约 128KB。网关 / ConnectRPC 层使用更高的硬上限兜底，例如 1MB。
+服务端按下面顺序逐类拉取：Collection -> Deck -> NoteType -> ProcessingNote -> Note -> Card -> ReviewLog。同一个 batch 默认控制在约 64KB；如果为了保证同一个 USN group 不被拆分，batch 可以溢出，但服务端应控制软上限约 128KB。网关 / ConnectRPC 层使用更高的硬上限兜底，例如 1MB。
 
 #### Pull 初始化
 

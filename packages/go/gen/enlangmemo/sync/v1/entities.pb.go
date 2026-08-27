@@ -29,8 +29,8 @@ const (
 	EntityType_ENTITY_TYPE_COLLECTION      EntityType = 1
 	EntityType_ENTITY_TYPE_DECK            EntityType = 2
 	EntityType_ENTITY_TYPE_NOTE_TYPE       EntityType = 3
-	EntityType_ENTITY_TYPE_NOTE            EntityType = 4
-	EntityType_ENTITY_TYPE_PROCESSING_NOTE EntityType = 5
+	EntityType_ENTITY_TYPE_PROCESSING_NOTE EntityType = 4
+	EntityType_ENTITY_TYPE_NOTE            EntityType = 5
 	EntityType_ENTITY_TYPE_CARD            EntityType = 6
 	EntityType_ENTITY_TYPE_REVIEW_LOG      EntityType = 7
 )
@@ -42,8 +42,8 @@ var (
 		1: "ENTITY_TYPE_COLLECTION",
 		2: "ENTITY_TYPE_DECK",
 		3: "ENTITY_TYPE_NOTE_TYPE",
-		4: "ENTITY_TYPE_NOTE",
-		5: "ENTITY_TYPE_PROCESSING_NOTE",
+		4: "ENTITY_TYPE_PROCESSING_NOTE",
+		5: "ENTITY_TYPE_NOTE",
 		6: "ENTITY_TYPE_CARD",
 		7: "ENTITY_TYPE_REVIEW_LOG",
 	}
@@ -52,8 +52,8 @@ var (
 		"ENTITY_TYPE_COLLECTION":      1,
 		"ENTITY_TYPE_DECK":            2,
 		"ENTITY_TYPE_NOTE_TYPE":       3,
-		"ENTITY_TYPE_NOTE":            4,
-		"ENTITY_TYPE_PROCESSING_NOTE": 5,
+		"ENTITY_TYPE_PROCESSING_NOTE": 4,
+		"ENTITY_TYPE_NOTE":            5,
 		"ENTITY_TYPE_CARD":            6,
 		"ENTITY_TYPE_REVIEW_LOG":      7,
 	}
@@ -1100,9 +1100,9 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\x17ENTITY_TYPE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16ENTITY_TYPE_COLLECTION\x10\x01\x12\x14\n" +
 	"\x10ENTITY_TYPE_DECK\x10\x02\x12\x19\n" +
-	"\x15ENTITY_TYPE_NOTE_TYPE\x10\x03\x12\x14\n" +
-	"\x10ENTITY_TYPE_NOTE\x10\x04\x12\x1f\n" +
-	"\x1bENTITY_TYPE_PROCESSING_NOTE\x10\x05\x12\x14\n" +
+	"\x15ENTITY_TYPE_NOTE_TYPE\x10\x03\x12\x1f\n" +
+	"\x1bENTITY_TYPE_PROCESSING_NOTE\x10\x04\x12\x14\n" +
+	"\x10ENTITY_TYPE_NOTE\x10\x05\x12\x14\n" +
 	"\x10ENTITY_TYPE_CARD\x10\x06\x12\x1a\n" +
 	"\x16ENTITY_TYPE_REVIEW_LOG\x10\a*k\n" +
 	"\bChangeOp\x12\x19\n" +
