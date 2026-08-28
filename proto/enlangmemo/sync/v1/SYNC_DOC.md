@@ -2,42 +2,56 @@
 
 使用 ConnectRPC（一个兼容 gRPC 基于 Protobuf 的 RPC 协议）作为传输基础
 
+# 术语约定
 
-# 设计核心原则
+entity/unit: 实体/单元是集合、牌组、笔记模板、笔记、卡片、复习记录等同步实体的称呼。
 
-主要依靠 usn（update sequence number）字段和批量传输数据完成数据同步
-同步颗粒度是 batch（知识单元数量待定），每一个 batch 对应一个数据库事务
-服务器负责分配和递增 usn 字段，每条同步变更携带自己的 usn，batch 表示意味着一批变更，也是事务颗粒度。
-collection.sync_cursor_usn = next_usn，同步游标，表示当前集合已同步到的 USN 上界，也是下次增量 Pull 的起点
-unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN，
-本地未同步数据 unit.usn = -1
+sync_change: 同步变更，一个 entity 的数据变化。
+
+batch: 对应同步最小的颗粒度，包含多个 sync_change。
+
+usn: update sequence number，每一个实体都有自己的 usn 可以粗略理解为表示的是实体的“版本”，但是 usn 是用户全局递增的而不是独立的，从未上传到服务器的实体 usn = -1，上传过但是客户端发生过修改则 usn = -2（仅仅客户端是这样），只有服务器分配的 usn 才是 >= 1 的。
+
+pull: 拉取，是客户端从服务器获取变更的操作。
+
+push: 推送，是客户端将本地变更上传到服务器的操作。
+
+# 设计核心思想
+
+首先，同步的颗粒度是 batch。对于服务器来说，batch 对应了一个服务器数据库事务，而对于客户端，batch 是最小的事务单位，客户端可能是多个 batch 作为一个事务。
+
+同步颗粒度是 batch，一个 batch 包含多少变更见具体实现，每一个 batch 对应一个数据库事务。
+每个变更由 usn 唯一标识，服务器负责分配和递增 usn 字段。
+
+collection.sync_cursor_usn = next_usn，同步游标 usn，表示当前集合已同步到的 usn 上界，也是下次增量 pull 的起点。
 
 
-# 注意事项
+## 设计检查清单
 
-## 设计检查清单：
-1. 是否处理超时的情形
-2. 是否处理超时后重连情形
-3. 是否处理了传输中断数据不一致的问题
+流程每个阶段至少考虑了以下问题：
 
+1. 超时的情形下的处理方式是什么样的
+2. 遇到重复请求是否进行了去重
+3. 传输中断数据可能导致不一致的问题是如何解决的。
+
+## 全局 Header
+
+注意所有的 ConnectRPC 操作都带上了全局 header
+ `Authorization: Bearer ${accessToken}`
+以此来验证用户身份，后面不再重复说明。
 
 # 流程
 
 ## 流程简述
 
 1. 双方握手
-2. 根据握手状态客户端决定下一步：
-  - NO_REMOTE_CHANGES：远端无新增。客户端若有本地待上传变更，则 PUSH，否则结束。
-  - NEED_PULL：远端有新增。客户端先 Pull，Pull 完成后客户端根据本地剩余待上传变更决定 PUSH 或结束。
-  - UPLOAD_ALL：客户端同步游标大于服务端同步游标，属于极端情况下服务端数据丢失/回退；客户端全量上传本地数据恢复服务端，完成后进入 FINISHING。
+2. 根据握手状态客户端决定下一步的操作
 3. 开始批量传输数据
 4. 数据传输完毕挥手
 
-## 全局 Header
+下面为状态机图，具体状态含义见下文。
 
-注意所有的 ConnectRPC 操作都带上了全局 header
- `Authorization: Bearer ${accessToken}`
-
+（这里是一个客户端状态机图，在飞书上）
 
 ## 握手
 
@@ -47,7 +61,7 @@ unit.usn = last_modified_usn，表示实体最后一次被服务端确认的 USN
 
 
 ### HandshakeRequest
-HandshakeRequest 是发起握手该携带的数据
+HandshakeRequest 是发起握手的请求
 
 ```proto
 message HandshakeRequest {
@@ -58,7 +72,7 @@ message HandshakeRequest {
   // 集合 UUIDv7
   bytes collection_id = 3 [(buf.validate.field).bytes.len = 16];
 
-  // 客户端 collection.sync_cursor_usn，已同步到的 USN 上界 / 下次增量 Pull 起点
+  // 客户端 collection.sync_cursor_usn，已同步到的 usn 上界 / 下次增量 pull 起点
   int64 client_sync_cursor_usn = 4 [(buf.validate.field).int64.gte = 0];
 
   // 同步协议版本
@@ -77,14 +91,15 @@ message HandshakeRequest {
 }
 ```
 
-`device_id` 用于区分同一用户的不同设备，并辅助判断 SyncLock 存在时是否为同一设备重复握手。
+`device_id` 用于区分同一用户的不同设备，以及预留的未来扩展字段。
 
 `client_now` 表示客户端发起握手时的本地时间戳。服务端用其对比自身时间，若偏差过大则返回 `CLIENT_TIME_SKEW_TOO_LARGE`，提示用户校准系统时间再同步。
 
-`client_last_sync_time` 表示客户端本地记录的上一次完整同步成功时间，该值来自上次 `FinishSyncResponse.server_finished_at`，因此是服务端分配的可信时间。服务端用它判断客户端是否落后过久。如果服务端运维正式删除某个时间之前的实体（原本是用 delete 标记逻辑删除的），而客户端最后同步时间如果比这个时间点早，则握手会返回 `CLIENT_DATA_TOO_OLD`。
+`client_last_sync_time` 表示客户端本地记录的上一次完整同步成功时间，该值来自上次 `FinishSyncResponse.server_finished_at`，因此是服务器分配的可信时间。服务端用它判断客户端是否落后过久。如果服务器运维正式删除某个时间之前的实体（而不是 delete 单单标记逻辑删除），而客户端最后同步时间如果比这个时间点早，则握手会返回 `CLIENT_DATA_TOO_OLD`。
 
 `has_local_changes` 表示客户端握手时是否存在待上传的本地变更，包括本地实体 `usn = -1` 的 UPSERT，以及 tombstones 中待上传的 DELETE。服务端用其决定 `NO_REMOTE_CHANGES` 下握手后的初始状态。
 
+(TODO 继续重写文档)
 ### Collection 身份校验
 
 每个用户在服务端只有一个 collection。HandshakeRequest 中的 `collection_id` 表示客户端本地唯一 collection 身份，服务端必须在判断 `client_sync_cursor_usn` 前先校验该身份。
@@ -339,10 +354,6 @@ UploadAllPush 完成后，客户端发送 FinishSyncRequest 结束本次 UPLOAD_
 
 ## 数据同步
 
-### 状态机图
-
-（这里是一个客户端状态机图，在飞书上）
-
 
 ### 注意事项
 
@@ -440,19 +451,20 @@ Pull 完成后，客户端在同一个本地 SQLite 事务内按服务端返回�
 2. 如果正式业务表中不存在该实体，则检查 tombstones 中是否存在同一 `entity_type` 和 `entity_id`。
 如果 tombstone 存在，说明本地已经提前产生过删除意图，而当前远端 DELETE 表示服务端确认该实体删除，客户端可以清理该 tombstone，但如果正式实体表和 tombstone 都不存在，则可以忽略该 DELETE，因为客户端和服务端都没该实体。
 
-客户端收到远端 UPSERT 时：
-
-先查询正式实体表，如果不存在，则产生 tombstone，后续 Push DELETE 补齐服务端残留的子实体。
-如果该 UPSERT 存在正式实体表中，则更新该实体。
-
 级联删除关系由客户端应用层处理负责，当前包括：
 
 1. 删除 note_type 时，删除依赖该 note_type 的 processing_note。
 2. 删除 note_type 时，删除依赖该 note_type 的 note，并继续删除该 note 对应的 card。
 3. 删除 deck 时，删除该 deck 下的 card，并反向删除该 card 依赖的 note。当前业务约束为一个 note 只对应一个 card，因此可以直接删除 note。
 4. 删除 note 时，删除该 note 对应的 card。
+5. 删除 card 时，删除对应的 note，因为目前笔记和卡片是一对一的关系。
 
-之所以在收到父级 DELETE 时提前级联删除并生成 tombstone，是为了处理 push batch 被大小限制分割的情况：服务端可能已经收到父级 DELETE，但依赖子实体 DELETE 尚未收到或尚未返回给客户端。客户端在 pull 时主动把这些残留没标记删除的实体转成 tombstone，并在 pull 后继续 Push，可以让服务端临时不一致状态最终收敛。
+之所以在收到父级 DELETE 时提前级联删除并生成 tombstone，是为了处理 push batch 被大小限制分割的情况：服务端可能已经收到父级 DELETE，但依赖子实体 DELETE 尚未收到或尚未返回给客户端。客户端在 pull 时主动把这些残留没标记删除的实体转成 tombstone，并在 pull 后继续 Push，这样子服务端即使因为删除导致临时不一致状态，在最终也会收敛。
+
+客户端收到远端 UPSERT 时：
+
+先查询正式实体表，如果不存在，则产生 tombstone，后续 Push DELETE 补齐服务端残留的子实体。
+如果该 UPSERT 存在正式实体表中，则更新该实体。
 
 
 #### 服务端删除策略
