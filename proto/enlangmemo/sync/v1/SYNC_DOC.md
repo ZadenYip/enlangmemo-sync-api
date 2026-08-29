@@ -463,7 +463,9 @@ Pull 完成后，客户端在同一个本地 SQLite 事务内按服务端返回�
 
 客户端收到远端 UPSERT 时：
 
-先查询正式实体表，如果不存在，则产生 tombstone，后续 Push DELETE 补齐服务端残留的子实体。
+先查询正式实体表，如果不存在，检查 tombstone 有没有记录
+- 有，则忽略此次 UPSERT 达成删除目的，而 tombstone 记录会后续 Push DELETE 补齐服务端残留的子实体
+- 没，则查看依赖的实体是否存在，不存在则生成 tombstone，存在则正常 upsert
 如果该 UPSERT 存在正式实体表中，则更新该实体。
 
 
