@@ -3,8 +3,8 @@ syntax = "proto3";
 package enlangmemo.sync.v1;
 
 import "enlangmemo/sync/v1/cancel.proto";
-import "enlangmemo/sync/v1/handshake.proto";
 import "enlangmemo/sync/v1/finish.proto";
+import "enlangmemo/sync/v1/handshake.proto";
 import "enlangmemo/sync/v1/pull.proto";
 import "enlangmemo/sync/v1/push.proto";
 import "enlangmemo/sync/v1/upload_all.proto";
