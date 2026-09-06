@@ -24,7 +24,7 @@ var File_enlangmemo_sync_v1_sync_proto protoreflect.FileDescriptor
 
 const file_enlangmemo_sync_v1_sync_proto_rawDesc = "" +
 	"\n" +
-	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\x1fenlangmemo/sync/v1/cancel.proto\x1a\"enlangmemo/sync/v1/handshake.proto\x1a\x1fenlangmemo/sync/v1/finish.proto\x1a\x1denlangmemo/sync/v1/pull.proto\x1a\x1denlangmemo/sync/v1/push.proto\x1a#enlangmemo/sync/v1/upload_all.proto2\x8c\x05\n" +
+	"\x1denlangmemo/sync/v1/sync.proto\x12\x12enlangmemo.sync.v1\x1a\x1fenlangmemo/sync/v1/cancel.proto\x1a\x1fenlangmemo/sync/v1/finish.proto\x1a\"enlangmemo/sync/v1/handshake.proto\x1a\x1denlangmemo/sync/v1/pull.proto\x1a\x1denlangmemo/sync/v1/push.proto\x1a#enlangmemo/sync/v1/upload_all.proto2\x8c\x05\n" +
 	"\vSyncService\x12X\n" +
 	"\tHandshake\x12$.enlangmemo.sync.v1.HandshakeRequest\x1a%.enlangmemo.sync.v1.HandshakeResponse\x12I\n" +
 	"\x04Pull\x12\x1f.enlangmemo.sync.v1.PullRequest\x1a .enlangmemo.sync.v1.PullResponse\x12I\n" +
@@ -81,8 +81,8 @@ func file_enlangmemo_sync_v1_sync_proto_init() {
 		return
 	}
 	file_enlangmemo_sync_v1_cancel_proto_init()
-	file_enlangmemo_sync_v1_handshake_proto_init()
 	file_enlangmemo_sync_v1_finish_proto_init()
+	file_enlangmemo_sync_v1_handshake_proto_init()
 	file_enlangmemo_sync_v1_pull_proto_init()
 	file_enlangmemo_sync_v1_push_proto_init()
 	file_enlangmemo_sync_v1_upload_all_proto_init()
