@@ -69,7 +69,6 @@ func (x *FinishSyncRequest) GetSessionId() string {
 type FinishSyncResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 服务端确认完成同步并释放 session / SyncLock 的时间
-	//
 	// 客户端会用这个更新本地 collection.last_sync_time
 	ServerFinishedAt int64 `protobuf:"varint,1,opt,name=server_finished_at,json=serverFinishedAt,proto3" json:"server_finished_at,omitempty"`
 	unknownFields    protoimpl.UnknownFields

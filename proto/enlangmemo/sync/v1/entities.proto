@@ -60,7 +60,7 @@ message CollectionPayload {
   // 每日重置的时间，例如 4 表示每天凌晨 4 点重置，0-23
   int32 daily_reset_time = 4 [(buf.validate.field).int32.gte = 0];
   // 时区 IANA 字符串，例如 "Asia/Shanghai"
-  string timezone = 5 [(buf.validate.field).string.max_len = 32];
+  string time_zone = 5 [(buf.validate.field).string.max_len = 32];
 
   // SQLite collection.config 的 JSON 字符串。
   string config_json = 6 [(buf.validate.field).string.min_len = 1];

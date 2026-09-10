@@ -357,7 +357,7 @@ type CollectionPayload struct {
 	// 每日重置的时间，例如 4 表示每天凌晨 4 点重置，0-23
 	DailyResetTime int32 `protobuf:"varint,4,opt,name=daily_reset_time,json=dailyResetTime,proto3" json:"daily_reset_time,omitempty"`
 	// 时区 IANA 字符串，例如 "Asia/Shanghai"
-	Timezone string `protobuf:"bytes,5,opt,name=timezone,proto3" json:"timezone,omitempty"`
+	TimeZone string `protobuf:"bytes,5,opt,name=time_zone,json=timeZone,proto3" json:"time_zone,omitempty"`
 	// SQLite collection.config 的 JSON 字符串。
 	ConfigJson    string `protobuf:"bytes,6,opt,name=config_json,json=configJson,proto3" json:"config_json,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -422,9 +422,9 @@ func (x *CollectionPayload) GetDailyResetTime() int32 {
 	return 0
 }
 
-func (x *CollectionPayload) GetTimezone() string {
+func (x *CollectionPayload) GetTimeZone() string {
 	if x != nil {
-		return x.Timezone
+		return x.TimeZone
 	}
 	return ""
 }
@@ -1041,15 +1041,15 @@ const file_enlangmemo_sync_v1_entities_proto_rawDesc = "" +
 	"\n" +
 	"review_log\x18\f \x01(\v2$.enlangmemo.sync.v1.ReviewLogPayloadH\x00R\treviewLogB\t\n" +
 	"\apayloadB\r\n" +
-	"\v_deleted_at\"\xa2\x02\n" +
+	"\v_deleted_at\"\xa3\x02\n" +
 	"\x11CollectionPayload\x12;\n" +
 	"\x15sqlite_schema_version\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x13sqliteSchemaVersion\x12&\n" +
 	"\n" +
 	"created_at\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tcreatedAt\x12&\n" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\tupdatedAt\x121\n" +
-	"\x10daily_reset_time\x18\x04 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x0edailyResetTime\x12#\n" +
-	"\btimezone\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x18 R\btimezone\x12(\n" +
+	"\x10daily_reset_time\x18\x04 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x0edailyResetTime\x12$\n" +
+	"\ttime_zone\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x18 R\btimeZone\x12(\n" +
 	"\vconfig_json\x18\x06 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"configJson\"\xe0\x02\n" +
 	"\vDeckPayload\x12\x1d\n" +

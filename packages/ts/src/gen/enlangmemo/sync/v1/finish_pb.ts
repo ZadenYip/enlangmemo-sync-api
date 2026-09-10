@@ -36,7 +36,6 @@ export const FinishSyncRequestSchema: GenMessage<FinishSyncRequest> = /*@__PURE_
 export type FinishSyncResponse = Message<"enlangmemo.sync.v1.FinishSyncResponse"> & {
   /**
    * 服务端确认完成同步并释放 session / SyncLock 的时间
-   *
    * 客户端会用这个更新本地 collection.last_sync_time
    *
    * @generated from field: int64 server_finished_at = 1;
