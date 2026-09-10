@@ -13,4 +13,12 @@
 pnpm install
 ```
 
-安装完后，可以用 pnpm buf 调用 Buf ClI。
+安装完后，可以用 pnpm buf 调用 Buf CLI 来生成代码，下面是根据 proto 文件生成代码的命令：
+
+```bash
+pnpm buf generate
+```
+
+生成完代码要发布新版本，记得修改 packges/ts/package.json 和 根目录的 package.json 的版本号。
+
+接着用打 tag，一个打 packages/ts/vX.X.X 的 tag，一个打根目录的 packages/go/vX.X.X 的 tag，然后 push tag，剩下的会交给 CI 脚本会自动发布到 npm 和 go module。
